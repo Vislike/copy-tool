@@ -40,7 +40,7 @@
 					<compress>2</compress>
 					<noHeaderFiles>true</noHeaderFiles>
 					<noManPages>true</noManPages>
-					<launcher>ct=copy.tool</launcher>
+					<launcher>ct=copy.tool/${main.class}</launcher>
 				</configuration>
 			</plugin>
 		</plugins>
