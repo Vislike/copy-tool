@@ -24,11 +24,11 @@ public class App {
 	}
 
 	public static void main(String[] args) throws IOException {
-		System.out.println("= = = = File Copy Tool = = = =");
+		System.out.println("= = = = Copy Tool = = = =");
 		System.out.println();
 
 		if (args.length != 2) {
-			System.out.println("Usage: copytool *source dir/file* *destination dir*");
+			System.out.println("Usage: ct *source dir/file* *destination dir*");
 		} else {
 
 			Path fromDir = Paths.get(args[0]).toAbsolutePath().normalize();
