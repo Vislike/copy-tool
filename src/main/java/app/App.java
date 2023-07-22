@@ -27,62 +27,97 @@ public class App {
 		System.out.println("= = = = Copy Tool = = = =");
 		System.out.println();
 
-		if (args.length != 2) {
-			System.out.println("Usage: ct *source dir/file* *destination dir*");
-		} else {
+		Path fromDir = null;
+		Path toDir = null;
+		boolean dryRun = false;
 
-			Path fromDir = Paths.get(args[0]).toAbsolutePath().normalize();
-			Path toDir = Paths.get(args[1]).toAbsolutePath().normalize();
-
-			System.out.println("Copy from: " + fromDir);
-			System.out.println("Copy to: " + toDir);
-			System.out.println();
-
-			System.out.print("Finding files...");
-			List<String> match = new ArrayList<>();
-			List<String> noMatch = new ArrayList<>();
-			List<Copy> copy = new ArrayList<>();
-
-			Files.walkFileTree(fromDir, new SimpleFileVisitor<Path>() {
-				@Override
-				public FileVisitResult visitFile(Path fromFile, BasicFileAttributes attrs) throws IOException {
-					Path relativize = fromDir.getParent().relativize(fromFile);
-					Path toFile = toDir.resolve(relativize);
-					Result result = Analyse.files(fromFile, toFile);
-					switch (result) {
-					case COPY -> copy.add(new Copy(fromFile, toFile));
-					case MATCH -> match.add(fromFile.toString());
-					case NO_MATCH -> noMatch.add(fromFile.toString());
-					}
-					return FileVisitResult.CONTINUE;
+		for (String arg : args) {
+			if (arg.startsWith("-")) {
+				if (arg.equals("-d")) {
+					dryRun = true;
+				} else {
+					System.out.println("Invalid parameter: " + arg);
+					System.out.println();
+					printHelp();
+					return;
 				}
-			});
-			System.out.println("complete");
+			} else {
+				if (fromDir == null) {
+					fromDir = Paths.get(arg).toAbsolutePath().normalize();
+				} else if (toDir == null) {
+					toDir = Paths.get(arg).toAbsolutePath().normalize();
+				}
+			}
+		}
+
+		if (fromDir != null && toDir != null) {
+			findAllFiles(fromDir, toDir, dryRun);
+		} else {
+			printHelp();
+		}
+	}
+
+	private static void printHelp() {
+		System.out.println("Usage:");
+		System.out.println("ct [-options] *src* *dst*");
+		System.out.println();
+		System.out.println("Options:");
+		System.out.println("-d    Dry Run, skips file copy");
+		System.out.println();
+	}
+
+	private static void findAllFiles(Path fromDir, Path toDir, boolean dryRun) throws IOException {
+		System.out.println("Copy from: " + fromDir);
+		System.out.println("Copy to: " + toDir);
+		System.out.println();
+
+		System.out.print("Finding files...");
+		List<String> match = new ArrayList<>();
+		List<String> noMatch = new ArrayList<>();
+		List<Copy> copy = new ArrayList<>();
+
+		Files.walkFileTree(fromDir, new SimpleFileVisitor<Path>() {
+			@Override
+			public FileVisitResult visitFile(Path fromFile, BasicFileAttributes attrs) throws IOException {
+				Path relativize = fromDir.getParent().relativize(fromFile);
+				Path toFile = toDir.resolve(relativize);
+				Result result = Analyse.files(fromFile, toFile);
+				switch (result) {
+				case COPY -> copy.add(new Copy(fromFile, toFile));
+				case MATCH -> match.add(fromFile.toString());
+				case NO_MATCH -> noMatch.add(fromFile.toString());
+				}
+				return FileVisitResult.CONTINUE;
+			}
+		});
+		System.out.println("complete");
+		System.out.println();
+
+		if (!match.isEmpty()) {
+			System.out.println("+ + + + Existing files that match in size and modify date + + + +");
+			match.forEach(System.out::println);
 			System.out.println();
+		}
 
-			if (!match.isEmpty()) {
-				System.out.println("+ + + + Existing files that match in size and modify date + + + +");
-				match.forEach(System.out::println);
-				System.out.println();
-			}
+		if (!noMatch.isEmpty()) {
+			System.out.println("- - - - Modified files, need manual attention - - - -");
+			noMatch.forEach(System.out::println);
+			System.out.println();
+		}
 
-			if (!noMatch.isEmpty()) {
-				System.out.println("- - - - Modified files, need manual attention - - - -");
-				noMatch.forEach(System.out::println);
-				System.out.println();
-			}
+		if (!copy.isEmpty()) {
+			System.out.println("* * * * Files to Copy * * * *");
+			copy.forEach(System.out::println);
+			System.out.println();
+		}
 
-			if (!copy.isEmpty()) {
-				System.out.println("* * * * Files to Copy * * * *");
-				copy.forEach(System.out::println);
-				System.out.println();
-			}
-
+		if (dryRun) {
+			System.out.println("Dry Run Complete");
+		} else {
 			copy.forEach(c -> {
 				RobustCopy.robustCopy(c.fromFile(), c.toFile(), BUFF_SIZE);
 				System.out.println();
 			});
-
 		}
 	}
 }
