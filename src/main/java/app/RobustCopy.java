@@ -11,12 +11,20 @@ import java.time.Duration;
 
 public class RobustCopy {
 
-	public static final int WAIT_TIME = 10;
+	private final ByteBuffer bb;
+	private final int waitBeforeRetryTimeSec;
 
-	public static void robustCopy(Path from, Path to, int bufferSize) {
+	private long progressPrintTime;
+	private long progressLastBytes;
+	private long progressStartCopyTime;
+
+	public RobustCopy(int bufferSize, int waitBeforeRetryTimeSec) {
 		// Allocate Buffer
-		ByteBuffer bb = ByteBuffer.allocate(bufferSize);
+		this.bb = ByteBuffer.allocate(bufferSize);
+		this.waitBeforeRetryTimeSec = waitBeforeRetryTimeSec;
+	}
 
+	public void robustCopy(Path from, Path to) {
 		// Get Size of Source
 		long size = -1;
 		while (size < 0) {
@@ -39,12 +47,14 @@ public class RobustCopy {
 			}
 		}
 
-		// Print
-		System.out.println("Copying " + from + " => " + to + " (" + size + " bytes)");
-		long printTime = 0;
+		// Print file to copy
+		System.out.println("Copying " + from + " => " + to + " (" + Utils.size(size) + ")");
 
 		// States
 		long bytesCopied = -1;
+		progressPrintTime = -1;
+		progressLastBytes = -1;
+		progressStartCopyTime = System.currentTimeMillis();
 		SeekableByteChannel inChannel = null;
 		SeekableByteChannel outChannel = null;
 
@@ -56,12 +66,12 @@ public class RobustCopy {
 				outChannel = Files.newByteChannel(to, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 
 				// Rollback last two buffers
-				bytesCopied = Math.max(0, bytesCopied - bufferSize * 2);
+				bytesCopied = Math.max(0, bytesCopied - bb.capacity() * 2);
 
 				// Resume
 				inChannel.position(bytesCopied);
 				outChannel.position(bytesCopied);
-				System.out.println("(Re)Starting at byte: " + bytesCopied);
+				System.out.println("(Re)Starting at: " + Utils.size(bytesCopied));
 
 				while (bytesCopied < size) {
 					// Copy chunk
@@ -69,12 +79,7 @@ public class RobustCopy {
 					outChannel.write(bb.flip());
 					bytesCopied += numBytes;
 
-					// Print progress
-					if (printTime + 9500 < System.currentTimeMillis() || bytesCopied == size) {
-						printTime = System.currentTimeMillis();
-						System.out.println(bytesCopied + " / " + size + " bytes ("
-								+ String.format("%.1f", (double) bytesCopied / (double) size * 100.0) + "%)");
-					}
+					printProgress(bytesCopied, size);
 				}
 			} catch (IOException e) {
 				System.err.println("Copy problem detected: " + e.getMessage());
@@ -101,7 +106,7 @@ public class RobustCopy {
 			}
 		}
 
-		// Set last modified time to the same
+		// Get last modified time from source file
 		FileTime fileTime = null;
 		while (fileTime == null) {
 			try {
@@ -111,6 +116,8 @@ public class RobustCopy {
 				waitBeforeRetry();
 			}
 		}
+
+		// Set target last modified time to the same
 		System.out.println("Setting Last Modified Time to: " + fileTime);
 		Path targetTimeModified = null;
 		while (targetTimeModified == null) {
@@ -123,10 +130,49 @@ public class RobustCopy {
 		}
 	}
 
-	private static void waitBeforeRetry() {
-		System.out.println("Waiting " + WAIT_TIME + "s...");
+	private void printProgress(long bytesCopied, long size) {
+		// Print progress
+		if (progressPrintTime + 9000 <= System.currentTimeMillis() || bytesCopied == size) {
+			long lastTime = progressPrintTime;
+			progressPrintTime = System.currentTimeMillis();
+			StringBuilder sb = new StringBuilder();
+
+			// Elapsed seconds
+			long totalElapsedSec = (progressPrintTime - progressStartCopyTime) / 1000;
+			sb.append("Elapsed: " + totalElapsedSec + "s  |  ");
+
+			// Progress in bytes
+			sb.append(Utils.size(bytesCopied) + " / " + Utils.size(size));
+
+			// Progress in %
+			sb.append(" (" + String.format("%.1f", (double) bytesCopied / (double) size * 100.0) + "%)");
+
+			// Total speed
+			if (totalElapsedSec > 0) {
+				long bytesPerSec = bytesCopied / totalElapsedSec;
+				sb.append("  |  [Average: " + Utils.size(bytesPerSec) + "/s, ");
+
+				long remaningBytes = size - bytesCopied;
+				long remaningSec = remaningBytes / bytesPerSec;
+				sb.append("Remaning: " + remaningSec + "s]");
+			}
+
+			// Current speed
+			long elapsed = progressPrintTime - lastTime;
+			long diffBytes = bytesCopied - progressLastBytes;
+			if (elapsed > 0 && elapsed < 100000 && diffBytes > 0) {
+				sb.append("  |  [Current: " + Utils.size(diffBytes * 1000 / elapsed) + "/s]");
+			}
+			progressLastBytes = bytesCopied;
+
+			System.out.println(sb);
+		}
+	}
+
+	private void waitBeforeRetry() {
+		System.out.println("Waiting " + waitBeforeRetryTimeSec + "s...");
 		try {
-			Thread.sleep(Duration.ofSeconds(WAIT_TIME));
+			Thread.sleep(Duration.ofSeconds(waitBeforeRetryTimeSec));
 		} catch (InterruptedException e) {
 			System.err.println("Wait Interrupted: " + e.getMessage());
 		}
