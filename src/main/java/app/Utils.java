@@ -7,17 +7,13 @@ public class Utils {
 	private Utils() {
 	}
 
-	private static boolean humanReadable = true;
-
-	public static void setRawBytes() {
-		humanReadable = false;
-	}
+	public static boolean rawBytes = false;
 
 	public static String size(long bytes) {
-		if (humanReadable) {
-			return humanReadableByteCountBin(bytes);
+		if (rawBytes) {
+			return bytes + " B";
 		}
-		return bytes + " B";
+		return humanReadableByteCountBin(bytes);
 	}
 
 	// From:

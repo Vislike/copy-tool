@@ -24,28 +24,12 @@ public class RobustCopy {
 		this.waitBeforeRetryTimeSec = waitBeforeRetryTimeSec;
 	}
 
-	public void robustCopy(Path from, Path to) {
+	public void copy(Path from, Path to) {
 		// Get Size of Source
-		long size = -1;
-		while (size < 0) {
-			try {
-				size = Files.size(from);
-			} catch (IOException e) {
-				System.err.println("Error getting size: " + e.getMessage());
-				waitBeforeRetry();
-			}
-		}
+		long size = getSize(from);
 
 		// Create all parent directories of target
-		Path targetDirectories = null;
-		while (targetDirectories == null) {
-			try {
-				targetDirectories = Files.createDirectories(to.getParent());
-			} catch (IOException e) {
-				System.err.println("Error creating parent directories: " + e.getMessage());
-				waitBeforeRetry();
-			}
-		}
+		createDirectories(to.getParent());
 
 		// Print file to copy
 		System.out.println("Copying " + from + " => " + to + " (" + Utils.size(size) + ")");
@@ -54,9 +38,9 @@ public class RobustCopy {
 		long bytesCopied = -1;
 		progressPrintTime = -1;
 		progressLastBytes = -1;
-		progressStartCopyTime = System.currentTimeMillis();
 		SeekableByteChannel inChannel = null;
 		SeekableByteChannel outChannel = null;
+		progressStartCopyTime = System.currentTimeMillis();
 
 		// Copy file
 		while (bytesCopied < size) {
@@ -67,12 +51,13 @@ public class RobustCopy {
 
 				// Rollback last two buffers
 				bytesCopied = Math.max(0, bytesCopied - bb.capacity() * 2);
+				if (bytesCopied > 0) {
+					System.out.println("Restarting at: " + Utils.size(bytesCopied));
+					inChannel.position(bytesCopied);
+					outChannel.position(bytesCopied);
+				}
 
-				// Resume
-				inChannel.position(bytesCopied);
-				outChannel.position(bytesCopied);
-				System.out.println("(Re)Starting at: " + Utils.size(bytesCopied));
-
+				// Copy all bytes
 				while (bytesCopied < size) {
 					// Copy chunk
 					int numBytes = inChannel.read(bb.clear());
@@ -82,52 +67,19 @@ public class RobustCopy {
 					printProgress(bytesCopied, size);
 				}
 			} catch (IOException e) {
-				System.err.println("Copy problem detected: " + e.getMessage());
-
-				if (inChannel != null) {
-					try {
-						inChannel.close();
-					} catch (IOException ce) {
-						System.err.println("Error closing inChannel: " + ce.getMessage());
-					}
-					inChannel = null;
-				}
-
-				if (outChannel != null) {
-					try {
-						outChannel.close();
-					} catch (IOException ce) {
-						System.err.println("Error closing outChannel: " + ce.getMessage());
-					}
-					outChannel = null;
-				}
-
+				System.err.println("Copy problem: " + e.getMessage());
 				waitBeforeRetry();
+			} finally {
+				// Close channels, ignore problems
+				close(inChannel);
+				close(outChannel);
 			}
 		}
 
-		// Get last modified time from source file
-		FileTime fileTime = null;
-		while (fileTime == null) {
-			try {
-				fileTime = Files.getLastModifiedTime(from);
-			} catch (IOException e) {
-				System.err.println("Error getting last modified time: " + e.getMessage());
-				waitBeforeRetry();
-			}
-		}
-
-		// Set target last modified time to the same
-		System.out.println("Setting Last Modified Time to: " + fileTime);
-		Path targetTimeModified = null;
-		while (targetTimeModified == null) {
-			try {
-				targetTimeModified = Files.setLastModifiedTime(to, fileTime);
-			} catch (IOException e) {
-				System.err.println("Error setting last modified time: " + e.getMessage());
-				waitBeforeRetry();
-			}
-		}
+		// Set last modified time to same as source
+		FileTime lastModifiedTime = getLastModifiedTime(from);
+		System.out.println("Setting Last Modified Time to: " + lastModifiedTime);
+		setLastModifiedTime(to, lastModifiedTime);
 	}
 
 	private void printProgress(long bytesCopied, long size) {
@@ -150,11 +102,14 @@ public class RobustCopy {
 			// Total speed
 			if (totalElapsedSec > 0) {
 				long bytesPerSec = bytesCopied / totalElapsedSec;
-				sb.append("  |  [Average: " + Utils.size(bytesPerSec) + "/s, ");
+				sb.append("  |  [Average: " + Utils.size(bytesPerSec) + "/s");
 
-				long remaningBytes = size - bytesCopied;
-				long remaningSec = remaningBytes / bytesPerSec;
-				sb.append("Remaning: " + remaningSec + "s]");
+				if (bytesPerSec > 0) {
+					long remaningBytes = size - bytesCopied;
+					long remaningSec = remaningBytes / bytesPerSec;
+					sb.append(", Remaning: " + remaningSec + "s");
+				}
+				sb.append("]");
 			}
 
 			// Current speed
@@ -177,5 +132,67 @@ public class RobustCopy {
 			System.err.println("Wait Interrupted: " + e.getMessage());
 		}
 		System.out.println("Retrying...");
+	}
+
+	private long getSize(Path path) {
+		long size = -1;
+		while (size < 0) {
+			try {
+				size = Files.size(path);
+			} catch (IOException e) {
+				System.err.println("Error getting size: " + e.getMessage());
+				waitBeforeRetry();
+			}
+		}
+		return size;
+	}
+
+	private void createDirectories(Path path) {
+		Path success = null;
+		while (success == null) {
+			try {
+				success = Files.createDirectories(path);
+			} catch (IOException e) {
+				System.err.println("Error creating directories: " + e.getMessage());
+				waitBeforeRetry();
+			}
+		}
+	}
+
+	private FileTime getLastModifiedTime(Path path) {
+		FileTime fileTime = null;
+		while (fileTime == null) {
+			try {
+				fileTime = Files.getLastModifiedTime(path);
+			} catch (IOException e) {
+				System.err.println("Error getting last modified time: " + e.getMessage());
+				waitBeforeRetry();
+			}
+		}
+		return fileTime;
+	}
+
+	private void setLastModifiedTime(Path path, FileTime fileTime) {
+		Path success = null;
+		while (success == null) {
+			try {
+				success = Files.setLastModifiedTime(path, fileTime);
+			} catch (IOException e) {
+				System.err.println("Error setting last modified time: " + e.getMessage());
+				waitBeforeRetry();
+			}
+		}
+	}
+
+	private void close(SeekableByteChannel channel) {
+		if (channel != null) {
+			try {
+				if (channel.isOpen()) {
+					channel.close();
+				}
+			} catch (IOException e) {
+				System.err.println("Warning closing channel failed: " + e.getMessage());
+			}
+		}
 	}
 }

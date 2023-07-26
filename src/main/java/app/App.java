@@ -17,6 +17,9 @@ public class App {
 	public static final int BUFF_SIZE = 1024 * 1024 * 1;
 	public static final int WAIT_TIME = 10;
 
+	public static boolean dryRun = false;
+	public static boolean overwrite = false;
+
 	private static record Copy(Path fromFile, Path toFile) {
 		@Override
 		public String toString() {
@@ -30,22 +33,21 @@ public class App {
 
 		Path fromDir = null;
 		Path toDir = null;
-		boolean dryRun = false;
-		boolean overwrite = false;
 
 		for (String arg : args) {
 			if (arg.startsWith("-")) {
-				if (arg.equals("-d")) {
-					dryRun = true;
-				} else if (arg.equals("-o")) {
-					overwrite = true;
-				} else if (arg.equals("-b")) {
-					Utils.setRawBytes();
-				} else {
-					System.out.println("Invalid parameter: " + arg);
-					System.out.println();
-					printHelp();
-					return;
+				for (int i = 1; i < arg.length(); i++) {
+					switch (arg.charAt(i)) {
+					case 'd' -> App.dryRun = true;
+					case 'b' -> Utils.rawBytes = true;
+					case 'o' -> App.overwrite = true;
+					default -> {
+						System.out.println("Invalid parameter: " + arg);
+						System.out.println();
+						printHelp();
+						return;
+					}
+					}
 				}
 			} else {
 				if (fromDir == null) {
@@ -57,7 +59,7 @@ public class App {
 		}
 
 		if (fromDir != null && toDir != null) {
-			findAllFiles(fromDir, toDir, dryRun, overwrite);
+			findAllFiles(fromDir, toDir);
 		} else {
 			printHelp();
 		}
@@ -74,7 +76,7 @@ public class App {
 		System.out.println();
 	}
 
-	private static void findAllFiles(Path fromDir, Path toDir, boolean dryRun, boolean overwrite) throws IOException {
+	private static void findAllFiles(Path fromDir, Path toDir) throws IOException {
 		System.out.println("Copy from: " + fromDir);
 		System.out.println("Copy to: " + toDir);
 		System.out.println();
@@ -130,7 +132,7 @@ public class App {
 		} else {
 			RobustCopy rc = new RobustCopy(BUFF_SIZE, WAIT_TIME);
 			copy.forEach(c -> {
-				rc.robustCopy(c.fromFile(), c.toFile());
+				rc.copy(c.fromFile(), c.toFile());
 				System.out.println();
 			});
 		}
