@@ -9,6 +9,24 @@ public class Utils {
 
 	public static boolean rawBytes = false;
 
+	public static String time(long seconds) {
+		StringBuilder sb = new StringBuilder();
+		if (seconds >= 60) {
+			long minutes = seconds / 60;
+			seconds %= 60;
+
+			if (minutes >= 60) {
+				long hours = minutes / 60;
+				minutes %= 60;
+
+				sb.append(hours + "h ");
+			}
+			sb.append(minutes + "m ");
+		}
+		sb.append(seconds + "s");
+		return sb.toString();
+	}
+
 	public static String size(long bytes) {
 		if (rawBytes) {
 			return bytes + " B";

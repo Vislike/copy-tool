@@ -91,7 +91,7 @@ public class RobustCopy {
 
 			// Elapsed seconds
 			long totalElapsedSec = (progressPrintTime - progressStartCopyTime) / 1000;
-			sb.append("Elapsed: " + totalElapsedSec + "s  |  ");
+			sb.append("Elapsed: " + Utils.time(totalElapsedSec) + "  |  ");
 
 			// Progress in bytes
 			sb.append(Utils.size(bytesCopied) + " / " + Utils.size(size));
@@ -107,7 +107,7 @@ public class RobustCopy {
 				if (bytesPerSec > 0) {
 					long remaningBytes = size - bytesCopied;
 					long remaningSec = remaningBytes / bytesPerSec;
-					sb.append(", Remaning: " + remaningSec + "s");
+					sb.append(", Remaning: " + Utils.time(remaningSec));
 				}
 				sb.append("]");
 			}
