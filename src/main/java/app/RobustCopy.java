@@ -60,9 +60,14 @@ public class RobustCopy {
 				// Copy all bytes
 				while (bytesCopied < size) {
 					// Copy chunk
-					int numBytes = inChannel.read(bb.clear());
-					outChannel.write(bb.flip());
-					bytesCopied += numBytes;
+					int bytesRead = inChannel.read(bb.clear());
+					int bytesWrite = outChannel.write(bb.flip());
+
+					if (bytesRead != bytesWrite) {
+						throw new IOException("Bytes missmatch, read: " + bytesRead + ", write: " + bytesWrite);
+					}
+
+					bytesCopied += bytesRead;
 
 					printProgress(bytesCopied, size);
 				}
