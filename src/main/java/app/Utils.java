@@ -9,7 +9,7 @@ public class Utils {
 
 	public static boolean rawBytes = false;
 
-	public static String time(long seconds) {
+	public static String timeLeft(long seconds) {
 		StringBuilder sb = new StringBuilder();
 		if (seconds >= 60) {
 			long minutes = seconds / 60;
@@ -25,6 +25,19 @@ public class Utils {
 		}
 		sb.append(seconds + "s");
 		return sb.toString();
+	}
+
+	public static String timeElapsed(long seconds) {
+		long minutes = seconds / 60;
+		seconds %= 60;
+
+		if (minutes >= 60) {
+			long hours = minutes / 60;
+			minutes %= 60;
+
+			return String.format("%d:%02d:%02d", hours, minutes, seconds);
+		}
+		return String.format("%d:%02d", minutes, seconds);
 	}
 
 	public static String size(long bytes) {

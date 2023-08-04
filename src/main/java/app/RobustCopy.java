@@ -96,23 +96,23 @@ public class RobustCopy {
 
 			// Elapsed seconds
 			long totalElapsedSec = (progressPrintTime - progressStartCopyTime) / 1000;
-			sb.append("Elapsed: " + Utils.time(totalElapsedSec) + "  |  ");
+			sb.append(Utils.timeElapsed(totalElapsedSec));
 
 			// Progress in bytes
-			sb.append(Utils.size(bytesCopied) + " / " + Utils.size(size));
+			sb.append("  |  " + Utils.size(bytesCopied) + " / " + Utils.size(size));
 
 			// Progress in %
 			sb.append(" (" + String.format("%.1f", (double) bytesCopied / (double) size * 100.0) + "%)");
+			long remaningBytes = size - bytesCopied;
 
 			// Total speed
 			if (totalElapsedSec > 0) {
 				long bytesPerSec = bytesCopied / totalElapsedSec;
-				sb.append("  |  [Average: " + Utils.size(bytesPerSec) + "/s");
+				sb.append("  |  [Avg: " + Utils.size(bytesPerSec) + "/s");
 
 				if (bytesPerSec > 0) {
-					long remaningBytes = size - bytesCopied;
 					long remaningSec = remaningBytes / bytesPerSec;
-					sb.append(", Remaning: " + Utils.time(remaningSec));
+					sb.append(", Rem: " + Utils.timeLeft(remaningSec));
 				}
 				sb.append("]");
 			}
@@ -121,7 +121,9 @@ public class RobustCopy {
 			long elapsed = progressPrintTime - lastTime;
 			long diffBytes = bytesCopied - progressLastBytes;
 			if (elapsed > 0 && elapsed < 100000 && diffBytes > 0) {
-				sb.append("  |  [Current: " + Utils.size(diffBytes * 1000 / elapsed) + "/s]");
+				long bytesPerSec = diffBytes * 1000 / elapsed;
+				sb.append("  |  [Cur: " + Utils.size(bytesPerSec) + "/s");
+				sb.append("]");
 			}
 			progressLastBytes = bytesCopied;
 

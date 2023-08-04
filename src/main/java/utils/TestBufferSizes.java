@@ -1,4 +1,4 @@
-package test;
+package utils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -14,14 +14,13 @@ import app.Utils;
 
 public class TestBufferSizes {
 
-	public static final long SIZE_64M = 1024 * 1024 * 64;
-	public static final long SIZE_100M = 1024 * 1024 * 100;
+	public static final long SIZE = 1024 * 1024 * 64;
 
 	public static void main(String[] args) throws IOException {
 		System.out.println("= = = = Copy Tool Buffer Test = = = =");
 		System.out.println();
 
-		if (args.length != 1) {
+		if (args.length == 0) {
 			System.out.println("Usage: ct-buffer-test *path-to-test-file*");
 			return;
 		}
@@ -30,24 +29,26 @@ public class TestBufferSizes {
 		Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "ct-buffer-test-temp-file");
 		System.out.println("Test file for reading: " + file);
 		System.out.println("Temp file for writing: " + tempFile);
+		System.out.println("Copy limit: " + Utils.size(SIZE));
 		System.out.println();
 
 		long size = Files.size(file);
-		if (size < SIZE_100M) {
-			System.out.println("Test file must be at least 100M large");
+		if (size < SIZE * 2) {
+			System.out.println("Test file must be at least " + Utils.size(SIZE * 2) + " large");
 			return;
 		}
 
 		Random random = new Random();
 
 		int numBytes = 512;
+		// 512 B to 16 MiB
 		for (int i = 0; i < 16; i++) {
 			// Open files
 			SeekableByteChannel inChannel = Files.newByteChannel(file, StandardOpenOption.READ);
 			SeekableByteChannel outChannel = Files.newByteChannel(tempFile, StandardOpenOption.WRITE,
 					StandardOpenOption.CREATE, StandardOpenOption.DELETE_ON_CLOSE);
 
-			long seek = random.nextLong(size - SIZE_64M);
+			long seek = random.nextLong(size - SIZE);
 			inChannel.position(seek);
 
 			testCopy(inChannel, outChannel, numBytes);
@@ -66,7 +67,7 @@ public class TestBufferSizes {
 		ByteBuffer bb = ByteBuffer.allocate(numBytes);
 		long bytesRead = 0;
 		long startTime = System.nanoTime();
-		while (bytesRead < SIZE_64M) {
+		while (bytesRead < SIZE) {
 			int read = inChannel.read(bb.clear());
 			int write = outChannel.write(bb.flip());
 			if (read != write) {
