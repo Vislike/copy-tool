@@ -35,7 +35,8 @@ public class RobustCopy {
 		System.out.println("Copying " + from + " => " + to + " (" + Utils.size(size) + ")");
 
 		// States
-		long bytesCopied = -1;
+		boolean copyComplete = false;
+		long bytesCopied = 0;
 		progressPrintTime = -1;
 		progressLastBytes = -1;
 		SeekableByteChannel inChannel = null;
@@ -43,7 +44,7 @@ public class RobustCopy {
 		progressStartCopyTime = System.currentTimeMillis();
 
 		// Copy file
-		while (bytesCopied < size) {
+		while (!copyComplete) {
 			try {
 				// Open files
 				inChannel = Files.newByteChannel(from, StandardOpenOption.READ);
@@ -71,6 +72,15 @@ public class RobustCopy {
 
 					printProgress(bytesCopied, size);
 				}
+
+				// Truncate if larger (can be the case during overwrite)
+				if (outChannel.size() > size) {
+					System.out.println("Truncating to: " + Utils.size(size));
+					outChannel.truncate(size);
+				}
+
+				// Done
+				copyComplete = true;
 			} catch (IOException e) {
 				System.err.println("Copy problem: " + e.getMessage());
 				waitBeforeRetry();
