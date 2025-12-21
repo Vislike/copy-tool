@@ -2,6 +2,7 @@ package app;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +21,7 @@ public class RobustCopy {
 
 	public RobustCopy(int bufferSize, int waitBeforeRetryTimeSec) {
 		// Allocate Buffer
-		this.bb = ByteBuffer.allocate(bufferSize);
+		this.bb = ByteBuffer.allocateDirect(bufferSize);
 		this.waitBeforeRetryTimeSec = waitBeforeRetryTimeSec;
 	}
 
@@ -39,19 +40,19 @@ public class RobustCopy {
 		long bytesCopied = 0;
 		progressPrintTime = -1;
 		progressLastBytes = -1;
-		SeekableByteChannel inChannel = null;
-		SeekableByteChannel outChannel = null;
+		FileChannel inChannel = null;
+		FileChannel outChannel = null;
 		progressStartCopyTime = System.currentTimeMillis();
 
 		// Copy file
 		while (!copyComplete) {
 			try {
 				// Open files
-				inChannel = Files.newByteChannel(from, StandardOpenOption.READ);
-				outChannel = Files.newByteChannel(to, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+				inChannel = FileChannel.open(from, StandardOpenOption.READ);
+				outChannel = FileChannel.open(to, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 
-				// Rollback last two buffers
-				bytesCopied = Math.max(0, bytesCopied - bb.capacity() * 2);
+				// Rollback last buffer
+				bytesCopied = Math.max(0, bytesCopied - bb.capacity());
 				if (bytesCopied > 0) {
 					System.out.println("Restarting at: " + Utils.size(bytesCopied));
 					inChannel.position(bytesCopied);
