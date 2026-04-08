@@ -3,7 +3,7 @@ The goal of this tool is to copy files over an unstable network connection.
 It will try, try and try again until either you abort it or it has copied all files.
 
 It is inspired by robocopy's restartable mode. But for me, that mode made robocopy very slow and I also got some corrupt files in the end.
-This tool tries to avoid that by immediately closing all file handlers at the first sign of a problem, and then reopening them to try again. I also made it discard the last two buffers of copied data, just like the old FTP days, even though I found no case there it actually made any difference in my testing, but still kept it it since it did not hurt either.
+This tool tries to avoid that by immediately closing all file handlers at the first sign of a problem, and then reopening them to try again. I also made it discard the last buffer of copied data, just like the old FTP days, even though I found no case there it actually made any difference in my testing, but still kept it it since it did not hurt either.
 
 The setup this tool was developed for:
 WIFI to 4G modem/router.

@@ -2,7 +2,7 @@ package benchmark;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SeekableByteChannel;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,9 +44,9 @@ public class TestBufferSizes {
 		// 512 B to 16 MiB
 		for (int i = 0; i < 16; i++) {
 			// Open files
-			SeekableByteChannel inChannel = Files.newByteChannel(file, StandardOpenOption.READ);
-			SeekableByteChannel outChannel = Files.newByteChannel(tempFile, StandardOpenOption.WRITE,
-					StandardOpenOption.CREATE, StandardOpenOption.DELETE_ON_CLOSE);
+			FileChannel inChannel = FileChannel.open(file, StandardOpenOption.READ);
+			FileChannel outChannel = FileChannel.open(tempFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE,
+					StandardOpenOption.DELETE_ON_CLOSE);
 
 			long seek = random.nextLong(size - SIZE);
 			inChannel.position(seek);
@@ -62,9 +62,8 @@ public class TestBufferSizes {
 
 	}
 
-	private static void testCopy(SeekableByteChannel inChannel, SeekableByteChannel outChannel, int numBytes)
-			throws IOException {
-		ByteBuffer bb = ByteBuffer.allocate(numBytes);
+	private static void testCopy(FileChannel inChannel, FileChannel outChannel, int numBytes) throws IOException {
+		ByteBuffer bb = ByteBuffer.allocateDirect(numBytes);
 		long bytesRead = 0;
 		long startTime = System.nanoTime();
 		while (bytesRead < SIZE) {

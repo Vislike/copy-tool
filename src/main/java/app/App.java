@@ -43,6 +43,10 @@ public class App {
 					case 'd' -> App.dryRun = true;
 					case 'b' -> Utils.rawBytes = true;
 					case 'o' -> App.overwrite = true;
+					case 'h' -> {
+						printHelp();
+						return;
+					}
 					default -> {
 						System.out.println("Invalid parameter: " + arg);
 						System.out.println();
@@ -68,17 +72,22 @@ public class App {
 	}
 
 	private static void printHelp() {
-		System.out.println("Usage:");
-		System.out.println("ct [-options] *src* *dst*");
-		System.out.println();
-		System.out.println("Options:");
-		System.out.println("-d    Dry Run, skips file copy");
-		System.out.println("-o    Overwrite modified files instead of skipping them.");
-		System.out.println("-b    Show all sizes in raw bytes instead of human readable.");
-		System.out.println();
+		System.out.println("""
+				Usage:
+				ct [-options] <src> <dst>
+
+				    <src> Can be file or directory.
+				    <dst> Must be directory (since <src> structure is kept).
+
+				Options:
+				-h    Show this help, and exit.
+				-d    Dry Run, skips file copy.
+				-o    Overwrite modified files instead of skipping them.
+				-b    Show all sizes in raw bytes instead of human readable.
+				""");
 	}
 
-	private static void findAllFiles(Path fromDir, Path toDir) throws IOException {
+	private static void findAllFiles(final Path fromDir, final Path toDir) throws IOException {
 		System.out.println("Copy from: " + fromDir);
 		System.out.println("Copy to: " + toDir);
 		System.out.println();
@@ -90,9 +99,9 @@ public class App {
 
 		Files.walkFileTree(fromDir, new SimpleFileVisitor<Path>() {
 			@Override
-			public FileVisitResult visitFile(Path fromFile, BasicFileAttributes attrs) throws IOException {
-				Path relativize = fromDir.getParent().relativize(fromFile);
-				Path toFile = toDir.resolve(relativize);
+			public FileVisitResult visitFile(final Path fromFile, BasicFileAttributes attrs) throws IOException {
+				final Path relativize = fromDir.getParent().relativize(fromFile);
+				final Path toFile = toDir.resolve(relativize);
 				Result result = Analyse.files(fromFile, toFile);
 				switch (result) {
 				case COPY -> copy.add(new Copy(fromFile, toFile));

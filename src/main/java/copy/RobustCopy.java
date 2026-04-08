@@ -3,7 +3,6 @@ package copy;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -204,7 +203,7 @@ public class RobustCopy {
 		}
 	}
 
-	private void close(SeekableByteChannel channel) {
+	private void close(FileChannel channel) {
 		if (channel != null) {
 			try {
 				if (channel.isOpen()) {
