@@ -1,4 +1,4 @@
-package utils;
+package benchmark;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -10,7 +10,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import app.Utils;
+import utils.Utils;
 
 public class TestBufferSizes {
 

@@ -1,4 +1,4 @@
-package app;
+package utils;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
@@ -47,8 +47,21 @@ public class Utils {
 		return humanReadableByteCountBin(bytes);
 	}
 
+	/**
+	 * <p>
+	 * From:<br>
+	 * https://stackoverflow.com/questions/3758606/how-can-i-convert-byte-size-into-a-human-readable-format-in-java
+	 *
+	 * <p>
+	 * Why use 0xfffccccccccccccL? <br>
+	 * Because that is the point at which one should transition from PB to EB. Think
+	 * of it like this: 0xfffccccccccccccL is to 2^50 what 999,950,000 is to 10^9.
+	 *
+	 * @param bytes
+	 * @return
+	 */
 	// From:
-	// https://stackoverflow.com/questions/3758606/how-can-i-convert-byte-size-into-a-human-readable-format-in-java
+	//
 	private static String humanReadableByteCountBin(long bytes) {
 		long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
 		if (absB < 1024) {
