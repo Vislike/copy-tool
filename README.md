@@ -27,3 +27,13 @@ ct -h
 ```
 
 When checking **src** for files **dst** is also analyzed and it will use the two basic file stats size and modified time to determine if two files are the same. By default all existing files is skipped but this can be changed with the overwrite option (**-o**), then it just overwrites files it can determine has changed, all files that look the same (date and size) is always skipped.
+
+## Roadmap
+
+* Multi-threaded read/write, for possible speed gains
+* Support for multiple files at the time
+* Better progress UI
+* Continue an aborted file transfer
+* React to sigterm and gracefully shutdown
+* Unit tests
+* Chaos inspired tests

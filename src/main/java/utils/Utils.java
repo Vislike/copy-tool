@@ -60,8 +60,6 @@ public class Utils {
 	 * @param bytes
 	 * @return
 	 */
-	// From:
-	//
 	private static String humanReadableByteCountBin(long bytes) {
 		long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
 		if (absB < 1024) {

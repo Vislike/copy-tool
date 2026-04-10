@@ -12,6 +12,8 @@ import java.util.List;
 
 import app.Analyse.Result;
 import copy.RobustCopy;
+import copy.meta.FileRecord;
+import copy.meta.Settings;
 import utils.Utils;
 
 public class App {
@@ -22,10 +24,10 @@ public class App {
 	public static boolean dryRun = false;
 	public static boolean overwrite = false;
 
-	private static record Copy(Path fromFile, Path toFile) {
+	private static record Copy(FileRecord sourceFile, FileRecord targetFile) {
 		@Override
 		public String toString() {
-			return fromFile.toString();
+			return sourceFile.toString();
 		}
 	}
 
@@ -33,8 +35,8 @@ public class App {
 		System.out.println("= = = = Copy Tool = = = =");
 		System.out.println();
 
-		Path fromDir = null;
-		Path toDir = null;
+		Path sourceDir = null;
+		Path targetDir = null;
 
 		for (String arg : args) {
 			if (arg.startsWith("-")) {
@@ -56,16 +58,16 @@ public class App {
 					}
 				}
 			} else {
-				if (fromDir == null) {
-					fromDir = Paths.get(arg).toAbsolutePath().normalize();
-				} else if (toDir == null) {
-					toDir = Paths.get(arg).toAbsolutePath().normalize();
+				if (sourceDir == null) {
+					sourceDir = Paths.get(arg).toAbsolutePath().normalize();
+				} else if (targetDir == null) {
+					targetDir = Paths.get(arg).toAbsolutePath().normalize();
 				}
 			}
 		}
 
-		if (fromDir != null && toDir != null) {
-			findAllFiles(fromDir, toDir);
+		if (sourceDir != null && targetDir != null) {
+			findAllFiles(sourceDir, targetDir);
 		} else {
 			printHelp();
 		}
@@ -87,29 +89,29 @@ public class App {
 				""");
 	}
 
-	private static void findAllFiles(final Path fromDir, final Path toDir) throws IOException {
-		System.out.println("Copy from: " + fromDir);
-		System.out.println("Copy to: " + toDir);
+	private static void findAllFiles(final Path sourceDir, final Path targetDir) throws IOException {
+		System.out.println("Copy from: " + sourceDir);
+		System.out.println("Copy to: " + targetDir);
 		System.out.println();
 
 		System.out.print("Finding files...");
-		List<String> match = new ArrayList<>();
-		List<String> noMatch = new ArrayList<>();
+		List<FileRecord> match = new ArrayList<>();
+		List<FileRecord> noMatch = new ArrayList<>();
 		List<Copy> copy = new ArrayList<>();
 
-		Files.walkFileTree(fromDir, new SimpleFileVisitor<Path>() {
+		Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
 			@Override
-			public FileVisitResult visitFile(final Path fromFile, BasicFileAttributes attrs) throws IOException {
-				final Path relativize = fromDir.getParent().relativize(fromFile);
-				final Path toFile = toDir.resolve(relativize);
-				Result result = Analyse.files(fromFile, toFile);
-				switch (result) {
-				case COPY -> copy.add(new Copy(fromFile, toFile));
-				case MATCH -> match.add(fromFile.toString());
+			public FileVisitResult visitFile(final Path sourceFile, BasicFileAttributes attrs) throws IOException {
+				final Path relativize = sourceDir.getParent().relativize(sourceFile);
+				final Path targetFile = targetDir.resolve(relativize);
+				Result result = Analyse.files(sourceFile, targetFile);
+				switch (result.status()) {
+				case COPY -> copy.add(new Copy(result.sourceFile(), result.targetFile()));
+				case MATCH -> match.add(result.sourceFile());
 				case NO_MATCH -> {
-					noMatch.add(fromFile.toString());
+					noMatch.add(result.sourceFile());
 					if (overwrite) {
-						copy.add(new Copy(fromFile, toFile));
+						copy.add(new Copy(result.sourceFile(), result.targetFile()));
 					}
 				}
 				}
@@ -141,9 +143,9 @@ public class App {
 		if (dryRun) {
 			System.out.println("Dry Run Complete");
 		} else {
-			RobustCopy rc = new RobustCopy(BUFF_SIZE, WAIT_TIME);
+			RobustCopy rc = new RobustCopy(new Settings(BUFF_SIZE, WAIT_TIME));
 			copy.forEach(c -> {
-				rc.copy(c.fromFile(), c.toFile());
+				rc.copy(c.sourceFile(), c.targetFile());
 				System.out.println();
 			});
 		}

@@ -1,20 +1,20 @@
 package benchmark;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import copy.RobustCopy;
+import copy.meta.FileRecord;
+import copy.meta.Settings;
 import utils.Utils;
 
 public class TestBufferSizes {
 
-	public static final long SIZE = 1024 * 1024 * 64;
+	public static final long SIZE = 1024 * 1024 * 512;
 
 	public static void main(String[] args) throws IOException {
 		System.out.println("= = = = Copy Tool Buffer Test = = = =");
@@ -44,39 +44,26 @@ public class TestBufferSizes {
 		// 512 B to 16 MiB
 		for (int i = 0; i < 16; i++) {
 			// Open files
-			FileChannel inChannel = FileChannel.open(file, StandardOpenOption.READ);
-			FileChannel outChannel = FileChannel.open(tempFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE,
-					StandardOpenOption.DELETE_ON_CLOSE);
 
-			long seek = random.nextLong(size - SIZE);
-			inChannel.position(seek);
+			long posistion = random.nextLong(size - SIZE);
 
-			testCopy(inChannel, outChannel, numBytes);
-			System.out.println(" (Pos: " + Utils.size(seek) + ")");
-
-			inChannel.close();
-			outChannel.close();
+			testCopy(new FileRecord(file, posistion, SIZE), FileRecord.targetFile(tempFile), numBytes);
+			System.out.println(" (Pos: " + Utils.size(posistion) + ")");
 
 			numBytes *= 2;
 		}
 
 	}
 
-	private static void testCopy(FileChannel inChannel, FileChannel outChannel, int numBytes) throws IOException {
-		ByteBuffer bb = ByteBuffer.allocateDirect(numBytes);
-		long bytesRead = 0;
+	private static void testCopy(FileRecord source, FileRecord target, int numBytes) throws IOException {
 		long startTime = System.nanoTime();
-		while (bytesRead < SIZE) {
-			int read = inChannel.read(bb.clear());
-			int write = outChannel.write(bb.flip());
-			if (read != write) {
-				throw new IOException("Bytes missmatch, read: " + read + ", write: " + write);
-			}
-			bytesRead += read;
-		}
+
+		RobustCopy robustCopy = new RobustCopy(new Settings(numBytes, 0));
+		robustCopy.copy(source, target);
+
 		long elapsedNanos = System.nanoTime() - startTime;
 		long ms = TimeUnit.NANOSECONDS.toMillis(elapsedNanos);
-		String perSec = Utils.size(bytesRead * 1000 / ms);
+		String perSec = Utils.size(source.size() * 1000 / ms);
 		System.out.print("Buffer: " + Utils.size(numBytes) + ": " + ms + "ms [" + perSec + "/s]");
 	}
 

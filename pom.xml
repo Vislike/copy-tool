@@ -14,7 +14,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.release>19</maven.compiler.release>
+		<maven.compiler.release>25</maven.compiler.release>
 		<main.class>app.App</main.class>
 	</properties>
 

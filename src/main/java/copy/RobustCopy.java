@@ -9,32 +9,31 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
+import copy.meta.FileRecord;
+import copy.meta.Settings;
 import utils.Utils;
 
 public class RobustCopy {
 
 	private final ByteBuffer bb;
-	private final int waitBeforeRetryTimeSec;
+	private final Settings settings;
 
 	private long progressPrintTime;
 	private long progressLastBytes;
 	private long progressStartCopyTime;
 
-	public RobustCopy(int bufferSize, int waitBeforeRetryTimeSec) {
+	public RobustCopy(Settings settings) {
+		this.settings = settings;
 		// Allocate Buffer
-		this.bb = ByteBuffer.allocateDirect(bufferSize);
-		this.waitBeforeRetryTimeSec = waitBeforeRetryTimeSec;
+		this.bb = ByteBuffer.allocateDirect(this.settings.bufferSize());
 	}
 
-	public void copy(Path from, Path to) {
-		// Get Size of Source
-		long size = getSize(from);
-
+	public void copy(FileRecord source, FileRecord target) {
 		// Create all parent directories of target
-		createDirectories(to.getParent());
+		createDirectories(target.path().getParent());
 
 		// Print file to copy
-		System.out.println("Copying " + from + " => " + to + " (" + Utils.size(size) + ")");
+		System.out.println("Copying " + source + " => " + target);
 
 		// States
 		boolean copyComplete = false;
@@ -49,8 +48,8 @@ public class RobustCopy {
 		while (!copyComplete) {
 			try {
 				// Open files
-				inChannel = FileChannel.open(from, StandardOpenOption.READ);
-				outChannel = FileChannel.open(to, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+				inChannel = FileChannel.open(source.path(), StandardOpenOption.READ);
+				outChannel = FileChannel.open(target.path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 
 				// Rollback last buffer
 				bytesCopied = Math.max(0, bytesCopied - bb.capacity());
@@ -61,7 +60,7 @@ public class RobustCopy {
 				}
 
 				// Copy all bytes
-				while (bytesCopied < size) {
+				while (bytesCopied < source.size()) {
 					// Copy chunk
 					int bytesRead = inChannel.read(bb.clear());
 					int bytesWrite = outChannel.write(bb.flip());
@@ -72,13 +71,13 @@ public class RobustCopy {
 
 					bytesCopied += bytesRead;
 
-					printProgress(bytesCopied, size);
+					printProgress(bytesCopied, source.size());
 				}
 
 				// Truncate if larger (can be the case during overwrite)
-				if (outChannel.size() > size) {
-					System.out.println("Truncating to: " + Utils.size(size));
-					outChannel.truncate(size);
+				if (outChannel.size() > source.size()) {
+					System.out.println("Truncating to: " + Utils.size(source.size()));
+					outChannel.truncate(source.size());
 				}
 
 				// Done
@@ -94,20 +93,19 @@ public class RobustCopy {
 		}
 
 		// Set last modified time to same as source
-		FileTime lastModifiedTime = getLastModifiedTime(from);
+		FileTime lastModifiedTime = getLastModifiedTime(source.path());
 		System.out.println("Setting Last Modified Time to: " + lastModifiedTime);
-		setLastModifiedTime(to, lastModifiedTime);
+		setLastModifiedTime(target.path(), lastModifiedTime);
 	}
 
 	private void printProgress(long bytesCopied, long size) {
 		// Print progress
-		if (progressPrintTime + 9000 <= System.currentTimeMillis() || bytesCopied == size) {
-			long lastTime = progressPrintTime;
-			progressPrintTime = System.currentTimeMillis();
+		long currentTime = System.currentTimeMillis();
+		if (progressPrintTime + 9000 <= currentTime || bytesCopied == size) {
 			StringBuilder sb = new StringBuilder();
 
 			// Elapsed seconds
-			long totalElapsedSec = (progressPrintTime - progressStartCopyTime) / 1000;
+			long totalElapsedSec = (currentTime - progressStartCopyTime) / 1000;
 			sb.append(Utils.timeElapsed(totalElapsedSec));
 
 			// Progress in bytes
@@ -130,40 +128,28 @@ public class RobustCopy {
 			}
 
 			// Current speed
-			long elapsed = progressPrintTime - lastTime;
+			long elapsed = currentTime - progressPrintTime;
 			long diffBytes = bytesCopied - progressLastBytes;
-			if (elapsed > 0 && elapsed < 100000 && diffBytes > 0) {
+			if (elapsed > 0 && diffBytes > 0 && progressPrintTime > 0) {
 				long bytesPerSec = diffBytes * 1000 / elapsed;
 				sb.append("  |  [Cur: " + Utils.size(bytesPerSec) + "/s");
 				sb.append("]");
 			}
 			progressLastBytes = bytesCopied;
+			progressPrintTime = currentTime;
 
 			System.out.println(sb);
 		}
 	}
 
 	private void waitBeforeRetry() {
-		System.out.println("Waiting " + waitBeforeRetryTimeSec + "s...");
+		System.out.println("Waiting " + settings.waitBeforeRetryTimeSec() + "s...");
 		try {
-			Thread.sleep(Duration.ofSeconds(waitBeforeRetryTimeSec));
+			Thread.sleep(Duration.ofSeconds(settings.waitBeforeRetryTimeSec()));
 		} catch (InterruptedException e) {
 			System.err.println("Wait Interrupted: " + e.getMessage());
 		}
 		System.out.println("Retrying...");
-	}
-
-	private long getSize(Path path) {
-		long size = -1;
-		while (size < 0) {
-			try {
-				size = Files.size(path);
-			} catch (IOException e) {
-				System.err.println("Error getting size: " + e.getMessage());
-				waitBeforeRetry();
-			}
-		}
-		return size;
 	}
 
 	private void createDirectories(Path path) {
