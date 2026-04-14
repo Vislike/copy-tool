@@ -1,13 +1,15 @@
 package ct.app;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.Properties;
 
 import ct.files.Analyse;
-import ct.files.RobustCopy;
 import ct.files.Analyse.FoundFiles;
+import ct.files.RobustCopy;
 import ct.files.meta.Settings;
 
 public class App {
@@ -16,9 +18,17 @@ public class App {
 	public static final int WAIT_TIME = 10;
 
 	public static void main(String[] args) throws IOException {
-		System.out.println("= = = = Copy Tool = = = =" + System.lineSeparator());
+		System.out.println("= = = = Copy Tool v" + version() + " = = = =" + System.lineSeparator());
 
 		parseArgs(args).ifPresentOrElse(App::copyAllFiles, App::printHelp);
+	}
+
+	private static String version() throws IOException {
+		Properties properties = new Properties();
+		try (InputStream in = App.class.getResourceAsStream("/ct.properties")) {
+			properties.load(in);
+		}
+		return properties.getProperty("ct.version", "0-dev");
 	}
 
 	private static Optional<Settings> parseArgs(String[] args) {

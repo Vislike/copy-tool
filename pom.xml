@@ -7,7 +7,7 @@
 
 	<groupId>vislike</groupId>
 	<artifactId>copy-tool</artifactId>
-	<version>1.6</version>
+	<version>1.7</version>
 	<packaging>jlink</packaging>
 
 	<name>Copy Tool</name>
@@ -28,6 +28,15 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>src/main/resources-filtered</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
