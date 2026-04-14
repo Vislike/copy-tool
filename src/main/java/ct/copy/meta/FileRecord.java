@@ -1,8 +1,8 @@
-package copy.meta;
+package ct.copy.meta;
 
 import java.nio.file.Path;
 
-import utils.Utils;
+import ct.utils.Utils;
 
 public record FileRecord(Path path, long position, long size) {
 

@@ -1,4 +1,4 @@
-package app;
+package ct.app;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -10,11 +10,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.Analyse.Result;
-import copy.RobustCopy;
-import copy.meta.FileRecord;
-import copy.meta.Settings;
-import utils.Utils;
+import ct.app.Analyse.Result;
+import ct.copy.RobustCopy;
+import ct.copy.meta.FileRecord;
+import ct.copy.meta.Settings;
+import ct.utils.Utils;
 
 public class App {
 

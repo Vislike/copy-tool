@@ -1,9 +1,9 @@
-package benchmark;
+package ct.benchmark;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import utils.Utils;
+import ct.utils.Utils;
 
 public class Shared {
 

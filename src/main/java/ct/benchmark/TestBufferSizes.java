@@ -1,4 +1,4 @@
-package benchmark;
+package ct.benchmark;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import copy.RobustCopy;
-import copy.meta.FileRecord;
-import copy.meta.Settings;
-import utils.Utils;
+import ct.copy.RobustCopy;
+import ct.copy.meta.FileRecord;
+import ct.copy.meta.Settings;
+import ct.utils.Utils;
 
 public class TestBufferSizes {
 
