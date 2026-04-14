@@ -60,6 +60,7 @@ public class TestBufferSizes {
 
 		System.out.println();
 		log.forEach(System.out::println);
+		Files.delete(targetFile.path());
 		System.out.println(System.lineSeparator() + "Done.");
 	}
 
@@ -107,7 +108,6 @@ public class TestBufferSizes {
 			}
 			sha256.put(filename, sha256sum);
 		}
-		System.out.println(sha256);
 		return sha256;
 	}
 }

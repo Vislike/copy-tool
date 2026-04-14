@@ -14,7 +14,7 @@ import utils.Utils;
 
 public class GenTestFiles {
 
-	public static final int SIZE = 1024 * 1024 * 64;
+	public static final int SIZE = 1024 * 1024 * 512;
 
 	public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
 		System.out.println("= = = = Copy Tool Gen Test Files = = = =");
