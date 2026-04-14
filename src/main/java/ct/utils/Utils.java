@@ -3,11 +3,12 @@ package ct.utils;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 
+import ct.copy.meta.Settings;
+
 public class Utils {
+
 	private Utils() {
 	}
-
-	public static boolean rawBytes = false;
 
 	public static String timeLeft(long seconds) {
 		StringBuilder sb = new StringBuilder();
@@ -41,7 +42,7 @@ public class Utils {
 	}
 
 	public static String size(long bytes) {
-		if (rawBytes) {
+		if (Settings.rawBytes) {
 			return bytes + " B";
 		}
 		return humanReadableByteCountBin(bytes);

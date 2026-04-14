@@ -1,59 +1,44 @@
 package ct.app;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
-import ct.app.Analyse.Result;
+import ct.app.Analyse.FoundFiles;
 import ct.copy.RobustCopy;
-import ct.copy.meta.FileRecord;
 import ct.copy.meta.Settings;
-import ct.utils.Utils;
 
 public class App {
 
 	public static final int BUFF_SIZE = 1024 * 1024 * 1;
 	public static final int WAIT_TIME = 10;
 
-	public static boolean dryRun = false;
-	public static boolean overwrite = false;
+	public static void main(String[] args) throws IOException {
+		System.out.println("= = = = Copy Tool = = = =" + System.lineSeparator());
 
-	private static record Copy(FileRecord sourceFile, FileRecord targetFile) {
-		@Override
-		public String toString() {
-			return sourceFile.toString();
-		}
+		parseArgs(args).ifPresentOrElse(App::copyAllFiles, App::printHelp);
 	}
 
-	public static void main(String[] args) throws IOException {
-		System.out.println("= = = = Copy Tool = = = =");
-		System.out.println();
-
+	private static Optional<Settings> parseArgs(String[] args) {
 		Path sourceDir = null;
 		Path targetDir = null;
+		boolean dryRun = false;
+		boolean overwrite = false;
 
 		for (String arg : args) {
 			if (arg.startsWith("-")) {
 				for (int i = 1; i < arg.length(); i++) {
 					switch (arg.charAt(i)) {
-					case 'd' -> App.dryRun = true;
-					case 'b' -> Utils.rawBytes = true;
-					case 'o' -> App.overwrite = true;
+					case 'd' -> dryRun = true;
+					case 'b' -> Settings.rawBytes = true;
+					case 'o' -> overwrite = true;
 					case 'h' -> {
-						printHelp();
-						return;
+						return Optional.empty();
 					}
 					default -> {
-						System.out.println("Invalid parameter: " + arg);
-						System.out.println();
-						printHelp();
-						return;
+						System.err.println("Invalid parameter: " + arg + System.lineSeparator());
+						return Optional.empty();
 					}
 					}
 				}
@@ -66,11 +51,20 @@ public class App {
 			}
 		}
 
-		if (sourceDir != null && targetDir != null) {
-			findAllFiles(sourceDir, targetDir);
-		} else {
-			printHelp();
+		if (sourceDir == null) {
+			System.err.println("Missing required parameter: <src>" + System.lineSeparator());
+			return Optional.empty();
+		} else if (sourceDir.getFileName() == null) {
+			System.err.println("Invalid: <src> must be a file or directory" + System.lineSeparator());
+			return Optional.empty();
 		}
+
+		if (targetDir == null) {
+			System.err.println("Missing required parameter: <dst>" + System.lineSeparator());
+			return Optional.empty();
+		}
+
+		return Optional.of(new Settings(sourceDir, targetDir, dryRun, overwrite, BUFF_SIZE, WAIT_TIME));
 	}
 
 	private static void printHelp() {
@@ -78,7 +72,7 @@ public class App {
 				Usage:
 				ct [-options] <src> <dst>
 
-				    <src> Can be file or directory.
+				    <src> Can be file or directory (filesystem root is not supported).
 				    <dst> Must be directory (since <src> structure is kept).
 
 				Options:
@@ -89,62 +83,42 @@ public class App {
 				""");
 	}
 
-	private static void findAllFiles(final Path sourceDir, final Path targetDir) throws IOException {
-		System.out.println("Copy from: " + sourceDir);
-		System.out.println("Copy to: " + targetDir);
+	private static void copyAllFiles(Settings settings) {
+		System.out.println("Copy from: " + settings.sourceDir());
+		System.out.println("Copy to: " + settings.targetDir().resolve(settings.sourceDir().getFileName()));
 		System.out.println();
 
 		System.out.print("Finding files...");
-		List<FileRecord> match = new ArrayList<>();
-		List<FileRecord> noMatch = new ArrayList<>();
-		List<Copy> copy = new ArrayList<>();
 
-		Files.walkFileTree(sourceDir, new SimpleFileVisitor<Path>() {
-			@Override
-			public FileVisitResult visitFile(final Path sourceFile, BasicFileAttributes attrs) throws IOException {
-				final Path relativize = sourceDir.getParent().relativize(sourceFile);
-				final Path targetFile = targetDir.resolve(relativize);
-				Result result = Analyse.files(sourceFile, targetFile);
-				switch (result.status()) {
-				case COPY -> copy.add(new Copy(result.sourceFile(), result.targetFile()));
-				case MATCH -> match.add(result.sourceFile());
-				case NO_MATCH -> {
-					noMatch.add(result.sourceFile());
-					if (overwrite) {
-						copy.add(new Copy(result.sourceFile(), result.targetFile()));
-					}
-				}
-				}
-				return FileVisitResult.CONTINUE;
-			}
-		});
+		FoundFiles result = Analyse.findAllFiles(settings);
+
 		System.out.println("complete");
 		System.out.println();
 
-		if (!match.isEmpty()) {
+		if (!result.match().isEmpty()) {
 			System.out.println("+ + + + Existing matching files (size and modify date) + + + +");
-			match.forEach(System.out::println);
+			result.match().forEach(System.out::println);
 			System.out.println();
 		}
 
-		if (!noMatch.isEmpty()) {
-			System.out.println(
-					"- - - - Existing mismatching files, " + (overwrite ? "overwriting" : "skipping") + " - - - -");
-			noMatch.forEach(System.out::println);
+		if (!result.missmatch().isEmpty()) {
+			System.out.println("- - - - Existing mismatching files, "
+					+ (settings.overwrite() ? "overwriting" : "skipping") + " - - - -");
+			result.missmatch().forEach(System.out::println);
 			System.out.println();
 		}
 
-		if (!copy.isEmpty()) {
+		if (!result.copy().isEmpty()) {
 			System.out.println("* * * * Files to Copy * * * *");
-			copy.forEach(System.out::println);
+			result.copy().forEach(System.out::println);
 			System.out.println();
 		}
 
-		if (dryRun) {
+		if (settings.dryRun()) {
 			System.out.println("Dry Run Complete");
 		} else {
-			RobustCopy rc = new RobustCopy(new Settings(BUFF_SIZE, WAIT_TIME));
-			copy.forEach(c -> {
+			RobustCopy rc = new RobustCopy(settings);
+			result.copy().forEach(c -> {
 				rc.copy(c.sourceFile(), c.targetFile());
 				System.out.println();
 			});

@@ -70,7 +70,7 @@ public class TestBufferSizes {
 		sb.append("Buffer: ").append(Utils.size(numBytes)).append(", Size: ").append(Utils.size(source.size()));
 
 		long startTime = System.nanoTime();
-		RobustCopy robustCopy = new RobustCopy(new Settings(numBytes, 0));
+		RobustCopy robustCopy = new RobustCopy(Settings.bufferSize(numBytes));
 		robustCopy.copy(source, target);
 		long elapsedNanos = System.nanoTime() - startTime;
 
