@@ -5,9 +5,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-import ct.app.Analyse.FoundFiles;
-import ct.copy.RobustCopy;
-import ct.copy.meta.Settings;
+import ct.files.Analyse;
+import ct.files.RobustCopy;
+import ct.files.Analyse.FoundFiles;
+import ct.files.meta.Settings;
 
 public class App {
 
@@ -90,27 +91,27 @@ public class App {
 
 		System.out.print("Finding files...");
 
-		FoundFiles result = Analyse.findAllFiles(settings);
+		FoundFiles files = Analyse.findAllFiles(settings);
 
 		System.out.println("complete");
 		System.out.println();
 
-		if (!result.match().isEmpty()) {
+		if (!files.match().isEmpty()) {
 			System.out.println("+ + + + Existing matching files (size and modify date) + + + +");
-			result.match().forEach(System.out::println);
+			files.match().forEach(System.out::println);
 			System.out.println();
 		}
 
-		if (!result.missmatch().isEmpty()) {
+		if (!files.missmatch().isEmpty()) {
 			System.out.println("- - - - Existing mismatching files, "
 					+ (settings.overwrite() ? "overwriting" : "skipping") + " - - - -");
-			result.missmatch().forEach(System.out::println);
+			files.missmatch().forEach(System.out::println);
 			System.out.println();
 		}
 
-		if (!result.copy().isEmpty()) {
+		if (!files.copy().isEmpty()) {
 			System.out.println("* * * * Files to Copy * * * *");
-			result.copy().forEach(System.out::println);
+			files.copy().forEach(System.out::println);
 			System.out.println();
 		}
 
@@ -118,7 +119,7 @@ public class App {
 			System.out.println("Dry Run Complete");
 		} else {
 			RobustCopy rc = new RobustCopy(settings);
-			result.copy().forEach(c -> {
+			files.copy().forEach(c -> {
 				rc.copy(c.sourceFile(), c.targetFile());
 				System.out.println();
 			});

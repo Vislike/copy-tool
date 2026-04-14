@@ -3,7 +3,7 @@ package ct.utils;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 
-import ct.copy.meta.Settings;
+import ct.files.meta.Settings;
 
 public class Utils {
 

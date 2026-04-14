@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
-import ct.copy.meta.FileRecord;
+import ct.files.meta.FileRecord;
 import ct.utils.Utils;
 
 public class GenTestFiles {

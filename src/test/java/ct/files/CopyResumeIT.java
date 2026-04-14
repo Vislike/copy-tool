@@ -1,4 +1,4 @@
-package ct.copy;
+package ct.files;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

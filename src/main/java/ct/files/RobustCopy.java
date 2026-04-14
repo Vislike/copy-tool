@@ -1,4 +1,4 @@
-package ct.copy;
+package ct.files;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -9,8 +9,8 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
-import ct.copy.meta.FileRecord;
-import ct.copy.meta.Settings;
+import ct.files.meta.FileRecord;
+import ct.files.meta.Settings;
 import ct.utils.Utils;
 
 public class RobustCopy {

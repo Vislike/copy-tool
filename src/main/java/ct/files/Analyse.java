@@ -1,4 +1,4 @@
-package ct.app;
+package ct.files;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -10,8 +10,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
-import ct.copy.meta.FileRecord;
-import ct.copy.meta.Settings;
+import ct.files.meta.FileRecord;
+import ct.files.meta.Settings;
 
 public class Analyse {
 

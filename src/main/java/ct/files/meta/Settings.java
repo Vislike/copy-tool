@@ -1,4 +1,4 @@
-package ct.copy.meta;
+package ct.files.meta;
 
 import java.nio.file.Path;
 

@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import ct.copy.RobustCopy;
-import ct.copy.meta.FileRecord;
-import ct.copy.meta.Settings;
+import ct.files.RobustCopy;
+import ct.files.meta.FileRecord;
+import ct.files.meta.Settings;
 import ct.utils.Utils;
 
 public class TestBufferSizes {
