@@ -3,26 +3,28 @@ package ct.files;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
+import ct.files.io.IOWrapper;
 import ct.files.meta.FileRecord;
 import ct.files.meta.Settings;
 import ct.utils.Utils;
 
 public class RobustCopy {
 
-	private final ByteBuffer bb;
+	private final IOWrapper io;
 	private final Settings settings;
+	private final ByteBuffer bb;
 
 	private long progressPrintTime;
 	private long progressLastBytes;
 	private long progressStartCopyTime;
 
-	public RobustCopy(Settings settings) {
+	public RobustCopy(IOWrapper io, Settings settings) {
+		this.io = io;
 		this.settings = settings;
 		// Allocate Buffer
 		this.bb = ByteBuffer.allocateDirect(this.settings.bufferSize());
@@ -48,22 +50,22 @@ public class RobustCopy {
 		while (!copyComplete) {
 			try {
 				// Open files
-				inChannel = FileChannel.open(source.path(), StandardOpenOption.READ);
-				outChannel = FileChannel.open(target.path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+				inChannel = io.open(source.path(), StandardOpenOption.READ);
+				outChannel = io.open(target.path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 
 				// Rollback last buffer
 				bytesCopied = Math.max(0, bytesCopied - bb.capacity());
 				if (bytesCopied > 0) {
 					System.out.println("Restarting at: " + Utils.size(bytesCopied));
-					inChannel.position(bytesCopied);
-					outChannel.position(bytesCopied);
+					io.position(inChannel, bytesCopied);
+					io.position(outChannel, bytesCopied);
 				}
 
 				// Copy all bytes
 				while (bytesCopied < source.size()) {
 					// Copy chunk
-					int bytesRead = inChannel.read(bb.clear());
-					int bytesWrite = outChannel.write(bb.flip());
+					int bytesRead = io.read(inChannel, bb.clear());
+					int bytesWrite = io.write(outChannel, bb.flip());
 
 					if (bytesRead != bytesWrite) {
 						throw new IOException("Bytes missmatch, read: " + bytesRead + ", write: " + bytesWrite);
@@ -75,9 +77,9 @@ public class RobustCopy {
 				}
 
 				// Truncate if larger (can be the case during overwrite)
-				if (outChannel.size() > source.size()) {
+				if (io.size(outChannel) > source.size()) {
 					System.out.println("Truncating to: " + Utils.size(source.size()));
-					outChannel.truncate(source.size());
+					io.truncate(outChannel, source.size());
 				}
 
 				// Done
@@ -147,7 +149,7 @@ public class RobustCopy {
 		try {
 			Thread.sleep(Duration.ofSeconds(settings.waitBeforeRetryTimeSec()));
 		} catch (InterruptedException e) {
-			System.err.println("Wait Interrupted: " + e.getMessage());
+			System.err.println("Warning: Wait Interrupted: " + e.getMessage());
 		}
 		System.out.println("Retrying...");
 	}
@@ -156,7 +158,7 @@ public class RobustCopy {
 		Path success = null;
 		while (success == null) {
 			try {
-				success = Files.createDirectories(path);
+				success = io.createDirectories(path);
 			} catch (IOException e) {
 				System.err.println("Error creating directories: " + e.getMessage());
 				waitBeforeRetry();
@@ -168,7 +170,7 @@ public class RobustCopy {
 		FileTime fileTime = null;
 		while (fileTime == null) {
 			try {
-				fileTime = Files.getLastModifiedTime(path);
+				fileTime = io.getLastModifiedTime(path);
 			} catch (IOException e) {
 				System.err.println("Error getting last modified time: " + e.getMessage());
 				waitBeforeRetry();
@@ -181,7 +183,7 @@ public class RobustCopy {
 		Path success = null;
 		while (success == null) {
 			try {
-				success = Files.setLastModifiedTime(path, fileTime);
+				success = io.setLastModifiedTime(path, fileTime);
 			} catch (IOException e) {
 				System.err.println("Error setting last modified time: " + e.getMessage());
 				waitBeforeRetry();
@@ -196,7 +198,7 @@ public class RobustCopy {
 					channel.close();
 				}
 			} catch (IOException e) {
-				System.err.println("Warning closing channel failed: " + e.getMessage());
+				System.err.println("Warning: Closing channel failed: " + e.getMessage());
 			}
 		}
 	}

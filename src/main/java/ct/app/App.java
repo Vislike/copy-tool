@@ -10,6 +10,7 @@ import java.util.Properties;
 import ct.files.Analyse;
 import ct.files.Analyse.FoundFiles;
 import ct.files.RobustCopy;
+import ct.files.io.FilesWrapper;
 import ct.files.meta.Settings;
 
 public class App {
@@ -128,7 +129,7 @@ public class App {
 		if (settings.dryRun()) {
 			System.out.println("Dry Run Complete");
 		} else {
-			RobustCopy rc = new RobustCopy(settings);
+			RobustCopy rc = new RobustCopy(new FilesWrapper(), settings);
 			files.copy().forEach(c -> {
 				rc.copy(c.sourceFile(), c.targetFile());
 				System.out.println();
