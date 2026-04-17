@@ -54,7 +54,7 @@ public class RobustCopy {
 				outChannel = io.open(target.path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 
 				// Rollback last buffer
-				bytesCopied = Math.max(0, bytesCopied - bb.capacity());
+				bytesCopied = Math.max(0, bytesCopied - settings.bufferSize() * settings.rollbackBuffersNum());
 				if (bytesCopied > 0) {
 					System.out.println("Restarting at: " + Utils.size(bytesCopied));
 					io.position(inChannel, bytesCopied);

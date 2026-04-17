@@ -35,5 +35,4 @@ When checking **src** for files **dst** is also analyzed and it will use the two
 * Better progress UI
 * Continue an aborted file transfer
 * React to sigterm and gracefully shutdown
-* Unit tests
 * Chaos inspired tests

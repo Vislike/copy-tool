@@ -6,17 +6,17 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import ct.files.meta.FileRecord;
+import ct.utils.TestUtils;
 import ct.utils.Utils;
 
 public class GenTestFiles {
 
 	public static final int SIZE = 1024 * 1024 * 512;
 
-	public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
+	public static void main(String[] args) throws IOException {
 		System.out.println("= = = = Copy Tool Gen Test Files = = = =");
 		System.out.println();
 
@@ -60,8 +60,8 @@ public class GenTestFiles {
 		System.out.println(System.lineSeparator() + "Done.");
 	}
 
-	private static String hash(ByteBuffer bb, FileRecord fileRecord) throws NoSuchAlgorithmException {
-		String sha256 = Shared.sha256(bb.array());
+	private static String hash(ByteBuffer bb, FileRecord fileRecord) throws IOException {
+		String sha256 = TestUtils.sha256(bb.array());
 		return sha256 + " *" + fileRecord.path().getFileName() + '\n';
 	}
 

@@ -17,6 +17,7 @@ public class App {
 
 	public static final int BUFF_SIZE = 1024 * 1024 * 1;
 	public static final int WAIT_TIME = 10;
+	public static final int ROLLBACK_BUFFERS = 1;
 
 	public static void main(String[] args) throws IOException {
 		System.out.println("= = = = Copy Tool v" + version() + " = = = =" + System.lineSeparator());
@@ -75,8 +76,8 @@ public class App {
 			System.err.println("Missing required parameter: <dst>" + System.lineSeparator());
 			return Optional.empty();
 		}
-
-		return Optional.of(new Settings(sourceDir, targetDir, dryRun, overwrite, BUFF_SIZE, WAIT_TIME));
+		Settings s = new Settings(sourceDir, targetDir, dryRun, overwrite, BUFF_SIZE, WAIT_TIME, ROLLBACK_BUFFERS);
+		return Optional.of(s);
 	}
 
 	private static void printHelp() {

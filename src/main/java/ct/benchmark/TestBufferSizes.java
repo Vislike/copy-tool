@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,11 +14,12 @@ import ct.files.RobustCopy;
 import ct.files.io.FilesWrapper;
 import ct.files.meta.FileRecord;
 import ct.files.meta.Settings;
+import ct.utils.TestUtils;
 import ct.utils.Utils;
 
 public class TestBufferSizes {
 
-	public static void main(String[] args) throws IOException, NoSuchAlgorithmException {
+	public static void main(String[] args) throws IOException {
 		System.out.println("= = = = Copy Tool Buffer Test = = = =");
 		System.out.println();
 
@@ -39,7 +39,7 @@ public class TestBufferSizes {
 			return;
 		}
 
-		Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "ct-buffer-test-temp-file");
+		Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "ct-test-buffer-temp-file");
 		System.out.println("Test dir for reading: " + testDir);
 		System.out.println("Temp file for writing: " + tempFile);
 		System.out.println("Hashes file: " + hashFile);
@@ -66,7 +66,7 @@ public class TestBufferSizes {
 	}
 
 	private static void testCopy(FileRecord source, FileRecord target, int numBytes, Map<String, String> sha256Map,
-			List<String> log) throws IOException, NoSuchAlgorithmException {
+			List<String> log) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Buffer: ").append(Utils.size(numBytes)).append(", Size: ").append(Utils.size(source.size()));
 
@@ -86,8 +86,8 @@ public class TestBufferSizes {
 	}
 
 	private static void compareHashes(FileRecord source, FileRecord target, Map<String, String> sha256Map,
-			StringBuilder sb) throws NoSuchAlgorithmException, IOException {
-		String sha256sum = Shared.sha256(Files.readAllBytes(target.path()));
+			StringBuilder sb) throws IOException {
+		String sha256sum = TestUtils.sha256(target.path());
 		String storedHash = sha256Map.get(source.path().getFileName().toString());
 		sb.append(", Hash: ");
 		if (sha256sum.equals(storedHash)) {
