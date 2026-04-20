@@ -120,7 +120,7 @@ public class CommandLine {
 			return Optional.empty();
 		}
 		Settings s = new Settings(sourceDir, targetDir, dryRun, overwrite, App.BUFF_SIZE, App.WAIT_TIME,
-				App.ROLLBACK_BUFFERS);
+				App.ROLLBACK_BUFFERS, App.NUM_FILES_SIMULTANEOUSLY);
 		return Optional.of(s);
 	}
 }

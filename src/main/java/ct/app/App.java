@@ -15,6 +15,7 @@ public class App {
 	static final int BUFF_SIZE = 1024 * 1024 * 1;
 	static final int WAIT_TIME = 10;
 	static final int ROLLBACK_BUFFERS = 1;
+	static final int NUM_FILES_SIMULTANEOUSLY = 1;
 
 	public static void main(String[] args) throws IOException {
 		infona("= = = = Copy Tool v" + version() + " = = = =");
@@ -76,6 +77,8 @@ public class App {
 
 		if (settings.dryRun()) {
 			infonb("Dry Run Complete");
+		} else if (files.copy().isEmpty()) {
+			infonb("Up to date");
 		} else {
 			info();
 			new Tui(settings).copyAll(files.copy());
