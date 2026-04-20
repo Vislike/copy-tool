@@ -59,6 +59,9 @@
 					<noHeaderFiles>true</noHeaderFiles>
 					<noManPages>true</noManPages>
 					<launcher>ct=copy.tool/${main.class}</launcher>
+					<addOptions>
+						<addOption>--enable-native-access=copy.tool</addOption>
+					</addOptions>
 				</configuration>
 			</plugin>
 			<plugin>

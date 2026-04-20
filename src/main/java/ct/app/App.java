@@ -6,10 +6,9 @@ import java.util.Properties;
 
 import ct.files.Analyse;
 import ct.files.Analyse.FoundFiles;
-import ct.files.RobustCopy;
-import ct.files.io.FilesWrapper;
 import ct.files.meta.Settings;
 import ct.utils.AnsiEscapeCodes.Color;
+import ct.utils.Native;
 
 public class App {
 
@@ -19,6 +18,8 @@ public class App {
 
 	public static void main(String[] args) throws IOException {
 		infona("= = = = Copy Tool v" + version() + " = = = =");
+
+		Native.enableVirtualTerminalProcessing();
 
 		CommandLine.parseArgs(args).ifPresentOrElse(App::copyAllFiles, CommandLine::printHelp);
 	}
@@ -71,11 +72,7 @@ public class App {
 			infonb("Dry Run Complete");
 		} else {
 			info();
-			RobustCopy rc = new RobustCopy(new FilesWrapper(), settings);
-			files.copy().forEach(c -> {
-				rc.copy(c.sourceFile(), c.targetFile());
-				info();
-			});
+			new Tui(settings).copyAll(files.copy());
 		}
 	}
 
