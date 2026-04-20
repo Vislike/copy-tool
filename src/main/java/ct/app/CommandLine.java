@@ -27,6 +27,7 @@ public class CommandLine {
 
 				    -b    Show all sizes in raw bytes instead of human readable.
 				    -c    Disable colors in text output.
+				    -v    Enable verbose output, for debugging purpose.
 				""");
 	}
 
@@ -36,6 +37,20 @@ public class CommandLine {
 
 	private static enum OptParams {
 		NONE;
+	}
+
+	static void parseOutputArgs(String[] args) {
+		for (String arg : args) {
+			if (arg.startsWith("-")) {
+				for (int i = 1; i < arg.length(); i++) {
+					switch (arg.charAt(i)) {
+					case 'b' -> Settings.rawBytes = true;
+					case 'c' -> Settings.terminalColor = false;
+					case 'v' -> Settings.verbose = true;
+					}
+				}
+			}
+		}
 	}
 
 	static Optional<Settings> parseArgs(String[] args) {
@@ -56,10 +71,11 @@ public class CommandLine {
 					}
 					case 'd' -> dryRun = true;
 					case 'o' -> overwrite = true;
-					case 'b' -> Settings.rawBytes = true;
-					case 'c' -> Settings.terminalColor = false;
+					case 'b', 'c', 'v' -> {
+						// Handled in parseOutputArgs
+					}
 					default -> {
-						App.error("Invalid parameter", arg);
+						App.error("Invalid parameter", arg.charAt(i));
 						return Optional.empty();
 					}
 					}

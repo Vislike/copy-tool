@@ -19,7 +19,13 @@ public class App {
 	public static void main(String[] args) throws IOException {
 		infona("= = = = Copy Tool v" + version() + " = = = =");
 
-		Native.enableVirtualTerminalProcessing();
+		CommandLine.parseOutputArgs(args);
+
+		if (Settings.terminalColor) {
+			boolean vtp = Native.enableVirtualTerminalProcessing();
+			verbose("EnableVirtualTerminalProcessing", vtp);
+			verbose();
+		}
 
 		CommandLine.parseArgs(args).ifPresentOrElse(App::copyAllFiles, CommandLine::printHelp);
 	}
@@ -102,15 +108,27 @@ public class App {
 		System.out.println(str);
 	}
 
+	public static void verbose() {
+		if (Settings.verbose) {
+			System.out.println();
+		}
+	}
+
+	public static void verbose(String str, Object... args) {
+		if (Settings.verbose) {
+			printCommon(Color.GREEN, "<V> ", false, str, args);
+		}
+	}
+
 	public static void warning(String str, Object... args) {
-		printCommon(Color.YELLOW, "<WARNING> ", str, args);
+		printCommon(Color.YELLOW, "<WARNING> ", true, str, args);
 	}
 
 	public static void error(String str, Object... args) {
-		printCommon(Color.RED, "<ERROR> ", str, args);
+		printCommon(Color.RED, "<ERROR> ", true, str, args);
 	}
 
-	private static void printCommon(Color color, String tag, String str, Object... args) {
+	private static void printCommon(Color color, String tag, boolean extraNl, String str, Object... args) {
 		StringBuilder sb = color.append(new StringBuilder(128)).append(tag).append(str);
 		if (args.length > 0) {
 			Color.RESET.append(sb.append(": ")).append(args[0]);
@@ -120,6 +138,9 @@ public class App {
 		} else {
 			Color.RESET.append(sb);
 		}
-		System.out.println(sb.append(System.lineSeparator()).toString());
+		if (extraNl) {
+			sb.append(System.lineSeparator());
+		}
+		System.out.println(sb.toString());
 	}
 }

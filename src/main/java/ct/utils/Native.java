@@ -10,6 +10,8 @@ import java.lang.invoke.MethodHandle;
 import java.util.Locale;
 import java.util.Optional;
 
+import ct.app.App;
+
 public class Native {
 
 	private Native() {
@@ -31,12 +33,15 @@ public class Native {
 				Optional<MemorySegment> getConsoleModeLookup = sl.find("GetConsoleMode");
 				Optional<MemorySegment> setConsoleModeLookup = sl.find("SetConsoleMode");
 				if (getStdHandleLookup.isEmpty()) {
+					App.verbose("SymbolLookup failed", "GetStdHandle");
 					return false;
 				}
 				if (getConsoleModeLookup.isEmpty()) {
+					App.verbose("SymbolLookup failed", "GetConsoleMode");
 					return false;
 				}
 				if (setConsoleModeLookup.isEmpty()) {
+					App.verbose("SymbolLookup failed", "SetConsoleMode");
 					return false;
 				}
 
@@ -51,6 +56,7 @@ public class Native {
 				// Get stdout handle
 				MemorySegment handle = (MemorySegment) getStdHandle.invokeExact(STD_OUTPUT_HANDLE);
 				if (handle.address() == INVALID_HANDLE_VALUE) {
+					App.verbose("GetStdHandle result", INVALID_HANDLE_VALUE);
 					return false;
 				}
 
@@ -58,18 +64,22 @@ public class Native {
 				MemorySegment lpMode = arena.allocateFrom(ValueLayout.JAVA_INT, 0);
 				boolean success = (boolean) getConsoleMode.invokeExact(handle, lpMode);
 				if (!success) {
+					App.verbose("GetConsoleMode result", success);
 					return false;
 				}
 				int mode = lpMode.get(ValueLayout.JAVA_INT, 0);
 
 				// Check if Virtual Terminal Processing is enabled
 				if ((mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0) {
+					App.verbose("Virtual Terminal Processing is already enabled");
 					return true;
 				}
 
 				// Enable
+				App.verbose("Enabling Virtual Terminal Processing");
 				success = (boolean) setConsoleMode.invokeExact(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 				if (!success) {
+					App.verbose("SetConsoleMode result", success);
 					return false;
 				}
 			} catch (RuntimeException | Error e) {
