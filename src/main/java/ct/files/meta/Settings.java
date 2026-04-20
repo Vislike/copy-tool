@@ -6,7 +6,8 @@ public record Settings(Path sourceDir, Path targetDir, boolean dryRun, boolean o
 		int waitBeforeRetryTimeSec, int rollbackBuffersNum) {
 
 	public static boolean rawBytes = false;
-	public static boolean virtualTerminalProcessing = true;
+	public static boolean terminalColor = true;
+	public static boolean terminalUserInterface = true;
 
 	public static Settings bufferSize(int bufferSize) {
 		return rollback(bufferSize, 0);

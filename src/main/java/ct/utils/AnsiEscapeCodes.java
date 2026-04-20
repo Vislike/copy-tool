@@ -15,14 +15,14 @@ public class AnsiEscapeCodes {
 		}
 
 		public StringBuilder append(StringBuilder sb) {
-			if (Settings.virtualTerminalProcessing) {
+			if (Settings.terminalColor) {
 				sb.append(color);
 			}
 			return sb;
 		}
 
 		public void emit() {
-			if (Settings.virtualTerminalProcessing) {
+			if (Settings.terminalColor) {
 				App.infonn(color);
 			}
 		}

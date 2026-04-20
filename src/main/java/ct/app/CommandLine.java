@@ -21,10 +21,12 @@ public class CommandLine {
 				    <dst> Must be directory (since <src> structure is kept).
 
 				Options:
-				-h    Show this help, and exit.
-				-d    Dry Run, skips file copy.
-				-o    Overwrite modified files instead of skipping them.
-				-b    Show all sizes in raw bytes instead of human readable.
+				    -h    Show this help, and exit.
+				    -d    Dry Run, skips file copy.
+				    -o    Overwrite modified files instead of skipping them.
+
+				    -b    Show all sizes in raw bytes instead of human readable.
+				    -c    Disable colors in text output.
 				""");
 	}
 
@@ -49,12 +51,13 @@ public class CommandLine {
 			if (arg.startsWith("-")) {
 				for (int i = 1; i < arg.length(); i++) {
 					switch (arg.charAt(i)) {
-					case 'd' -> dryRun = true;
-					case 'b' -> Settings.rawBytes = true;
-					case 'o' -> overwrite = true;
 					case 'h' -> {
 						return Optional.empty();
 					}
+					case 'd' -> dryRun = true;
+					case 'o' -> overwrite = true;
+					case 'b' -> Settings.rawBytes = true;
+					case 'c' -> Settings.terminalColor = false;
 					default -> {
 						App.error("Invalid parameter", arg);
 						return Optional.empty();
