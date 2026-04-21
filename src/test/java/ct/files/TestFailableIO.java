@@ -7,18 +7,18 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 
-import ct.files.io.FilesWrapper;
+import ct.files.io.FilesIO;
 import ct.files.io.IOWrapper;
 
-public class TestIODelegator implements IOWrapper {
+public class TestFailableIO implements IOWrapper {
 
 	private final IOWrapper io;
-	final int count[];
-	final int failAt[];
-	int writeOneLessByteAt = 0;
+	private final int count[];
+	private final int failAt[];
+	private int writeOneLessByteAt = 0;
 
-	TestIODelegator() {
-		io = new FilesWrapper();
+	TestFailableIO() {
+		io = new FilesIO();
 		count = new int[TT.values().length];
 		failAt = new int[TT.values().length];
 	}
@@ -31,12 +31,12 @@ public class TestIODelegator implements IOWrapper {
 		return count[t.ordinal()];
 	}
 
-	TestIODelegator failAt(TT t, int n) {
+	TestFailableIO failAt(TT t, int n) {
 		failAt[t.ordinal()] = n;
 		return this;
 	}
 
-	public TestIODelegator writeOneLessAt(int n) {
+	TestFailableIO writeOneLessAt(int n) {
 		writeOneLessByteAt = n;
 		return this;
 	}

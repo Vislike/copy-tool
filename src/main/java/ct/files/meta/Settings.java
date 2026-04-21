@@ -9,6 +9,7 @@ public record Settings(Path sourceDir, Path targetDir, boolean dryRun, boolean o
 	public static boolean rawBytes = false;
 	public static boolean terminalColor = true;
 	public static boolean terminalUserInterface = true;
+	public static boolean devMode = false;
 
 	public static Settings bufferSize(int bufferSize) {
 		return rollback(bufferSize, 0);

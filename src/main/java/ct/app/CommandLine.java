@@ -47,6 +47,7 @@ public class CommandLine {
 					case 'b' -> Settings.rawBytes = true;
 					case 'c' -> Settings.terminalColor = false;
 					case 'v' -> Settings.verbose = true;
+					case 'x' -> Settings.devMode = true;
 					}
 				}
 			}
@@ -71,7 +72,7 @@ public class CommandLine {
 					}
 					case 'd' -> dryRun = true;
 					case 'o' -> overwrite = true;
-					case 'b', 'c', 'v' -> {
+					case 'b', 'c', 'v', 'x' -> {
 						// Handled in parseOutputArgs
 					}
 					default -> {

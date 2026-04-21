@@ -8,6 +8,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
+import ct.files.io.IProgress;
 import ct.files.io.IOWrapper;
 import ct.files.meta.FileRecord;
 import ct.files.meta.Settings;
@@ -17,15 +18,17 @@ public class RobustCopy {
 
 	private final IOWrapper io;
 	private final Settings settings;
+	private final IProgress pr;
 	private final ByteBuffer bb;
 
 	private long progressPrintTime;
 	private long progressLastBytes;
 	private long progressStartCopyTime;
 
-	public RobustCopy(IOWrapper io, Settings settings) {
+	public RobustCopy(IOWrapper io, Settings settings, IProgress pr) {
 		this.io = io;
 		this.settings = settings;
+		this.pr = pr;
 		// Allocate Buffer
 		this.bb = ByteBuffer.allocateDirect(this.settings.bufferSize());
 	}
@@ -35,7 +38,7 @@ public class RobustCopy {
 		createDirectories(target.path().getParent());
 
 		// Print file to copy
-		System.out.println("Copying " + source + " => " + target);
+		pr.message("Copying " + source + " => " + target);
 
 		// States
 		boolean copyComplete = false;
@@ -56,7 +59,7 @@ public class RobustCopy {
 				// Rollback last buffer
 				bytesCopied = Math.max(0, bytesCopied - settings.bufferSize() * settings.rollbackBuffersNum());
 				if (bytesCopied > 0) {
-					System.out.println("Restarting at: " + Utils.size(bytesCopied));
+					pr.message("Restarting at: " + Utils.size(bytesCopied));
 					io.position(inChannel, bytesCopied);
 					io.position(outChannel, bytesCopied);
 				}
@@ -78,14 +81,14 @@ public class RobustCopy {
 
 				// Truncate if larger (can be the case during overwrite)
 				if (io.size(outChannel) > source.size()) {
-					System.out.println("Truncating to: " + Utils.size(source.size()));
+					pr.message("Truncating to: " + Utils.size(source.size()));
 					io.truncate(outChannel, source.size());
 				}
 
 				// Done
 				copyComplete = true;
 			} catch (IOException e) {
-				System.err.println("Copy problem: " + e.getMessage());
+				pr.message("Copy problem: " + e.getMessage());
 				waitBeforeRetry();
 			} finally {
 				// Close channels, ignore problems
@@ -96,7 +99,7 @@ public class RobustCopy {
 
 		// Set last modified time to same as source
 		FileTime lastModifiedTime = getLastModifiedTime(source.path());
-		System.out.println("Setting Last Modified Time to: " + lastModifiedTime);
+		pr.message("Setting Last Modified Time to: " + lastModifiedTime);
 		setLastModifiedTime(target.path(), lastModifiedTime);
 	}
 
@@ -140,18 +143,18 @@ public class RobustCopy {
 			progressLastBytes = bytesCopied;
 			progressPrintTime = currentTime;
 
-			System.out.println(sb);
+			pr.message(sb.toString());
 		}
 	}
 
 	private void waitBeforeRetry() {
-		System.out.println("Waiting " + settings.waitBeforeRetryTimeSec() + "s...");
+		pr.message("Waiting " + settings.waitBeforeRetryTimeSec() + "s...");
 		try {
 			Thread.sleep(Duration.ofSeconds(settings.waitBeforeRetryTimeSec()));
 		} catch (InterruptedException e) {
-			System.err.println("Warning: Wait Interrupted: " + e.getMessage());
+			pr.message("Warning: Wait Interrupted: " + e.getMessage());
 		}
-		System.out.println("Retrying...");
+		pr.message("Retrying...");
 	}
 
 	private void createDirectories(Path path) {
@@ -160,7 +163,7 @@ public class RobustCopy {
 			try {
 				success = io.createDirectories(path);
 			} catch (IOException e) {
-				System.err.println("Error creating directories: " + e.getMessage());
+				pr.message("Error creating directories: " + e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -172,7 +175,7 @@ public class RobustCopy {
 			try {
 				fileTime = io.getLastModifiedTime(path);
 			} catch (IOException e) {
-				System.err.println("Error getting last modified time: " + e.getMessage());
+				pr.message("Error getting last modified time: " + e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -185,7 +188,7 @@ public class RobustCopy {
 			try {
 				success = io.setLastModifiedTime(path, fileTime);
 			} catch (IOException e) {
-				System.err.println("Error setting last modified time: " + e.getMessage());
+				pr.message("Error setting last modified time: " + e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -198,7 +201,7 @@ public class RobustCopy {
 					channel.close();
 				}
 			} catch (IOException e) {
-				System.err.println("Warning: Closing channel failed: " + e.getMessage());
+				pr.message("Warning: Closing channel failed: " + e.getMessage());
 			}
 		}
 	}

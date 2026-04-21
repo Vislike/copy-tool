@@ -11,7 +11,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import ct.files.RobustCopy;
-import ct.files.io.FilesWrapper;
+import ct.files.io.FilesIO;
+import ct.files.io.StdoutProgress;
 import ct.files.meta.FileRecord;
 import ct.files.meta.Settings;
 import ct.utils.TestUtils;
@@ -71,7 +72,7 @@ public class TestBufferSizes {
 		sb.append("Buffer: ").append(Utils.size(numBytes)).append(", Size: ").append(Utils.size(source.size()));
 
 		long startTime = System.nanoTime();
-		RobustCopy robustCopy = new RobustCopy(new FilesWrapper(), Settings.bufferSize(numBytes));
+		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.bufferSize(numBytes), new StdoutProgress());
 		robustCopy.copy(source, target);
 		long elapsedNanos = System.nanoTime() - startTime;
 

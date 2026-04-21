@@ -11,8 +11,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import ct.files.TestIODelegator.TT;
-import ct.files.io.FilesWrapper;
+import ct.files.TestFailableIO.TT;
+import ct.files.io.FilesIO;
+import ct.files.io.IProgress;
 import ct.files.io.IOWrapper;
 import ct.files.meta.FileRecord;
 import ct.files.meta.Settings;
@@ -52,8 +53,12 @@ public class RobustCopyIT {
 		assertEquals(expectedSha256, TestUtils.sha256(tempFile().path()));
 	}
 
+	private IProgress createMessageProducer() {
+		return new TestVoidProgress();
+	}
+
 	private RobustCopy createRobustCopy(IOWrapper wrapper) {
-		return new RobustCopy(wrapper, Settings.bufferSize(TEST_BUFFER_SIZE));
+		return new RobustCopy(wrapper, Settings.bufferSize(TEST_BUFFER_SIZE), createMessageProducer());
 	}
 
 	private void copyAndVerifySmallFile(IOWrapper wrapper) throws IOException {
@@ -67,27 +72,27 @@ public class RobustCopyIT {
 	}
 
 	private void testFailAt1Count2(TT t) throws IOException {
-		TestIODelegator io = new TestIODelegator();
+		TestFailableIO io = new TestFailableIO();
 		copyAndVerifySmallFile(io.failAt(t, 1));
 		assertEquals(2, io.count(t));
 	}
 
 	@Test
 	void canary() throws IOException {
-		copyAndVerifySmallFile(new FilesWrapper());
+		copyAndVerifySmallFile(new FilesIO());
 	}
 
 	@Test
 	void interruptRead() throws IOException {
 		Thread.currentThread().interrupt();
-		copyAndVerifySmallFile(new FilesWrapper());
+		copyAndVerifySmallFile(new FilesIO());
 	}
 
 	@Test
 	void truncate() throws IOException {
-		copyAndVerifyLargeFile(new FilesWrapper());
+		copyAndVerifyLargeFile(new FilesIO());
 		assertEquals(2999, Files.size(tempFile().path()));
-		copyAndVerifySmallFile(new FilesWrapper());
+		copyAndVerifySmallFile(new FilesIO());
 		assertEquals(1999, Files.size(tempFile().path()));
 	}
 
@@ -108,19 +113,19 @@ public class RobustCopyIT {
 
 	@Test
 	void openFail() throws IOException {
-		TestIODelegator io = new TestIODelegator();
+		TestFailableIO io = new TestFailableIO();
 		copyAndVerifySmallFile(io.failAt(TT.open, 2));
 		assertEquals(4, io.count(TT.open));
 	}
 
 	@Test
 	void readWriteAndDiffFail() throws IOException {
-		TestIODelegator io = new TestIODelegator();
+		TestFailableIO io = new TestFailableIO();
 		copyAndVerifySmallFile(io.failAt(TT.read, 2).failAt(TT.write, 4));
 		assertEquals(6, io.count(TT.read));
 		assertEquals(5, io.count(TT.write));
 
-		io = new TestIODelegator();
+		io = new TestFailableIO();
 		copyAndVerifySmallFile(io.writeOneLessAt(3));
 		assertEquals(5, io.count(TT.read));
 		assertEquals(5, io.count(TT.write));
@@ -128,8 +133,8 @@ public class RobustCopyIT {
 
 	@Test
 	void sizeTruncateAndResumeFail() throws IOException {
-		copyAndVerifyLargeFile(new FilesWrapper());
-		TestIODelegator io = new TestIODelegator();
+		copyAndVerifyLargeFile(new FilesIO());
+		TestFailableIO io = new TestFailableIO();
 		copyAndVerifySmallFile(io.failAt(TT.truncate, 1).failAt(TT.size, 2).failAt(TT.position, 4));
 		assertEquals(4, io.count(TT.read));
 		assertEquals(4, io.count(TT.write));
@@ -140,12 +145,12 @@ public class RobustCopyIT {
 
 	@Test
 	void rollback() throws IOException {
-		TestIODelegator io = new TestIODelegator();
+		TestFailableIO io = new TestFailableIO();
 		// 2999 bytes completes in 6 cycles, fail at write 6 throws away two buffers
 		// 5+4, restart at 3 completed, fail at read 8 throws away buffers 4+3, restart
 		// at 2 completed, read 9-12 for 6 completed
 		io.failAt(TT.write, 6).failAt(TT.read, 8);
-		RobustCopy rc = new RobustCopy(io, Settings.rollback(TEST_BUFFER_SIZE, 2));
+		RobustCopy rc = new RobustCopy(io, Settings.rollback(TEST_BUFFER_SIZE, 2), createMessageProducer());
 		rc.copy(largeFile(), tempFile());
 		verifySha256Temp(SHA_256_LARGE_FILE);
 		assertEquals(12, io.count(TT.read));

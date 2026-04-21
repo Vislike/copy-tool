@@ -8,7 +8,7 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 
-public class FilesWrapper implements IOWrapper {
+public class FilesIO implements IOWrapper {
 
 	@Override
 	public Path createDirectories(Path path) throws IOException {

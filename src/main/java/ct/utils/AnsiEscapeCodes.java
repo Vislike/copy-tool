@@ -30,4 +30,11 @@ public class AnsiEscapeCodes {
 			}
 		}
 	}
+
+	private static final String PREV_LINE = "\u001B[%dF";
+	private static final String ERASE_DOWN = "\u001B[J";
+
+	public static StringBuilder moveUpAndErase(StringBuilder sb, int lines) {
+		return sb.append(PREV_LINE.formatted(lines)).append(ERASE_DOWN);
+	}
 }

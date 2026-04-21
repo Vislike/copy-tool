@@ -4,18 +4,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import ct.app.tui.Tui;
 import ct.files.Analyse;
 import ct.files.Analyse.FoundFiles;
+import ct.files.RobustCopy;
+import ct.files.io.FilesIO;
+import ct.files.io.StdoutProgress;
 import ct.files.meta.Settings;
 import ct.utils.AnsiEscapeCodes.Color;
 import ct.utils.Native;
+import ct.utils.Utils;
 
 public class App {
 
 	static final int BUFF_SIZE = 1024 * 1024 * 1;
 	static final int WAIT_TIME = 10;
 	static final int ROLLBACK_BUFFERS = 1;
-	static final int NUM_FILES_SIMULTANEOUSLY = 1;
+	static final int NUM_FILES_SIMULTANEOUSLY = 4;
 
 	public static void main(String[] args) throws IOException {
 		infona("= = = = Copy Tool v" + version() + " = = = =");
@@ -80,8 +85,17 @@ public class App {
 		} else if (files.copy().isEmpty()) {
 			infonb("Up to date");
 		} else {
-			info();
-			new Tui(settings).copyAll(files.copy());
+			if (Settings.devMode) {
+				new Tui(settings).copyAll(files.copy());
+			} else {
+				long startTime = System.currentTimeMillis();
+				RobustCopy rc = new RobustCopy(new FilesIO(), settings, new StdoutProgress());
+				files.copy().forEach(c -> {
+					info();
+					rc.copy(c.sourceFile(), c.targetFile());
+				});
+				App.infonb("Copy Complete in: " + Utils.timeLeft((System.currentTimeMillis() - startTime) / 1000));
+			}
 		}
 	}
 
