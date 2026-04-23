@@ -30,9 +30,9 @@ public class MultiFileCopy {
 			Thread thread = Thread.ofVirtual().start(() -> {
 				MessageSender messageSender = new MessageSender(threadId, messageQueue);
 				RobustCopy rc = new RobustCopy(new FilesIO(), settings, messageSender);
-				CopyTask c;
-				while ((c = queue.poll()) != null) {
-					rc.copy(c.sourceFile(), c.targetFile());
+				CopyTask ct;
+				while ((ct = queue.poll()) != null) {
+					rc.copy(ct);
 				}
 				messageSender.done();
 			});

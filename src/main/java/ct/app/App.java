@@ -90,9 +90,9 @@ public class App {
 				new MultiFileCopy(settings).copyAll(files.copy());
 			} else {
 				RobustCopy rc = new RobustCopy(new FilesIO(), settings, new StdoutProgress());
-				files.copy().forEach(c -> {
+				files.copy().forEach(ct -> {
 					info();
-					rc.copy(c.sourceFile(), c.targetFile());
+					rc.copy(ct);
 				});
 			}
 			App.infonb("Copy Complete in: " + Utils.timeLeft((System.currentTimeMillis() - startTime) / 1000));

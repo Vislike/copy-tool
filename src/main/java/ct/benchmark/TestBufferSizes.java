@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import ct.files.RobustCopy;
 import ct.files.io.FilesIO;
+import ct.files.metadata.CopyTask;
 import ct.files.metadata.FileRecord;
 import ct.files.metadata.Settings;
 import ct.files.progress.StdoutProgress;
@@ -73,7 +74,7 @@ public class TestBufferSizes {
 
 		long startTime = System.nanoTime();
 		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.bufferSize(numBytes), new StdoutProgress());
-		robustCopy.copy(source, target);
+		robustCopy.copy(new CopyTask(source, target));
 		long elapsedNanos = System.nanoTime() - startTime;
 
 		long ms = TimeUnit.NANOSECONDS.toMillis(elapsedNanos);

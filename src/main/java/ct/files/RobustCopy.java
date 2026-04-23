@@ -9,10 +9,17 @@ import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
 import ct.files.io.IOWrapper;
-import ct.files.metadata.FileRecord;
+import ct.files.metadata.CopyTask;
 import ct.files.metadata.Settings;
+import ct.files.progress.IProgressEvent.CopyEndEvent;
+import ct.files.progress.IProgressEvent.CopyProgressEvent;
+import ct.files.progress.IProgressEvent.CopyStartEvent;
+import ct.files.progress.IProgressEvent.ModifiedTimeEvent;
+import ct.files.progress.IProgressEvent.RestartEvent;
+import ct.files.progress.IProgressEvent.TruncateEvent;
+import ct.files.progress.IProgressEvent.WaitEndEvent;
+import ct.files.progress.IProgressEvent.WaitStartEvent;
 import ct.files.progress.IProgressReport;
-import ct.utils.Utils;
 
 public class RobustCopy {
 
@@ -20,10 +27,6 @@ public class RobustCopy {
 	private final Settings settings;
 	private final IProgressReport pr;
 	private final ByteBuffer bb;
-
-	private long progressPrintTime;
-	private long progressLastBytes;
-	private long progressStartCopyTime;
 
 	public RobustCopy(IOWrapper io, Settings settings, IProgressReport pr) {
 		this.io = io;
@@ -33,39 +36,36 @@ public class RobustCopy {
 		this.bb = ByteBuffer.allocateDirect(this.settings.bufferSize());
 	}
 
-	public void copy(FileRecord source, FileRecord target) {
-		// Create all parent directories of target
-		createDirectories(target.path().getParent());
+	public void copy(CopyTask ct) {
+		// Start
+		pr.raise(new CopyStartEvent(ct));
 
-		// Print file to copy
-		pr.message("Copying " + source + " => " + target);
+		// Create all parent directories of target
+		createDirectories(ct.targetFile().path().getParent());
 
 		// States
 		boolean copyComplete = false;
 		long bytesCopied = 0;
-		progressPrintTime = -1;
-		progressLastBytes = -1;
 		FileChannel inChannel = null;
 		FileChannel outChannel = null;
-		progressStartCopyTime = System.currentTimeMillis();
 
 		// Copy file
 		while (!copyComplete) {
 			try {
 				// Open files
-				inChannel = io.open(source.path(), StandardOpenOption.READ);
-				outChannel = io.open(target.path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+				inChannel = io.open(ct.sourceFile().path(), StandardOpenOption.READ);
+				outChannel = io.open(ct.targetFile().path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 
 				// Rollback last buffer
 				bytesCopied = Math.max(0, bytesCopied - settings.bufferSize() * settings.rollbackBuffersNum());
 				if (bytesCopied > 0) {
-					pr.message("Restarting at: " + Utils.size(bytesCopied));
+					pr.raise(new RestartEvent(bytesCopied));
 					io.position(inChannel, bytesCopied);
 					io.position(outChannel, bytesCopied);
 				}
 
 				// Copy all bytes
-				while (bytesCopied < source.size()) {
+				while (bytesCopied < ct.sourceFile().size()) {
 					// Copy chunk
 					int bytesRead = io.read(inChannel, bb.clear());
 					int bytesWrite = io.write(outChannel, bb.flip());
@@ -76,19 +76,19 @@ public class RobustCopy {
 
 					bytesCopied += bytesRead;
 
-					printProgress(bytesCopied, source.size());
+					pr.raise(new CopyProgressEvent(bytesCopied));
 				}
 
 				// Truncate if larger (can be the case during overwrite)
-				if (io.size(outChannel) > source.size()) {
-					pr.message("Truncating to: " + Utils.size(source.size()));
-					io.truncate(outChannel, source.size());
+				if (io.size(outChannel) > ct.sourceFile().size()) {
+					pr.raise(new TruncateEvent(ct.sourceFile().size()));
+					io.truncate(outChannel, ct.sourceFile().size());
 				}
 
 				// Done
 				copyComplete = true;
 			} catch (IOException e) {
-				pr.message("Copy problem: " + e.getMessage());
+				pr.error("Copy problem: " + e.getMessage());
 				waitBeforeRetry();
 			} finally {
 				// Close channels, ignore problems
@@ -98,63 +98,22 @@ public class RobustCopy {
 		}
 
 		// Set last modified time to same as source
-		FileTime lastModifiedTime = getLastModifiedTime(source.path());
-		pr.message("Setting Last Modified Time to: " + lastModifiedTime);
-		setLastModifiedTime(target.path(), lastModifiedTime);
-	}
+		FileTime lastModifiedTime = getLastModifiedTime(ct.sourceFile().path());
+		pr.raise(new ModifiedTimeEvent(lastModifiedTime));
+		setLastModifiedTime(ct.targetFile().path(), lastModifiedTime);
 
-	private void printProgress(long bytesCopied, long size) {
-		// Print progress
-		long currentTime = System.currentTimeMillis();
-		if (progressPrintTime + 9000 <= currentTime || bytesCopied == size) {
-			StringBuilder sb = new StringBuilder();
-
-			// Elapsed seconds
-			long totalElapsedSec = (currentTime - progressStartCopyTime) / 1000;
-			sb.append(Utils.timeElapsed(totalElapsedSec));
-
-			// Progress in bytes
-			sb.append("  |  " + Utils.size(bytesCopied) + " / " + Utils.size(size));
-
-			// Progress in %
-			sb.append(" (" + String.format("%.1f", (double) bytesCopied / (double) size * 100.0) + "%)");
-			long remaningBytes = size - bytesCopied;
-
-			// Total speed
-			if (totalElapsedSec > 0) {
-				long bytesPerSec = bytesCopied / totalElapsedSec;
-				sb.append("  |  [Avg: " + Utils.size(bytesPerSec) + "/s");
-
-				if (bytesPerSec > 0) {
-					long remaningSec = remaningBytes / bytesPerSec;
-					sb.append(", Rem: " + Utils.timeLeft(remaningSec));
-				}
-				sb.append("]");
-			}
-
-			// Current speed
-			long elapsed = currentTime - progressPrintTime;
-			long diffBytes = bytesCopied - progressLastBytes;
-			if (elapsed > 0 && diffBytes > 0 && progressPrintTime > 0) {
-				long bytesPerSec = diffBytes * 1000 / elapsed;
-				sb.append("  |  [Cur: " + Utils.size(bytesPerSec) + "/s");
-				sb.append("]");
-			}
-			progressLastBytes = bytesCopied;
-			progressPrintTime = currentTime;
-
-			pr.message(sb.toString());
-		}
+		// End
+		pr.raise(new CopyEndEvent(ct));
 	}
 
 	private void waitBeforeRetry() {
-		pr.message("Waiting " + settings.waitBeforeRetryTimeSec() + "s...");
+		pr.raise(new WaitStartEvent(settings.waitBeforeRetryTimeSec()));
 		try {
 			Thread.sleep(Duration.ofSeconds(settings.waitBeforeRetryTimeSec()));
 		} catch (InterruptedException e) {
-			pr.message("Warning: Wait Interrupted: " + e.getMessage());
+			pr.error("Warning wait interrupted: " + e.getMessage());
 		}
-		pr.message("Retrying...");
+		pr.raise(new WaitEndEvent());
 	}
 
 	private void createDirectories(Path path) {
@@ -163,7 +122,7 @@ public class RobustCopy {
 			try {
 				success = io.createDirectories(path);
 			} catch (IOException e) {
-				pr.message("Error creating directories: " + e.getMessage());
+				pr.error("Error creating directories: " + e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -175,7 +134,7 @@ public class RobustCopy {
 			try {
 				fileTime = io.getLastModifiedTime(path);
 			} catch (IOException e) {
-				pr.message("Error getting last modified time: " + e.getMessage());
+				pr.error("Error getting last modified time: " + e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -188,7 +147,7 @@ public class RobustCopy {
 			try {
 				success = io.setLastModifiedTime(path, fileTime);
 			} catch (IOException e) {
-				pr.message("Error setting last modified time: " + e.getMessage());
+				pr.error("Error setting modified time: " + e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -201,7 +160,7 @@ public class RobustCopy {
 					channel.close();
 				}
 			} catch (IOException e) {
-				pr.message("Warning: Closing channel failed: " + e.getMessage());
+				pr.error("Warning closing channel failed: " + e.getMessage());
 			}
 		}
 	}

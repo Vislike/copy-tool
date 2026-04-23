@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import ct.files.TestFailableIO.TT;
 import ct.files.io.FilesIO;
 import ct.files.io.IOWrapper;
+import ct.files.metadata.CopyTask;
 import ct.files.metadata.FileRecord;
 import ct.files.metadata.Settings;
 import ct.files.progress.IProgressReport;
@@ -62,12 +63,12 @@ public class RobustCopyIT {
 	}
 
 	private void copyAndVerifySmallFile(IOWrapper wrapper) throws IOException {
-		createRobustCopy(wrapper).copy(smallFile(), tempFile());
+		createRobustCopy(wrapper).copy(new CopyTask(smallFile(), tempFile()));
 		verifySha256Temp(SHA_256_SMALL_FILE);
 	}
 
 	private void copyAndVerifyLargeFile(IOWrapper wrapper) throws IOException {
-		createRobustCopy(wrapper).copy(largeFile(), tempFile());
+		createRobustCopy(wrapper).copy(new CopyTask(largeFile(), tempFile()));
 		verifySha256Temp(SHA_256_LARGE_FILE);
 	}
 
@@ -151,7 +152,7 @@ public class RobustCopyIT {
 		// at 2 completed, read 9-12 for 6 completed
 		io.failAt(TT.write, 6).failAt(TT.read, 8);
 		RobustCopy rc = new RobustCopy(io, Settings.rollback(TEST_BUFFER_SIZE, 2), createMessageProducer());
-		rc.copy(largeFile(), tempFile());
+		rc.copy(new CopyTask(largeFile(), tempFile()));
 		verifySha256Temp(SHA_256_LARGE_FILE);
 		assertEquals(12, io.count(TT.read));
 		assertEquals(11, io.count(TT.write));
