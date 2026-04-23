@@ -1,8 +1,8 @@
 package ct.files;
 
-import ct.files.io.IProgress;
+import ct.files.progress.IProgressReport;
 
-public class TestVoidProgress implements IProgress {
+public class TestVoidProgress implements IProgressReport {
 
 	@Override
 	public void message(String str) {

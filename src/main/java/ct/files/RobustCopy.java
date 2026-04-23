@@ -8,24 +8,24 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
-import ct.files.io.IProgress;
 import ct.files.io.IOWrapper;
-import ct.files.meta.FileRecord;
-import ct.files.meta.Settings;
+import ct.files.metadata.FileRecord;
+import ct.files.metadata.Settings;
+import ct.files.progress.IProgressReport;
 import ct.utils.Utils;
 
 public class RobustCopy {
 
 	private final IOWrapper io;
 	private final Settings settings;
-	private final IProgress pr;
+	private final IProgressReport pr;
 	private final ByteBuffer bb;
 
 	private long progressPrintTime;
 	private long progressLastBytes;
 	private long progressStartCopyTime;
 
-	public RobustCopy(IOWrapper io, Settings settings, IProgress pr) {
+	public RobustCopy(IOWrapper io, Settings settings, IProgressReport pr) {
 		this.io = io;
 		this.settings = settings;
 		this.pr = pr;

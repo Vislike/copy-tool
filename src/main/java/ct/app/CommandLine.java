@@ -5,7 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-import ct.files.meta.Settings;
+import ct.files.metadata.Settings;
 
 public class CommandLine {
 

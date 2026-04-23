@@ -12,9 +12,9 @@ import java.util.concurrent.TimeUnit;
 
 import ct.files.RobustCopy;
 import ct.files.io.FilesIO;
-import ct.files.io.StdoutProgress;
-import ct.files.meta.FileRecord;
-import ct.files.meta.Settings;
+import ct.files.metadata.FileRecord;
+import ct.files.metadata.Settings;
+import ct.files.progress.StdoutProgress;
 import ct.utils.TestUtils;
 import ct.utils.Utils;
 

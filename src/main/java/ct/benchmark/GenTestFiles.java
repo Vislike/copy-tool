@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Random;
 
-import ct.files.meta.FileRecord;
+import ct.files.metadata.FileRecord;
 import ct.utils.TestUtils;
 import ct.utils.Utils;
 

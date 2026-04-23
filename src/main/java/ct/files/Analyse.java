@@ -7,35 +7,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
 
-import ct.files.meta.FileRecord;
-import ct.files.meta.Settings;
+import ct.files.metadata.AnalyseResult;
+import ct.files.metadata.CopyTask;
+import ct.files.metadata.FileRecord;
+import ct.files.metadata.Settings;
 
 public class Analyse {
 
 	private Analyse() {
 	}
 
-	public static record Copy(FileRecord sourceFile, FileRecord targetFile) {
-		@Override
-		public String toString() {
-			return sourceFile.toString();
-		}
+	private static enum Status {
+		COPY, MATCH, MISSMATCH
 	}
 
-	public static record FoundFiles(List<Copy> copy, List<FileRecord> match, List<FileRecord> missmatch) {
-		public FoundFiles() {
-			this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
-		}
-	}
-
-	private static record CheckResult(Status status, long sourceSize, Path sourcePath, Path targetPath) {
-
-		private static enum Status {
-			COPY, MATCH, NO_MATCH
-		}
+	private static record FilesResult(Status status, long sourceSize, Path sourcePath, Path targetPath) {
 
 		public FileRecord sourceFile() {
 			return FileRecord.sourceFile(sourcePath, sourceSize);
@@ -46,24 +33,24 @@ public class Analyse {
 		}
 	}
 
-	private static CheckResult checkFiles(Path source, Path target) throws IOException {
-		CheckResult.Status status;
+	private static FilesResult filesStatus(Path source, Path target) throws IOException {
+		Status status;
 		long sourceSize = Files.size(source);
 
 		if (Files.notExists(target)) {
-			status = CheckResult.Status.COPY;
+			status = Status.COPY;
 		} else if (sourceSize == Files.size(target)
 				&& Files.getLastModifiedTime(source).equals(Files.getLastModifiedTime(target))) {
-			status = CheckResult.Status.MATCH;
+			status = Status.MATCH;
 		} else {
-			status = CheckResult.Status.NO_MATCH;
+			status = Status.MISSMATCH;
 		}
 
-		return new CheckResult(status, sourceSize, source, target);
+		return new FilesResult(status, sourceSize, source, target);
 	}
 
-	public static FoundFiles findAllFiles(Settings settings) {
-		FoundFiles files = new FoundFiles();
+	public static AnalyseResult findAllFiles(Settings settings) {
+		AnalyseResult files = new AnalyseResult();
 
 		try {
 			Files.walkFileTree(settings.sourceDir(), new SimpleFileVisitor<Path>() {
@@ -72,15 +59,15 @@ public class Analyse {
 					final Path relativize = settings.sourceDir().getParent().relativize(sourceFile);
 					final Path targetFile = settings.targetDir().resolve(relativize);
 
-					CheckResult res = checkFiles(sourceFile, targetFile);
+					FilesResult res = filesStatus(sourceFile, targetFile);
 
 					switch (res.status()) {
-					case COPY -> files.copy.add(new Copy(res.sourceFile(), res.targetFile()));
-					case MATCH -> files.match.add(res.sourceFile());
-					case NO_MATCH -> {
-						files.missmatch.add(res.sourceFile());
+					case COPY -> files.copy().add(new CopyTask(res.sourceFile(), res.targetFile()));
+					case MATCH -> files.match().add(res.sourceFile());
+					case MISSMATCH -> {
+						files.missmatch().add(res.sourceFile());
 						if (settings.overwrite()) {
-							files.copy.add(new Copy(res.sourceFile(), res.targetFile()));
+							files.copy().add(new CopyTask(res.sourceFile(), res.targetFile()));
 						}
 					}
 					}

@@ -3,9 +3,9 @@ package ct.app.tui;
 import java.util.concurrent.BlockingQueue;
 
 import ct.app.tui.Message.Status;
-import ct.files.io.IProgress;
+import ct.files.progress.IProgressReport;
 
-public class MessageSender implements IProgress {
+public class MessageSender implements IProgressReport {
 
 	private final int threadId;
 	private final BlockingQueue<Message> mq;

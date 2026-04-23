@@ -13,10 +13,10 @@ import org.junit.jupiter.api.Test;
 
 import ct.files.TestFailableIO.TT;
 import ct.files.io.FilesIO;
-import ct.files.io.IProgress;
 import ct.files.io.IOWrapper;
-import ct.files.meta.FileRecord;
-import ct.files.meta.Settings;
+import ct.files.metadata.FileRecord;
+import ct.files.metadata.Settings;
+import ct.files.progress.IProgressReport;
 import ct.utils.TestUtils;
 
 public class RobustCopyIT {
@@ -53,7 +53,7 @@ public class RobustCopyIT {
 		assertEquals(expectedSha256, TestUtils.sha256(tempFile().path()));
 	}
 
-	private IProgress createMessageProducer() {
+	private IProgressReport createMessageProducer() {
 		return new TestVoidProgress();
 	}
 

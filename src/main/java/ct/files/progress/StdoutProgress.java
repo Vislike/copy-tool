@@ -1,8 +1,8 @@
-package ct.files.io;
+package ct.files.progress;
 
 import ct.app.App;
 
-public class StdoutProgress implements IProgress {
+public class StdoutProgress implements IProgressReport {
 
 	@Override
 	public void message(String str) {

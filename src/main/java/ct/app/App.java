@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import ct.app.tui.Tui;
+import ct.app.tui.MultiFileCopy;
 import ct.files.Analyse;
-import ct.files.Analyse.FoundFiles;
 import ct.files.RobustCopy;
 import ct.files.io.FilesIO;
-import ct.files.io.StdoutProgress;
-import ct.files.meta.Settings;
+import ct.files.metadata.AnalyseResult;
+import ct.files.metadata.Settings;
+import ct.files.progress.StdoutProgress;
 import ct.utils.AnsiEscapeCodes.Color;
 import ct.utils.Native;
 import ct.utils.Utils;
@@ -50,7 +50,7 @@ public class App {
 
 		infonn("Finding files...");
 
-		FoundFiles files = Analyse.findAllFiles(settings);
+		AnalyseResult files = Analyse.findAllFiles(settings);
 
 		info("complete");
 
@@ -85,17 +85,17 @@ public class App {
 		} else if (files.copy().isEmpty()) {
 			infonb("Up to date");
 		} else {
+			long startTime = System.currentTimeMillis();
 			if (Settings.devMode) {
-				new Tui(settings).copyAll(files.copy());
+				new MultiFileCopy(settings).copyAll(files.copy());
 			} else {
-				long startTime = System.currentTimeMillis();
 				RobustCopy rc = new RobustCopy(new FilesIO(), settings, new StdoutProgress());
 				files.copy().forEach(c -> {
 					info();
 					rc.copy(c.sourceFile(), c.targetFile());
 				});
-				App.infonb("Copy Complete in: " + Utils.timeLeft((System.currentTimeMillis() - startTime) / 1000));
 			}
+			App.infonb("Copy Complete in: " + Utils.timeLeft((System.currentTimeMillis() - startTime) / 1000));
 		}
 	}
 

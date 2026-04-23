@@ -1,4 +1,4 @@
-package ct.files.meta;
+package ct.files.metadata;
 
 import java.nio.file.Path;
 
