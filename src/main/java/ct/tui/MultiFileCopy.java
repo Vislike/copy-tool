@@ -1,4 +1,4 @@
-package ct.app.tui;
+package ct.tui;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package ct.app.tui;
+package ct.tui;
 
 public class ThreadStatus {
 

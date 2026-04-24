@@ -4,13 +4,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import ct.app.tui.MultiFileCopy;
 import ct.files.Analyse;
 import ct.files.RobustCopy;
 import ct.files.io.FilesIO;
 import ct.files.metadata.AnalyseResult;
 import ct.files.metadata.Settings;
 import ct.files.progress.StdoutProgress;
+import ct.tui.MultiFileCopy;
 import ct.utils.AnsiEscapeCodes.Color;
 import ct.utils.Native;
 import ct.utils.Utils;

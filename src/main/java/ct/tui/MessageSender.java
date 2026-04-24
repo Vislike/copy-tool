@@ -1,11 +1,11 @@
-package ct.app.tui;
+package ct.tui;
 
 import java.util.concurrent.BlockingQueue;
 
-import ct.app.tui.Message.Status;
 import ct.files.progress.IProgressEvent;
 import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
+import ct.tui.Message.Status;
 import ct.files.progress.IProgressReport;
 import ct.files.progress.StdoutProgress;
 

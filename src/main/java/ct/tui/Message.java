@@ -1,4 +1,4 @@
-package ct.app.tui;
+package ct.tui;
 
 public record Message(int threadId, Status status, String msg) {
 
