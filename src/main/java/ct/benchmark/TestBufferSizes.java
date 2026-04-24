@@ -55,7 +55,7 @@ public class TestBufferSizes {
 		// 512 B to 16 MiB
 		for (int i = 0; i < 16; i++) {
 			Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
-			FileRecord sourceFile = FileRecord.sourceFile(testFile, Files.size(testFile));
+			FileRecord sourceFile = FileRecord.sourceFile(testFile, Files.size(testFile), testDir.relativize(testFile));
 			testCopy(sourceFile, targetFile, numBytes, sha256Map, log);
 
 			numBytes *= 2;

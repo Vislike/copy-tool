@@ -47,7 +47,8 @@ public class GenTestFiles {
 			int numBytes = 512;
 			// 512 B to 16 MiB
 			for (int i = 0; i < 16; i++) {
-				FileRecord fileRecord = FileRecord.sourceFile(testDir.resolve(Shared.nameOfGenFile(numBytes)), SIZE);
+				Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
+				FileRecord fileRecord = FileRecord.sourceFile(testFile, SIZE, testDir.relativize(testFile));
 				System.out.println("Creating " + fileRecord);
 				ByteBuffer bb = randomBb(random, (int) fileRecord.size());
 				Files.write(fileRecord.path(), bb.array());

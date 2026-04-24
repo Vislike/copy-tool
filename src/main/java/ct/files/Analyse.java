@@ -19,13 +19,14 @@ public class Analyse {
 	}
 
 	private static enum Status {
-		COPY, MATCH, MISSMATCH
+		COPY, MATCH, MISMATCH
 	}
 
-	private static record FilesResult(Status status, long sourceSize, Path sourcePath, Path targetPath) {
+	private static record FilesResult(Status status, long sourceSize, Path sourcePath, Path targetPath,
+			Path relativeFromSource) {
 
 		public FileRecord sourceFile() {
-			return FileRecord.sourceFile(sourcePath, sourceSize);
+			return FileRecord.sourceFile(sourcePath, sourceSize, relativeFromSource);
 		}
 
 		public FileRecord targetFile() {
@@ -33,7 +34,7 @@ public class Analyse {
 		}
 	}
 
-	private static FilesResult filesStatus(Path source, Path target) throws IOException {
+	private static FilesResult filesStatus(Path source, Path target, Path relativeFromSource) throws IOException {
 		Status status;
 		long sourceSize = Files.size(source);
 
@@ -43,10 +44,10 @@ public class Analyse {
 				&& Files.getLastModifiedTime(source).equals(Files.getLastModifiedTime(target))) {
 			status = Status.MATCH;
 		} else {
-			status = Status.MISSMATCH;
+			status = Status.MISMATCH;
 		}
 
-		return new FilesResult(status, sourceSize, source, target);
+		return new FilesResult(status, sourceSize, source, target, relativeFromSource);
 	}
 
 	public static AnalyseResult findAllFiles(Settings settings) {
@@ -56,16 +57,16 @@ public class Analyse {
 			Files.walkFileTree(settings.sourceDir(), new SimpleFileVisitor<Path>() {
 				@Override
 				public FileVisitResult visitFile(final Path sourceFile, BasicFileAttributes attrs) throws IOException {
-					final Path relativize = settings.sourceDir().getParent().relativize(sourceFile);
-					final Path targetFile = settings.targetDir().resolve(relativize);
+					final Path relativeFromSource = settings.sourceDir().getParent().relativize(sourceFile);
+					final Path targetFile = settings.targetDir().resolve(relativeFromSource);
 
-					FilesResult res = filesStatus(sourceFile, targetFile);
+					FilesResult res = filesStatus(sourceFile, targetFile, relativeFromSource);
 
 					switch (res.status()) {
 					case COPY -> files.copy().add(new CopyTask(res.sourceFile(), res.targetFile()));
 					case MATCH -> files.match().add(res.sourceFile());
-					case MISSMATCH -> {
-						files.missmatch().add(res.sourceFile());
+					case MISMATCH -> {
+						files.mismatch().add(res.sourceFile());
 						if (settings.overwrite()) {
 							files.copy().add(new CopyTask(res.sourceFile(), res.targetFile()));
 						}

@@ -18,10 +18,13 @@ import ct.files.metadata.CopyTask;
 import ct.files.metadata.FileRecord;
 import ct.files.metadata.Settings;
 import ct.files.progress.IProgressReport;
+import ct.files.progress.StdoutProgress;
 import ct.utils.TestUtils;
 
 public class RobustCopyIT {
 
+	// Add "-Dshow=true" as VM argument
+	private static final boolean OUTPUT_VISIBLE = Boolean.parseBoolean(System.getProperty("show"));
 	private static final int TEST_BUFFER_SIZE = 512;
 	private static final String SHA_256_SMALL_FILE = "ca40ee83ed80d2f85a606289c0e71863a0ab1da7c347198ed761226b1e760670";
 	private static final String SHA_256_LARGE_FILE = "ad3b72ea83803bf178855f7e41e29d4e0bff02b3b69c470d7edaf4459f7157f3";
@@ -43,11 +46,13 @@ public class RobustCopyIT {
 	}
 
 	private static FileRecord smallFile() {
-		return FileRecord.sourceFile(Paths.get("src/test/resources", "1999.bin"), 1999);
+		Path relative = Paths.get("src/test/resources", "1999.bin");
+		return FileRecord.sourceFile(relative.toAbsolutePath(), 1999, relative);
 	}
 
 	private static FileRecord largeFile() {
-		return FileRecord.sourceFile(Paths.get("src/test/resources", "2999.bin"), 2999);
+		Path relative = Paths.get("src/test/resources", "2999.bin");
+		return FileRecord.sourceFile(relative.toAbsolutePath(), 2999, relative);
 	}
 
 	private void verifySha256Temp(String expectedSha256) throws IOException {
@@ -55,7 +60,7 @@ public class RobustCopyIT {
 	}
 
 	private IProgressReport createMessageProducer() {
-		return new TestVoidProgress();
+		return OUTPUT_VISIBLE ? new StdoutProgress() : new TestVoidProgress();
 	}
 
 	private RobustCopy createRobustCopy(IOWrapper wrapper) {

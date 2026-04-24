@@ -9,7 +9,8 @@ public class AnsiEscapeCodes {
 	}
 
 	public static enum Color {
-		RESET("\u001B[m"), RED("\u001B[31m"), GREEN("\u001B[32m"), YELLOW("\u001B[33m");
+		RESET("\u001B[m"), RED("\u001B[31m"), GREEN("\u001B[32m"), YELLOW("\u001B[33m"), CYAN("\u001B[36m"),
+		CYAN_INTENSE("\u001B[96m"), WHITE_INTENSE("\u001B[97m");
 
 		private final String color;
 

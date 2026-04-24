@@ -45,40 +45,36 @@ public class App {
 	}
 
 	private static void copyAllFiles(Settings settings) {
-		info("Copy from: " + settings.sourceDir());
-		infona("Copy to: " + settings.targetDir().resolve(settings.sourceDir().getFileName()));
+		info(textFrom(settings));
+		infona(textTo(settings));
 
-		infonn("Finding files...");
+		infonn("Analyzing files...");
 
 		AnalyseResult files = Analyse.findAllFiles(settings);
 
 		info("complete");
 
 		if (!files.match().isEmpty()) {
-			infonb("+ + + + Existing matching files (size and modify date) + + + +");
+			infonb(textMatch());
 			Color.GREEN.emit();
 			files.match().forEach(App::info);
 			Color.RESET.emit();
 		}
 
-		if (!files.missmatch().isEmpty()) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("- - - - Existing mismatching files, ");
-			if (settings.overwrite()) {
-				Color.RESET.append(Color.RED.append(sb).append("overwriting"));
-			} else {
-				sb.append("skipping");
-			}
-			infonb(sb.append(" - - - -").toString());
+		if (!files.mismatch().isEmpty()) {
+			infonb(textMismatch(settings));
 			Color.YELLOW.emit();
-			files.missmatch().forEach(App::info);
+			files.mismatch().forEach(App::info);
 			Color.RESET.emit();
 		}
 
 		if (!files.copy().isEmpty()) {
-			infonb("* * * * Files to Copy * * * *");
+			infonb(textCopy());
 			files.copy().forEach(App::info);
 		}
+
+		infonb(textFrom(settings));
+		info(textTo(settings));
 
 		if (settings.dryRun()) {
 			infonb("Dry Run Complete");
@@ -97,6 +93,44 @@ public class App {
 			}
 			App.infonb("Copy Complete in: " + Utils.timeLeft((System.currentTimeMillis() - startTime) / 1000));
 		}
+	}
+
+	private static String textMatch() {
+		StringBuilder sb = new StringBuilder();
+		Color.WHITE_INTENSE.append(sb).append("+ + + + Existing matching files (size and modify date) + + + +");
+		return Color.RESET.append(sb).toString();
+	}
+
+	private static String textMismatch(Settings settings) {
+		StringBuilder sb = new StringBuilder();
+		Color.WHITE_INTENSE.append(sb).append("- - - - Existing mismatching files (");
+		if (settings.overwrite()) {
+			Color.RED.append(sb).append("overwriting");
+		} else {
+			Color.YELLOW.append(sb).append("skipping");
+		}
+		Color.WHITE_INTENSE.append(sb).append(") - - - -");
+		return Color.RESET.append(sb).toString();
+	}
+
+	private static String textCopy() {
+		StringBuilder sb = new StringBuilder();
+		Color.WHITE_INTENSE.append(sb).append("* * * * Files to Copy * * * *");
+		return Color.RESET.append(sb).toString();
+	}
+
+	private static String textFrom(Settings settings) {
+		StringBuilder sb = new StringBuilder();
+		Color.CYAN.append(sb).append("Copy from: ");
+		Color.RESET.append(sb).append(settings.sourceDir());
+		return sb.toString();
+	}
+
+	private static String textTo(Settings settings) {
+		StringBuilder sb = new StringBuilder();
+		Color.CYAN_INTENSE.append(sb).append("Copy to: ");
+		Color.RESET.append(sb).append(settings.targetDir().resolve(settings.sourceDir().getFileName()));
+		return sb.toString();
 	}
 
 	public static void info() {

@@ -71,7 +71,7 @@ public class RobustCopy {
 					int bytesWrite = io.write(outChannel, bb.flip());
 
 					if (bytesRead != bytesWrite) {
-						throw new IOException("Bytes missmatch, read: " + bytesRead + ", write: " + bytesWrite);
+						throw new IOException("Bytes mismatch, read: " + bytesRead + ", write: " + bytesWrite);
 					}
 
 					bytesCopied += bytesRead;
