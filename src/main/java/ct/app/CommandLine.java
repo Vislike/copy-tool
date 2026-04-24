@@ -12,7 +12,7 @@ public class CommandLine {
 	private CommandLine() {
 	}
 
-	static void printHelp() {
+	static void help() {
 		App.info("""
 				Usage:
 				ct [-options] <src> <dst>

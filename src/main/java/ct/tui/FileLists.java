@@ -1,0 +1,103 @@
+package ct.tui;
+
+import ct.app.App;
+import ct.files.Analyse;
+import ct.files.RobustCopy;
+import ct.files.io.FilesIO;
+import ct.files.metadata.AnalyseResult;
+import ct.files.metadata.Settings;
+import ct.utils.AnsiEscapeCodes.Color;
+import ct.utils.Utils;
+import ct.utils.Utils.Timer;
+
+public class FileLists {
+
+	public static void analyseAllFiles(Settings settings) {
+		App.info(textFrom(settings));
+		App.infona(textTo(settings));
+
+		App.infonn("Analysing files...");
+
+		AnalyseResult files = Analyse.findAllFiles(settings);
+
+		App.info("complete");
+
+		if (!files.match().isEmpty()) {
+			App.infonb(textMatch());
+			Color.GREEN.emit();
+			files.match().forEach(App::info);
+			Color.RESET.emit();
+		}
+
+		if (!files.mismatch().isEmpty()) {
+			App.infonb(textMismatch(settings));
+			Color.YELLOW.emit();
+			files.mismatch().forEach(App::info);
+			Color.RESET.emit();
+		}
+
+		if (!files.copy().isEmpty()) {
+			App.infonb(textCopy());
+			files.copy().forEach(App::info);
+		}
+
+		App.infonb(textFrom(settings));
+		App.info(textTo(settings));
+
+		if (settings.dryRun()) {
+			App.infonb("Dry Run Complete");
+		} else if (files.copy().isEmpty()) {
+			App.infonb("Up to date");
+		} else {
+			Timer timer = Utils.timer();
+			if (Settings.devMode) {
+				new MultiFileCopy(settings).copyAll(files.copy());
+			} else {
+				RobustCopy rc = new RobustCopy(new FilesIO(), settings, new PrintBufferedProgress());
+				files.copy().forEach(ct -> {
+					App.info();
+					rc.copy(ct);
+				});
+			}
+			App.infonb(timer.elapsedSeconds("Copy Complete in"));
+		}
+	}
+
+	private static String textMatch() {
+		StringBuilder sb = new StringBuilder();
+		Color.WHITE_INTENSE.append(sb).append("+ + + + Existing matching files (size and modify date) + + + +");
+		return Color.RESET.append(sb).toString();
+	}
+
+	private static String textMismatch(Settings settings) {
+		StringBuilder sb = new StringBuilder();
+		Color.WHITE_INTENSE.append(sb).append("- - - - Existing mismatching files (");
+		if (settings.overwrite()) {
+			Color.RED.append(sb).append("overwriting");
+		} else {
+			Color.YELLOW.append(sb).append("skipping");
+		}
+		Color.WHITE_INTENSE.append(sb).append(") - - - -");
+		return Color.RESET.append(sb).toString();
+	}
+
+	private static String textCopy() {
+		StringBuilder sb = new StringBuilder();
+		Color.WHITE_INTENSE.append(sb).append("* * * * Files to Copy * * * *");
+		return Color.RESET.append(sb).toString();
+	}
+
+	private static String textFrom(Settings settings) {
+		StringBuilder sb = new StringBuilder();
+		Color.CYAN.append(sb).append("Copy from: ");
+		Color.RESET.append(sb).append(settings.sourceDir());
+		return sb.toString();
+	}
+
+	private static String textTo(Settings settings) {
+		StringBuilder sb = new StringBuilder();
+		Color.CYAN_INTENSE.append(sb).append("Copy to: ");
+		Color.RESET.append(sb).append(settings.targetDir().resolve(settings.sourceDir().getFileName()));
+		return sb.toString();
+	}
+}

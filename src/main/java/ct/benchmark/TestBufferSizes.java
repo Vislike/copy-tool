@@ -10,48 +10,50 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import ct.app.App;
 import ct.files.RobustCopy;
 import ct.files.io.FilesIO;
 import ct.files.metadata.CopyTask;
 import ct.files.metadata.FileRecord;
 import ct.files.metadata.Settings;
-import ct.files.progress.StdoutProgress;
+import ct.tui.PrintBufferedProgress;
 import ct.utils.TestUtils;
 import ct.utils.Utils;
+import ct.utils.Utils.Timer;
 
 public class TestBufferSizes {
 
 	public static void main(String[] args) throws IOException {
-		System.out.println("= = = = Copy Tool Buffer Test = = = =");
-		System.out.println();
+		App.infona("= = = = Copy Tool Buffer Test = = = =");
 
 		if (args.length == 0) {
-			System.out.println("Usage: ct-buffer-test *path-to-test-dir-with-generated-files*");
+			App.info("Usage: ct-buffer-test *path-to-test-dir-with-generated-files*");
 			return;
 		}
 
 		Path testDir = Paths.get(args[0]);
 		if (!Files.isDirectory(testDir)) {
-			System.err.println("Not a directory: " + args[0]);
+			App.error("Not a directory", args[0]);
 			return;
 		}
 		Path hashFile = testDir.resolve(Shared.HASHES_FILE);
 		if (Files.notExists(hashFile)) {
-			System.err.println("No hashfile found, generate files first: " + hashFile);
+			App.error("No hashfile found, generate files first", hashFile);
 			return;
 		}
 
 		Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "ct-test-buffer-temp-file");
-		System.out.println("Test dir for reading: " + testDir);
-		System.out.println("Temp file for writing: " + tempFile);
-		System.out.println("Hashes file: " + hashFile);
-		System.out.println();
+		App.highlight("Test Dir", testDir);
+		App.highlight("Tempfile", tempFile);
+		App.highlight("Hashfile", hashFile);
+		App.info();
 
+		Timer timer = Utils.timer();
 		FileRecord targetFile = FileRecord.targetFile(tempFile);
 		Map<String, String> sha256Map = readHashFileToMap(hashFile);
 		List<String> log = new ArrayList<>();
-
 		int numBytes = 512;
+
 		// 512 B to 16 MiB
 		for (int i = 0; i < 16; i++) {
 			Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
@@ -61,10 +63,10 @@ public class TestBufferSizes {
 			numBytes *= 2;
 		}
 
-		System.out.println();
-		log.forEach(System.out::println);
+		log.forEach(App::info);
 		Files.delete(targetFile.path());
-		System.out.println(System.lineSeparator() + "Done.");
+
+		App.infonb(timer.elapsedSeconds("Done in"));
 	}
 
 	private static void testCopy(FileRecord source, FileRecord target, int numBytes, Map<String, String> sha256Map,
@@ -73,7 +75,7 @@ public class TestBufferSizes {
 		sb.append("Buffer: ").append(Utils.size(numBytes)).append(", Size: ").append(Utils.size(source.size()));
 
 		long startTime = System.nanoTime();
-		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.bufferSize(numBytes), new StdoutProgress());
+		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.bufferSize(numBytes), new PrintBufferedProgress());
 		robustCopy.copy(new CopyTask(source, target));
 		long elapsedNanos = System.nanoTime() - startTime;
 
@@ -83,7 +85,7 @@ public class TestBufferSizes {
 
 		compareHashes(source, target, sha256Map, sb);
 		String status = sb.toString();
-		System.out.println(status);
+		App.infona(status);
 		log.add(status);
 	}
 

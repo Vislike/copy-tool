@@ -2,6 +2,7 @@ package ct.utils;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
+import java.util.concurrent.TimeUnit;
 
 import ct.files.metadata.Settings;
 
@@ -74,5 +75,21 @@ public class Utils {
 		}
 		value *= Long.signum(bytes);
 		return String.format("%.1f %ciB", value / 1024.0, ci.current());
+	}
+
+	public static class Timer {
+		private final long startTime;
+
+		private Timer() {
+			startTime = System.currentTimeMillis();
+		}
+
+		public String elapsedSeconds(String prefix) {
+			return prefix + ": " + timeLeft(TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime));
+		}
+	}
+
+	public static Timer timer() {
+		return new Timer();
 	}
 }

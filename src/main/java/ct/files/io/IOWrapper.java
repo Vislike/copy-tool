@@ -30,4 +30,6 @@ public interface IOWrapper {
 	long size(FileChannel channel) throws IOException;
 
 	FileChannel truncate(FileChannel channel, long size) throws IOException;
+
+	void close(FileChannel channel) throws IOException;
 }

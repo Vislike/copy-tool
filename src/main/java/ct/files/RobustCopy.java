@@ -88,7 +88,7 @@ public class RobustCopy {
 				// Done
 				copyComplete = true;
 			} catch (IOException e) {
-				pr.error("Copy problem: " + e.getMessage());
+				pr.error("Copy problem", e.getMessage());
 				waitBeforeRetry();
 			} finally {
 				// Close channels, ignore problems
@@ -111,7 +111,7 @@ public class RobustCopy {
 		try {
 			Thread.sleep(Duration.ofSeconds(settings.waitBeforeRetryTimeSec()));
 		} catch (InterruptedException e) {
-			pr.error("Warning wait interrupted: " + e.getMessage());
+			pr.warning("Warning wait interrupted", e.getMessage());
 		}
 		pr.raise(new WaitEndEvent());
 	}
@@ -122,7 +122,7 @@ public class RobustCopy {
 			try {
 				success = io.createDirectories(path);
 			} catch (IOException e) {
-				pr.error("Error creating directories: " + e.getMessage());
+				pr.error("Error creating directories", e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -134,7 +134,7 @@ public class RobustCopy {
 			try {
 				fileTime = io.getLastModifiedTime(path);
 			} catch (IOException e) {
-				pr.error("Error getting last modified time: " + e.getMessage());
+				pr.error("Error getting last modified time", e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -147,7 +147,7 @@ public class RobustCopy {
 			try {
 				success = io.setLastModifiedTime(path, fileTime);
 			} catch (IOException e) {
-				pr.error("Error setting modified time: " + e.getMessage());
+				pr.error("Error setting modified time", e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -157,10 +157,10 @@ public class RobustCopy {
 		if (channel != null) {
 			try {
 				if (channel.isOpen()) {
-					channel.close();
+					io.close(channel);
 				}
 			} catch (IOException e) {
-				pr.error("Warning closing channel failed: " + e.getMessage());
+				pr.warning("Warning closing channel failed", e.getMessage());
 			}
 		}
 	}

@@ -54,4 +54,9 @@ public class FilesIO implements IOWrapper {
 	public FileChannel truncate(FileChannel channel, long size) throws IOException {
 		return channel.truncate(size);
 	}
+
+	@Override
+	public void close(FileChannel channel) throws IOException {
+		channel.close();
+	}
 }

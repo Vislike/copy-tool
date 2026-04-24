@@ -50,8 +50,8 @@ public class MultiFileCopy {
 				tui.update(threads);
 			}
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
+			throw new AssertionError("Interrupt not implemented yet", e);
 		}
 	}
 

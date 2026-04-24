@@ -9,8 +9,8 @@ public class AnsiEscapeCodes {
 	}
 
 	public static enum Color {
-		RESET("\u001B[m"), RED("\u001B[31m"), GREEN("\u001B[32m"), YELLOW("\u001B[33m"), CYAN("\u001B[36m"),
-		CYAN_INTENSE("\u001B[96m"), WHITE_INTENSE("\u001B[97m");
+		RESET("\u001B[m"), RED("\u001B[31m"), GREEN("\u001B[32m"), YELLOW("\u001B[33m"), MAGENTA("\u001B[35m"),
+		CYAN("\u001B[36m"), CYAN_INTENSE("\u001B[96m"), WHITE_INTENSE("\u001B[97m");
 
 		private final String color;
 
@@ -36,6 +36,9 @@ public class AnsiEscapeCodes {
 	private static final String ERASE_DOWN = "\u001B[J";
 
 	public static StringBuilder moveUpAndErase(StringBuilder sb, int lines) {
-		return sb.append(PREV_LINE.formatted(lines)).append(ERASE_DOWN);
+		if (lines > 0) {
+			sb.append(PREV_LINE.formatted(lines)).append(ERASE_DOWN);
+		}
+		return sb;
 	}
 }

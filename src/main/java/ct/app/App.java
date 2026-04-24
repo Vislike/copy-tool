@@ -4,16 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import ct.files.Analyse;
-import ct.files.RobustCopy;
-import ct.files.io.FilesIO;
-import ct.files.metadata.AnalyseResult;
 import ct.files.metadata.Settings;
-import ct.files.progress.StdoutProgress;
-import ct.tui.MultiFileCopy;
+import ct.tui.FileLists;
 import ct.utils.AnsiEscapeCodes.Color;
 import ct.utils.Native;
-import ct.utils.Utils;
 
 public class App {
 
@@ -33,7 +27,7 @@ public class App {
 			verbose();
 		}
 
-		CommandLine.parseArgs(args).ifPresentOrElse(App::copyAllFiles, CommandLine::printHelp);
+		CommandLine.parseArgs(args).ifPresentOrElse(FileLists::analyseAllFiles, CommandLine::help);
 	}
 
 	private static String version() throws IOException {
@@ -42,95 +36,6 @@ public class App {
 			properties.load(in);
 		}
 		return properties.getProperty("ct.version", "0-dev");
-	}
-
-	private static void copyAllFiles(Settings settings) {
-		info(textFrom(settings));
-		infona(textTo(settings));
-
-		infonn("Analyzing files...");
-
-		AnalyseResult files = Analyse.findAllFiles(settings);
-
-		info("complete");
-
-		if (!files.match().isEmpty()) {
-			infonb(textMatch());
-			Color.GREEN.emit();
-			files.match().forEach(App::info);
-			Color.RESET.emit();
-		}
-
-		if (!files.mismatch().isEmpty()) {
-			infonb(textMismatch(settings));
-			Color.YELLOW.emit();
-			files.mismatch().forEach(App::info);
-			Color.RESET.emit();
-		}
-
-		if (!files.copy().isEmpty()) {
-			infonb(textCopy());
-			files.copy().forEach(App::info);
-		}
-
-		infonb(textFrom(settings));
-		info(textTo(settings));
-
-		if (settings.dryRun()) {
-			infonb("Dry Run Complete");
-		} else if (files.copy().isEmpty()) {
-			infonb("Up to date");
-		} else {
-			long startTime = System.currentTimeMillis();
-			if (Settings.devMode) {
-				new MultiFileCopy(settings).copyAll(files.copy());
-			} else {
-				RobustCopy rc = new RobustCopy(new FilesIO(), settings, new StdoutProgress());
-				files.copy().forEach(ct -> {
-					info();
-					rc.copy(ct);
-				});
-			}
-			App.infonb("Copy Complete in: " + Utils.timeLeft((System.currentTimeMillis() - startTime) / 1000));
-		}
-	}
-
-	private static String textMatch() {
-		StringBuilder sb = new StringBuilder();
-		Color.WHITE_INTENSE.append(sb).append("+ + + + Existing matching files (size and modify date) + + + +");
-		return Color.RESET.append(sb).toString();
-	}
-
-	private static String textMismatch(Settings settings) {
-		StringBuilder sb = new StringBuilder();
-		Color.WHITE_INTENSE.append(sb).append("- - - - Existing mismatching files (");
-		if (settings.overwrite()) {
-			Color.RED.append(sb).append("overwriting");
-		} else {
-			Color.YELLOW.append(sb).append("skipping");
-		}
-		Color.WHITE_INTENSE.append(sb).append(") - - - -");
-		return Color.RESET.append(sb).toString();
-	}
-
-	private static String textCopy() {
-		StringBuilder sb = new StringBuilder();
-		Color.WHITE_INTENSE.append(sb).append("* * * * Files to Copy * * * *");
-		return Color.RESET.append(sb).toString();
-	}
-
-	private static String textFrom(Settings settings) {
-		StringBuilder sb = new StringBuilder();
-		Color.CYAN.append(sb).append("Copy from: ");
-		Color.RESET.append(sb).append(settings.sourceDir());
-		return sb.toString();
-	}
-
-	private static String textTo(Settings settings) {
-		StringBuilder sb = new StringBuilder();
-		Color.CYAN_INTENSE.append(sb).append("Copy to: ");
-		Color.RESET.append(sb).append(settings.targetDir().resolve(settings.sourceDir().getFileName()));
-		return sb.toString();
 	}
 
 	public static void info() {
@@ -165,6 +70,10 @@ public class App {
 		}
 	}
 
+	public static void highlight(String str, Object... args) {
+		printCommon(Color.YELLOW, "", false, str, args);
+	}
+
 	public static void verbose(String str, Object... args) {
 		if (Settings.verbose) {
 			printCommon(Color.GREEN, "<V> ", false, str, args);
@@ -172,11 +81,19 @@ public class App {
 	}
 
 	public static void warning(String str, Object... args) {
-		printCommon(Color.YELLOW, "<WARNING> ", true, str, args);
+		printCommon(Color.MAGENTA, "<WARNING> ", true, str, args);
+	}
+
+	public static void recoverWarning(String str, Object... args) {
+		printCommon(Color.MAGENTA, "", false, str, args);
 	}
 
 	public static void error(String str, Object... args) {
 		printCommon(Color.RED, "<ERROR> ", true, str, args);
+	}
+
+	public static void recoverError(String str, Object... args) {
+		printCommon(Color.RED, "", false, str, args);
 	}
 
 	private static void printCommon(Color color, String tag, boolean extraNl, String str, Object... args) {

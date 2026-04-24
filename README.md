@@ -26,7 +26,7 @@ Or to see the help:
 ct -h
 ```
 
-When checking **src** for files **dst** is also analyzed and it will use the two basic file stats size and modified time to determine if two files are the same. By default all existing files is skipped but this can be changed with the overwrite option (**-o**), then it just overwrites files it can determine has changed, all files that look the same (date and size) is always skipped.
+When checking **src** for files **dst** is also analysed and it will use the two basic file stats size and modified time to determine if two files are the same. By default all existing files is skipped but this can be changed with the overwrite option (**-o**), then it just overwrites files it can determine has changed, all files that look the same (date and size) is always skipped.
 
 ## Roadmap
 

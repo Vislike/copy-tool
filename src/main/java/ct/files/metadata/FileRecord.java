@@ -19,6 +19,7 @@ public record FileRecord(Path path, long size, long position, Path relativeFromS
 	@Override
 	public final String toString() {
 		StringBuilder sb = new StringBuilder();
+
 		if (relativeFromSource == null) {
 			sb.append(path);
 		} else {

@@ -18,7 +18,7 @@ import ct.files.metadata.CopyTask;
 import ct.files.metadata.FileRecord;
 import ct.files.metadata.Settings;
 import ct.files.progress.IProgressReport;
-import ct.files.progress.StdoutProgress;
+import ct.tui.PrintBufferedProgress;
 import ct.utils.TestUtils;
 
 public class RobustCopyIT {
@@ -33,6 +33,7 @@ public class RobustCopyIT {
 
 	@BeforeEach
 	void createTemp() throws IOException {
+		Settings.verbose = true;
 		tempFile = Files.createTempFile("ct-test-", null);
 	}
 
@@ -60,7 +61,7 @@ public class RobustCopyIT {
 	}
 
 	private IProgressReport createMessageProducer() {
-		return OUTPUT_VISIBLE ? new StdoutProgress() : new TestVoidProgress();
+		return OUTPUT_VISIBLE ? new PrintBufferedProgress() : new TestVoidProgress();
 	}
 
 	private RobustCopy createRobustCopy(IOWrapper wrapper) {
@@ -118,10 +119,12 @@ public class RobustCopyIT {
 	}
 
 	@Test
-	void openFail() throws IOException {
+	void openAndCloseFail() throws IOException {
 		TestFailableIO io = new TestFailableIO();
-		copyAndVerifySmallFile(io.failAt(TT.open, 2));
+		copyAndVerifySmallFile(io.failAt(TT.open, 2).failAt(TT.close, 3));
 		assertEquals(4, io.count(TT.open));
+		// Only close opened, and do not retry close
+		assertEquals(3, io.count(TT.close));
 	}
 
 	@Test

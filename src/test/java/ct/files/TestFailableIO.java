@@ -24,7 +24,7 @@ public class TestFailableIO implements IOWrapper {
 	}
 
 	enum TT {
-		createDirectories, getLastModifiedTime, setLastModifiedTime, open, position, read, write, size, truncate
+		createDirectories, getLastModifiedTime, setLastModifiedTime, open, position, read, write, size, truncate, close
 	};
 
 	int count(TT t) {
@@ -102,5 +102,11 @@ public class TestFailableIO implements IOWrapper {
 	public FileChannel truncate(FileChannel channel, long size) throws IOException {
 		incCoundAndCheckFail(TT.truncate);
 		return io.truncate(channel, size);
+	}
+
+	@Override
+	public void close(FileChannel channel) throws IOException {
+		incCoundAndCheckFail(TT.close);
+		io.close(channel);
 	}
 }

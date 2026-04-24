@@ -5,28 +5,29 @@ import java.util.concurrent.BlockingQueue;
 import ct.files.progress.IProgressEvent;
 import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
-import ct.tui.Message.Status;
 import ct.files.progress.IProgressReport;
-import ct.files.progress.StdoutProgress;
+import ct.tui.Message.Status;
+import ct.tui.PrintBufferedProgress.DeBounce;
 
 public class MessageSender implements IProgressReport {
 
+	private static final long DEBOUNCE_TIME = 900;
+
 	private final int threadId;
 	private final BlockingQueue<Message> mq;
-
-	private final StdoutProgress out = new StdoutProgress();
+	private DeBounce db;
 
 	public MessageSender(int threadId, BlockingQueue<Message> mq) {
 		this.threadId = threadId;
 		this.mq = mq;
 	}
 
-	public void message(String str) {
+	public void sendMessage(String str) {
 		try {
 			mq.put(new Message(threadId, Status.MESSAGE, str));
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
+			throw new AssertionError("Interrupt not implemented yet", e);
 		}
 	}
 
@@ -34,8 +35,8 @@ public class MessageSender implements IProgressReport {
 		try {
 			mq.put(new Message(threadId, Status.EOF, null));
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Thread.currentThread().interrupt();
+			throw new AssertionError("Interrupt not implemented yet", e);
 		}
 	}
 
@@ -43,15 +44,15 @@ public class MessageSender implements IProgressReport {
 	public void raise(IProgressEvent event) {
 		switch (event) {
 		case CopyStartEvent e -> {
-			out.progressStart(e.ct().sourceFile().size());
-			message(out.stringMessage(event));
+			db = new DeBounce(e.ct().sourceFile().size());
+			sendMessage(PrintBufferedProgress.stringMessage(event, db));
 		}
 		case CopyProgressEvent e -> {
-			if (out.progressUpdate(e.size(), 900)) {
-				message(out.stringMessage(event));
+			if (db.shouldUpdate(e.size(), DEBOUNCE_TIME)) {
+				sendMessage(PrintBufferedProgress.stringMessage(event, db));
 			}
 		}
-		default -> message(out.stringMessage(event));
+		default -> sendMessage(PrintBufferedProgress.stringMessage(event, db));
 		}
 
 	}

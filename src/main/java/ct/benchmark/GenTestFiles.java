@@ -8,48 +8,50 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Random;
 
+import ct.app.App;
 import ct.files.metadata.FileRecord;
 import ct.utils.TestUtils;
 import ct.utils.Utils;
+import ct.utils.Utils.Timer;
 
 public class GenTestFiles {
 
 	public static final int SIZE = 1024 * 1024 * 512;
 
 	public static void main(String[] args) throws IOException {
-		System.out.println("= = = = Copy Tool Gen Test Files = = = =");
-		System.out.println();
+		App.infona("= = = = Copy Tool Gen Test Files = = = =");
 
 		if (args.length == 0) {
-			System.out.println("Usage: ct-gen-files *path-to-test-dir*");
+			App.info("Usage: ct-gen-files *path-to-test-dir*");
 			return;
 		}
 
 		Path testDir = Paths.get(args[0]);
 		if (!Files.isDirectory(testDir)) {
-			System.err.println("Not a directory: " + args[0]);
+			App.error("Not a directory", args[0]);
 			return;
 		}
 		Path hashFile = testDir.resolve(Shared.HASHES_FILE);
 		if (Files.exists(hashFile)) {
-			System.err.println("Dir already contain hashfile, remove it to create new test files: " + hashFile);
+			App.error("Hashfile exists, remove it to create new files", hashFile);
 			return;
 		}
 
-		System.out.println("Test dir for generating files: " + testDir);
-		System.out.println("Size of generated files: " + Utils.size(SIZE));
-		System.out.println("Hashes file: " + hashFile);
-		System.out.println();
+		App.highlight("Test Dir", testDir);
+		App.highlight("Filesize", Utils.size(SIZE));
+		App.highlight("Hashfile", hashFile);
+		App.info();
+
+		Timer timer = Utils.timer();
+		Random random = new Random();
+		int numBytes = 512;
 
 		try (BufferedWriter hashWriter = Files.newBufferedWriter(hashFile)) {
-			Random random = new Random();
-
-			int numBytes = 512;
 			// 512 B to 16 MiB
 			for (int i = 0; i < 16; i++) {
 				Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
 				FileRecord fileRecord = FileRecord.sourceFile(testFile, SIZE, testDir.relativize(testFile));
-				System.out.println("Creating " + fileRecord);
+				App.highlight("Creating", fileRecord);
 				ByteBuffer bb = randomBb(random, (int) fileRecord.size());
 				Files.write(fileRecord.path(), bb.array());
 				hashWriter.append(hash(bb, fileRecord));
@@ -58,7 +60,7 @@ public class GenTestFiles {
 			}
 		}
 
-		System.out.println(System.lineSeparator() + "Done.");
+		App.infonb(timer.elapsedSeconds("Done in"));
 	}
 
 	private static String hash(ByteBuffer bb, FileRecord fileRecord) throws IOException {

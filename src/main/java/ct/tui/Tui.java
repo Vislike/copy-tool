@@ -30,9 +30,7 @@ public class Tui {
 
 	private void clear() {
 		sb.setLength(0);
-		if (rows > 0) {
-			AnsiEscapeCodes.moveUpAndErase(sb, rows);
-		}
+		AnsiEscapeCodes.moveUpAndErase(sb, rows);
 		rows = 0;
 	}
 }

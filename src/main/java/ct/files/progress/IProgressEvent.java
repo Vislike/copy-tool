@@ -24,12 +24,15 @@ public sealed interface IProgressEvent {
 	record ModifiedTimeEvent(FileTime time) implements IProgressEvent {
 	}
 
-	record ErrorEvent(String msg) implements IProgressEvent {
-	}
-
 	record WaitStartEvent(int seconds) implements IProgressEvent {
 	}
 
 	record WaitEndEvent() implements IProgressEvent {
+	}
+
+	record WarningEvent(String description, String cause) implements IProgressEvent {
+	}
+
+	record ErrorEvent(String description, String cause) implements IProgressEvent {
 	}
 }
