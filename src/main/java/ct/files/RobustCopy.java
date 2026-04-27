@@ -8,9 +8,8 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
+import ct.app.Settings;
 import ct.files.io.IOWrapper;
-import ct.files.metadata.CopyTask;
-import ct.files.metadata.Settings;
 import ct.files.progress.IProgressEvent.CopyEndEvent;
 import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
@@ -19,6 +18,7 @@ import ct.files.progress.IProgressEvent.RestartEvent;
 import ct.files.progress.IProgressEvent.TruncateEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
+import ct.files.types.CopyTask;
 import ct.files.progress.IProgressReport;
 
 public class RobustCopy {
@@ -38,7 +38,7 @@ public class RobustCopy {
 
 	public void copy(CopyTask ct) {
 		// Start
-		pr.raise(new CopyStartEvent(ct));
+		pr.event(new CopyStartEvent(ct));
 
 		// Create all parent directories of target
 		createDirectories(ct.targetFile().path().getParent());
@@ -59,7 +59,7 @@ public class RobustCopy {
 				// Rollback last buffer
 				bytesCopied = Math.max(0, bytesCopied - settings.bufferSize() * settings.rollbackBuffersNum());
 				if (bytesCopied > 0) {
-					pr.raise(new RestartEvent(bytesCopied));
+					pr.event(new RestartEvent(bytesCopied));
 					io.position(inChannel, bytesCopied);
 					io.position(outChannel, bytesCopied);
 				}
@@ -76,12 +76,12 @@ public class RobustCopy {
 
 					bytesCopied += bytesRead;
 
-					pr.raise(new CopyProgressEvent(bytesCopied));
+					pr.event(new CopyProgressEvent(bytesCopied));
 				}
 
 				// Truncate if larger (can be the case during overwrite)
 				if (io.size(outChannel) > ct.sourceFile().size()) {
-					pr.raise(new TruncateEvent(ct.sourceFile().size()));
+					pr.event(new TruncateEvent(ct.sourceFile().size()));
 					io.truncate(outChannel, ct.sourceFile().size());
 				}
 
@@ -99,21 +99,21 @@ public class RobustCopy {
 
 		// Set last modified time to same as source
 		FileTime lastModifiedTime = getLastModifiedTime(ct.sourceFile().path());
-		pr.raise(new ModifiedTimeEvent(lastModifiedTime));
+		pr.event(new ModifiedTimeEvent(lastModifiedTime));
 		setLastModifiedTime(ct.targetFile().path(), lastModifiedTime);
 
 		// End
-		pr.raise(new CopyEndEvent(ct));
+		pr.event(new CopyEndEvent(ct));
 	}
 
 	private void waitBeforeRetry() {
-		pr.raise(new WaitStartEvent(settings.waitBeforeRetryTimeSec()));
+		pr.event(new WaitStartEvent(settings.waitBeforeRetryTimeSec()));
 		try {
 			Thread.sleep(Duration.ofSeconds(settings.waitBeforeRetryTimeSec()));
 		} catch (InterruptedException e) {
 			pr.warning("Warning wait interrupted", e.getMessage());
 		}
-		pr.raise(new WaitEndEvent());
+		pr.event(new WaitEndEvent());
 	}
 
 	private void createDirectories(Path path) {

@@ -15,14 +15,14 @@ import ct.files.progress.IProgressEvent.WarningEvent;
 import ct.files.progress.IProgressReport;
 import ct.utils.Utils;
 
-public class PrintBufferedProgress implements IProgressReport {
+public class StdoutPrinter implements IProgressReport {
 
 	private static final long DEBOUNCE_TIME = 9000;
 
 	private DeBounce db = new DeBounce(-1);
 
 	@Override
-	public void raise(IProgressEvent event) {
+	public void event(IProgressEvent event) {
 		switch (event) {
 		case CopyStartEvent e -> {
 			db = new DeBounce(e.ct().sourceFile().size());

@@ -2,7 +2,7 @@ package ct.files.progress;
 
 import java.nio.file.attribute.FileTime;
 
-import ct.files.metadata.CopyTask;
+import ct.files.types.CopyTask;
 
 public sealed interface IProgressEvent {
 

@@ -8,10 +8,10 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import ct.files.metadata.AnalyseResult;
-import ct.files.metadata.CopyTask;
-import ct.files.metadata.FileRecord;
-import ct.files.metadata.Settings;
+import ct.app.Settings;
+import ct.files.types.AnalyseResult;
+import ct.files.types.CopyTask;
+import ct.files.types.FileRecord;
 
 public class Analyse {
 

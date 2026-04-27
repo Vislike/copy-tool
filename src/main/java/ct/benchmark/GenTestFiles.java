@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.Random;
 
 import ct.app.App;
-import ct.files.metadata.FileRecord;
+import ct.files.types.FileRecord;
 import ct.utils.TestUtils;
 import ct.utils.Utils;
 import ct.utils.Utils.Timer;

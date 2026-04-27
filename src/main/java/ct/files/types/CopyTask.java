@@ -1,4 +1,4 @@
-package ct.files.metadata;
+package ct.files.types;
 
 public record CopyTask(FileRecord sourceFile, FileRecord targetFile) {
 

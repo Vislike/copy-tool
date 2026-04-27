@@ -1,11 +1,11 @@
 package ct.tui;
 
 import ct.app.App;
+import ct.app.Settings;
 import ct.files.Analyse;
 import ct.files.RobustCopy;
 import ct.files.io.FilesIO;
-import ct.files.metadata.AnalyseResult;
-import ct.files.metadata.Settings;
+import ct.files.types.AnalyseResult;
 import ct.utils.AnsiEscapeCodes.Color;
 import ct.utils.Utils;
 import ct.utils.Utils.Timer;
@@ -53,7 +53,7 @@ public class FileLists {
 			if (Settings.devMode) {
 				new MultiFileCopy(settings).copyAll(files.copy());
 			} else {
-				RobustCopy rc = new RobustCopy(new FilesIO(), settings, new PrintBufferedProgress());
+				RobustCopy rc = new RobustCopy(new FilesIO(), settings, new StdoutPrinter());
 				files.copy().forEach(ct -> {
 					App.info();
 					rc.copy(ct);

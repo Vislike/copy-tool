@@ -4,7 +4,7 @@ import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.concurrent.TimeUnit;
 
-import ct.files.metadata.Settings;
+import ct.app.Settings;
 
 public class Utils {
 

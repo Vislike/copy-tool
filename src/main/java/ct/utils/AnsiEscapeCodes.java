@@ -1,7 +1,7 @@
 package ct.utils;
 
 import ct.app.App;
-import ct.files.metadata.Settings;
+import ct.app.Settings;
 
 public class AnsiEscapeCodes {
 

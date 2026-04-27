@@ -1,4 +1,4 @@
-package ct.files.metadata;
+package ct.files.types;
 
 import java.util.ArrayList;
 import java.util.List;

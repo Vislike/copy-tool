@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import ct.files.metadata.Settings;
 import ct.tui.FileLists;
 import ct.utils.AnsiEscapeCodes.Color;
 import ct.utils.Native;
@@ -15,6 +14,7 @@ public class App {
 	static final int WAIT_TIME = 10;
 	static final int ROLLBACK_BUFFERS = 1;
 	static final int NUM_FILES_SIMULTANEOUSLY = 4;
+	static final int TERMINAL_WIDTH = 120;
 
 	public static void main(String[] args) throws IOException {
 		infona("= = = = Copy Tool v" + version() + " = = = =");

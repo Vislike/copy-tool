@@ -11,14 +11,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import ct.app.Settings;
 import ct.files.TestFailableIO.TT;
 import ct.files.io.FilesIO;
 import ct.files.io.IOWrapper;
-import ct.files.metadata.CopyTask;
-import ct.files.metadata.FileRecord;
-import ct.files.metadata.Settings;
 import ct.files.progress.IProgressReport;
-import ct.tui.PrintBufferedProgress;
+import ct.files.types.CopyTask;
+import ct.files.types.FileRecord;
+import ct.tui.StdoutPrinter;
 import ct.utils.TestUtils;
 
 public class RobustCopyIT {
@@ -61,7 +61,7 @@ public class RobustCopyIT {
 	}
 
 	private IProgressReport createMessageProducer() {
-		return OUTPUT_VISIBLE ? new PrintBufferedProgress() : new TestVoidProgress();
+		return OUTPUT_VISIBLE ? new StdoutPrinter() : new TestVoidProgress();
 	}
 
 	private RobustCopy createRobustCopy(IOWrapper wrapper) {
