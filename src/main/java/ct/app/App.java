@@ -7,6 +7,7 @@ import java.util.Properties;
 import ct.tui.FileLists;
 import ct.utils.AnsiEscapeCodes.Color;
 import ct.utils.Native;
+import ct.utils.Utils;
 
 public class App {
 
@@ -71,41 +72,33 @@ public class App {
 	}
 
 	public static void highlight(String str, Object... args) {
-		printCommon(Color.YELLOW, "", false, str, args);
+		printCommon(Color.YELLOW, false, str, args);
 	}
 
 	public static void verbose(String str, Object... args) {
 		if (Settings.verbose) {
-			printCommon(Color.GREEN, "<V> ", false, str, args);
+			printCommon(Color.GREEN, false, "<V> " + str, args);
 		}
 	}
 
 	public static void warning(String str, Object... args) {
-		printCommon(Color.MAGENTA, "<WARNING> ", true, str, args);
+		printCommon(Color.MAGENTA, true, "<WARNING> " + str, args);
 	}
 
 	public static void recoverWarning(String str, Object... args) {
-		printCommon(Color.MAGENTA, "", false, str, args);
+		printCommon(Color.MAGENTA, false, str, args);
 	}
 
 	public static void error(String str, Object... args) {
-		printCommon(Color.RED, "<ERROR> ", true, str, args);
+		printCommon(Color.RED, true, "<ERROR> " + str, args);
 	}
 
 	public static void recoverError(String str, Object... args) {
-		printCommon(Color.RED, "", false, str, args);
+		printCommon(Color.RED, false, str, args);
 	}
 
-	private static void printCommon(Color color, String tag, boolean extraNl, String str, Object... args) {
-		StringBuilder sb = color.append(new StringBuilder(128)).append(tag).append(str);
-		if (args.length > 0) {
-			Color.RESET.append(sb.append(": ")).append(args[0]);
-			for (int i = 1; i < args.length; i++) {
-				Color.RESET.append(color.append(sb).append(", ")).append(args[i]);
-			}
-		} else {
-			Color.RESET.append(sb);
-		}
+	private static void printCommon(Color color, boolean extraNl, String str, Object... args) {
+		StringBuilder sb = color.highlight(new StringBuilder(Utils.SB_SIZE), str, args);
 		if (extraNl) {
 			sb.append(System.lineSeparator());
 		}

@@ -63,12 +63,6 @@ public class FileLists {
 		}
 	}
 
-	private static String textMatch() {
-		StringBuilder sb = new StringBuilder();
-		Color.WHITE_INTENSE.append(sb).append("+ + + + Existing matching files (size and modify date) + + + +");
-		return Color.RESET.append(sb).toString();
-	}
-
 	private static String textMismatch(Settings settings) {
 		StringBuilder sb = new StringBuilder();
 		Color.WHITE_INTENSE.append(sb).append("- - - - Existing mismatching files (");
@@ -81,23 +75,20 @@ public class FileLists {
 		return Color.RESET.append(sb).toString();
 	}
 
+	private static String textMatch() {
+		return Color.WHITE_INTENSE.highlight("+ + + + Existing matching files (size and modify date) + + + +");
+	}
+
 	private static String textCopy() {
-		StringBuilder sb = new StringBuilder();
-		Color.WHITE_INTENSE.append(sb).append("* * * * Files to Copy * * * *");
-		return Color.RESET.append(sb).toString();
+		return Color.WHITE_INTENSE.highlight("* * * * Files to Copy * * * *");
 	}
 
 	private static String textFrom(Settings settings) {
-		StringBuilder sb = new StringBuilder();
-		Color.CYAN.append(sb).append("Copy from: ");
-		Color.RESET.append(sb).append(settings.sourceDir());
-		return sb.toString();
+		return Color.CYAN.highlight("Copy from", settings.sourceDir());
 	}
 
 	private static String textTo(Settings settings) {
-		StringBuilder sb = new StringBuilder();
-		Color.CYAN_INTENSE.append(sb).append("Copy to: ");
-		Color.RESET.append(sb).append(settings.targetDir().resolve(settings.sourceDir().getFileName()));
-		return sb.toString();
+		return Color.CYAN_INTENSE.highlight("Copy to",
+				settings.targetDir().resolve(settings.sourceDir().getFileName()));
 	}
 }

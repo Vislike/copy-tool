@@ -5,92 +5,108 @@ import java.util.List;
 
 import ct.app.App;
 import ct.app.Settings;
+import ct.files.progress.IProgressEvent.CopyEndEvent;
 import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
-import ct.tui.StdoutPrinter.DeBounce;
+import ct.tui.types.DeBounce;
 import ct.tui.types.ProgressUpdate;
 import ct.utils.AnsiEscapeCodes;
+import ct.utils.AnsiEscapeCodes.Color;
 
 public class TerminalUpdater {
 
-	private static final long DEBOUNCE_TIME = 900;
+	private static final long DEBOUNCE_TIME = 1000;
 
-	private class ThreadStatus {
-
+	private class Row {
 		private DeBounce db;
 		boolean eof = false;
-		String message = "";
-
-		public ThreadStatus() {
-		}
-
-		public boolean update(ProgressUpdate pu) {
-
-			if (pu.eof()) {
-				eof = true;
-				return true;
-			}
-
-			switch (pu.event()) {
-			case CopyStartEvent e -> {
-				db = new DeBounce(e.ct().sourceFile().size());
-				message = StdoutPrinter.stringMessage(pu.event(), db);
-			}
-			case CopyProgressEvent e -> {
-				if (db.shouldUpdate(e.size(), DEBOUNCE_TIME)) {
-					message = StdoutPrinter.stringMessage(pu.event(), db);
-				} else {
-					return false;
-				}
-			}
-			default -> message = StdoutPrinter.stringMessage(pu.event(), db);
-			}
-
-			return true;
-		}
+		String heading = "Starting up...";
+		String body = "Grabbing task...";
 	}
 
 	private final Settings settings;
-	private final List<ThreadStatus> statuses = new ArrayList<>();
+	private final List<Row> rows = new ArrayList<>();
 
-	private int rows = 0;
+	private int newLines = 0;
 	private StringBuilder sb = new StringBuilder();
+	private boolean firstLog = true;
 
 	public TerminalUpdater(Settings settings) {
 		this.settings = settings;
-		for (int i = 0; i < settings.filesSimultaneously(); i++) {
-			statuses.add(new ThreadStatus());
+		for (int tId = 0; tId < settings.filesSimultaneously(); tId++) {
+			rows.add(new Row());
 		}
 	}
 
 	public void update(ProgressUpdate pu) {
-		if (statuses.get(pu.threadId()).update(pu)) {
+		Row row = rows.get(pu.threadId());
+		if (pu.eof()) {
+			row.eof = true;
 			draw();
+			return;
+		}
+
+		switch (pu.event()) {
+		case CopyStartEvent e -> {
+			row.db = new DeBounce(DEBOUNCE_TIME, e.ct().sourceFile().size());
+			row.heading = e.ct().sourceFile().relativeFromSource().toString();
+			row.body = StdoutPrinter.createProgress(0, row.db);
+			draw();
+		}
+		case CopyProgressEvent e -> {
+			if (row.db.shouldUpdate(e.size())) {
+				row.body = StdoutPrinter.createProgress(e.size(), row.db);
+				draw();
+			}
+		}
+		case CopyEndEvent e -> {
+			log(Color.YELLOW.highlight("Copied", e.ct().sourceFile()));
+		}
+		default -> {
+		}
 		}
 	}
 
 	private void draw() {
-		// Clear old
 		clear();
+		paint();
+	}
 
-		sb.append(nl()).append("Copy status:").append(nl());
-		for (ThreadStatus threadStatus : statuses) {
+	private void log(String msg) {
+		clear();
+		if (firstLog) {
+			firstLog = false;
+			sb.append(System.lineSeparator());
+		}
+		sb.append(msg).append(System.lineSeparator());
+		paint();
+	}
+
+	private void paint() {
+		if (rows.stream().anyMatch(r -> !r.eof)) {
+			Color.WHITE_INTENSE.highlight(sb.append(nl()), "Copy progress:").append(nl());
+		}
+		for (Row threadStatus : rows) {
 			if (!threadStatus.eof) {
-				sb.append(threadStatus.message.substring(0,
-						Math.min(threadStatus.message.length(), settings.terminalWidth()))).append(nl());
+				sb.append(maxWidth(threadStatus.heading)).append(nl());
+				sb.append(maxWidth(threadStatus.body)).append(nl());
 			}
 		}
 		App.infonn(sb.toString());
 	}
 
+	private String maxWidth(String text) {
+		return text.substring(0, Math.min(text.length(), settings.terminalWidth()));
+	}
+
 	private String nl() {
-		rows++;
+		newLines++;
 		return System.lineSeparator();
 	}
 
 	private void clear() {
 		sb.setLength(0);
-		AnsiEscapeCodes.moveUpAndErase(sb, rows);
-		rows = 0;
+		AnsiEscapeCodes.moveUpAndErase(sb, newLines);
+		newLines = 0;
 	}
 }

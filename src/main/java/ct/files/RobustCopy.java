@@ -18,8 +18,8 @@ import ct.files.progress.IProgressEvent.RestartEvent;
 import ct.files.progress.IProgressEvent.TruncateEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
-import ct.files.types.CopyTask;
 import ct.files.progress.IProgressReport;
+import ct.files.types.CopyTask;
 
 public class RobustCopy {
 

@@ -18,6 +18,12 @@ public class AnsiEscapeCodes {
 			this.color = color;
 		}
 
+		public void emit() {
+			if (Settings.terminalColor) {
+				App.infonn(color);
+			}
+		}
+
 		public StringBuilder append(StringBuilder sb) {
 			if (Settings.terminalColor) {
 				sb.append(color);
@@ -25,10 +31,21 @@ public class AnsiEscapeCodes {
 			return sb;
 		}
 
-		public void emit() {
-			if (Settings.terminalColor) {
-				App.infonn(color);
+		public StringBuilder highlight(StringBuilder sb, String msg, Object... args) {
+			append(sb).append(msg);
+			if (args.length > 0) {
+				Color.RESET.append(sb.append(": ")).append(args[0]);
+				for (int i = 1; i < args.length; i++) {
+					Color.RESET.append(append(sb).append(", ")).append(args[i]);
+				}
+			} else {
+				Color.RESET.append(sb);
 			}
+			return sb;
+		}
+
+		public String highlight(String msg, Object... args) {
+			return highlight(new StringBuilder(Utils.SB_SIZE), msg, args).toString();
 		}
 	}
 

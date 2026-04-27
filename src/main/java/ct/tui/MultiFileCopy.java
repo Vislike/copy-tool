@@ -19,6 +19,36 @@ public class MultiFileCopy {
 	private final Settings settings;
 	private final BlockingQueue<ProgressUpdate> progressQueue;
 
+	public MultiFileCopy(Settings settings) {
+		this.settings = settings;
+		progressQueue = new ArrayBlockingQueue<>(settings.filesSimultaneously() * 4);
+	}
+
+	public void copyAll(List<CopyTask> fileList) {
+		BlockingQueue<CopyTask> copyTaskQueue = new ArrayBlockingQueue<>(fileList.size(), false, fileList);
+
+		List<Optional<Thread>> threads = new ArrayList<>();
+
+		for (int tId = 0; tId < settings.filesSimultaneously(); tId++) {
+			threads.add(Optional.of(workerThread(tId, copyTaskQueue)));
+		}
+
+		TerminalUpdater terminalUpdater = new TerminalUpdater(settings);
+
+		try {
+			while (threads.stream().anyMatch(Optional::isPresent)) {
+				ProgressUpdate progressUpdate = progressQueue.take();
+				if (progressUpdate.eof()) {
+					threads.set(progressUpdate.threadId(), Optional.empty());
+				}
+				terminalUpdater.update(progressUpdate);
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new AssertionError("Interrupt not implemented yet", e);
+		}
+	}
+
 	private static class ProgressSender implements IProgressReport {
 
 		private final int threadId;
@@ -50,40 +80,9 @@ public class MultiFileCopy {
 
 	}
 
-	public MultiFileCopy(Settings settings) {
-		this.settings = settings;
-		progressQueue = new ArrayBlockingQueue<>(settings.filesSimultaneously() * 4);
-	}
-
-	public void copyAll(List<CopyTask> fileList) {
-		BlockingQueue<CopyTask> copyTaskQueue = new ArrayBlockingQueue<>(fileList.size(), false, fileList);
-
-		List<Optional<Thread>> threads = new ArrayList<>();
-
-		for (int i = 0; i < settings.filesSimultaneously(); i++) {
-			Thread thread = workerThread(i, copyTaskQueue);
-			threads.add(Optional.of(thread));
-		}
-
-		TerminalUpdater terminalUpdater = new TerminalUpdater(settings);
-
-		try {
-			while (!allEof(threads)) {
-				ProgressUpdate progressUpdate = progressQueue.take();
-				if (progressUpdate.eof()) {
-					threads.set(progressUpdate.threadId(), Optional.empty());
-				}
-				terminalUpdater.update(progressUpdate);
-			}
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new AssertionError("Interrupt not implemented yet", e);
-		}
-	}
-
-	private Thread workerThread(int threadId, BlockingQueue<CopyTask> copyTaskQueue) {
+	private Thread workerThread(int tId, BlockingQueue<CopyTask> copyTaskQueue) {
 		return Thread.ofVirtual().start(() -> {
-			ProgressSender ps = new ProgressSender(threadId, progressQueue);
+			ProgressSender ps = new ProgressSender(tId, progressQueue);
 			RobustCopy rc = new RobustCopy(new FilesIO(), settings, ps);
 			CopyTask ct;
 			while ((ct = copyTaskQueue.poll()) != null) {
@@ -91,14 +90,5 @@ public class MultiFileCopy {
 			}
 			ps.done();
 		});
-	}
-
-	private boolean allEof(List<Optional<Thread>> threads) {
-		for (var t : threads) {
-			if (t.isPresent()) {
-				return false;
-			}
-		}
-		return true;
 	}
 }
