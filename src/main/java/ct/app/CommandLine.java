@@ -11,7 +11,7 @@ public class CommandLine {
 	}
 
 	static void help() {
-		App.info("""
+		App.infolb("""
 				Usage:
 				ct [-options] <src> <dst>
 
@@ -22,13 +22,15 @@ public class CommandLine {
 				  Functional:
 				    -h    Show this help, and exit.
 				    -d    Dry Run, analyse only, skips file copy. (D)
+				    -n n  Copy multiple files at the same time, 1-8. (%1$d)
 				    -o    Overwrite modified files instead of skipping them. (D)
 				    -v    Verbose output, for debugging purpose. (D)
+				    -x    Dev Mode, enables experimental features. (D)
 				  Visual:
 				    -b    Enable show all sizes in raw bytes instead of human readable. (D)
 				    -c    Disable colors in text output. (E)
-				    -w n  Max width of dynamic content. (120)
-				""");
+				    -w n  Max width of dynamic content, 40-500. (%2$d)
+				""".formatted(App.NUM_FILES_SIMULTANEOUSLY, App.TERMINAL_WIDTH));
 	}
 
 	private static enum ReqParams {
@@ -36,7 +38,7 @@ public class CommandLine {
 	}
 
 	private static enum OptParams {
-		TERM_WIDTH, NONE;
+		NONE, TERM_WIDTH, MULTIPLE_FILES;
 	}
 
 	static void parseOutputArgs(String[] args) {
@@ -55,6 +57,7 @@ public class CommandLine {
 	}
 
 	static Optional<Settings> parseArgs(String[] args) {
+		// States
 		ReqParams reqParams = ReqParams.SOURCE;
 		OptParams optParams = OptParams.NONE;
 
@@ -62,8 +65,10 @@ public class CommandLine {
 		Path targetDir = null;
 		boolean dryRun = false;
 		boolean overwrite = false;
+		int filesSimultaneously = App.NUM_FILES_SIMULTANEOUSLY;
 		int terminalWidth = App.TERMINAL_WIDTH;
 
+		// Parse
 		for (String arg : args) {
 			if (arg.startsWith("-")) {
 				for (int i = 1; i < arg.length(); i++) {
@@ -77,6 +82,7 @@ public class CommandLine {
 						// Handled in parseOutputArgs
 					}
 					case 'w' -> optParams = OptParams.TERM_WIDTH;
+					case 'n' -> optParams = OptParams.MULTIPLE_FILES;
 					default -> {
 						App.error("Invalid parameter", arg.charAt(i));
 						return Optional.empty();
@@ -104,8 +110,9 @@ public class CommandLine {
 					// Parse Optional
 					try {
 						switch (optParams) {
-						case TERM_WIDTH -> terminalWidth = Integer.parseInt(arg);
 						case NONE -> throw new AssertionError();
+						case TERM_WIDTH -> terminalWidth = Integer.parseInt(arg);
+						case MULTIPLE_FILES -> filesSimultaneously = Integer.parseInt(arg);
 						}
 					} catch (NumberFormatException e) {
 						App.error("N must be a number", arg);
@@ -116,6 +123,7 @@ public class CommandLine {
 			}
 		}
 
+		// Validate
 		if (sourceDir == null) {
 			App.error("Missing required parameter", "<src>", "<dst>");
 			return Optional.empty();
@@ -131,8 +139,19 @@ public class CommandLine {
 			App.error("Invalid parameter, <dst> must be a directory", targetDir);
 			return Optional.empty();
 		}
-		Settings s = new Settings(sourceDir, targetDir, dryRun, overwrite, App.BUFF_SIZE, App.WAIT_TIME,
-				App.ROLLBACK_BUFFERS, App.NUM_FILES_SIMULTANEOUSLY, terminalWidth);
-		return Optional.of(s);
+
+		if (filesSimultaneously < 1 || filesSimultaneously > 8) {
+			App.error("Invlaid value for -n", filesSimultaneously);
+			return Optional.empty();
+		}
+
+		if (terminalWidth < 40 || terminalWidth > 500) {
+			App.error("Invlaid value for -w", terminalWidth);
+			return Optional.empty();
+		}
+
+		// Done
+		return Optional.of(new Settings(sourceDir, targetDir, dryRun, overwrite, App.BUFF_SIZE, App.WAIT_TIME,
+				App.ROLLBACK_BUFFERS, filesSimultaneously, terminalWidth));
 	}
 }

@@ -24,10 +24,10 @@ import ct.utils.Utils.Timer;
 public class TestBufferSizes {
 
 	public static void main(String[] args) throws IOException {
-		App.infona("= = = = Copy Tool Buffer Test = = = =");
+		App.info("= = = = Copy Tool Buffer Test = = = =");
 
 		if (args.length == 0) {
-			App.info("Usage: ct-buffer-test *path-to-test-dir-with-generated-files*");
+			App.infolb("Usage: ct-buffer-test *path-to-test-dir-with-generated-files*");
 			return;
 		}
 
@@ -43,6 +43,7 @@ public class TestBufferSizes {
 		}
 
 		Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "ct-test-buffer-temp-file");
+		App.info();
 		App.highlight("Test Dir", testDir);
 		App.highlight("Tempfile", tempFile);
 		App.highlight("Hashfile", hashFile);
@@ -59,6 +60,7 @@ public class TestBufferSizes {
 			Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
 			FileRecord sourceFile = FileRecord.sourceFile(testFile, Files.size(testFile), testDir.relativize(testFile));
 			testCopy(sourceFile, targetFile, numBytes, sha256Map, log);
+			App.info();
 
 			numBytes *= 2;
 		}
@@ -66,7 +68,7 @@ public class TestBufferSizes {
 		log.forEach(App::info);
 		Files.delete(targetFile.path());
 
-		App.infonb(timer.elapsedSeconds("Done in"));
+		App.infolb(timer.elapsedSeconds("Done in"));
 	}
 
 	private static void testCopy(FileRecord source, FileRecord target, int numBytes, Map<String, String> sha256Map,
@@ -85,7 +87,7 @@ public class TestBufferSizes {
 
 		compareHashes(source, target, sha256Map, sb);
 		String status = sb.toString();
-		App.infona(status);
+		App.info(status);
 		log.add(status);
 	}
 

@@ -24,8 +24,8 @@ public class MultiFileCopy {
 		progressQueue = new ArrayBlockingQueue<>(settings.filesSimultaneously() * 4);
 	}
 
-	public void copyAll(List<CopyTask> fileList) {
-		BlockingQueue<CopyTask> copyTaskQueue = new ArrayBlockingQueue<>(fileList.size(), false, fileList);
+	public void copyAll(List<CopyTask> tasks) {
+		BlockingQueue<CopyTask> copyTaskQueue = new ArrayBlockingQueue<>(tasks.size(), false, tasks);
 
 		List<Optional<Thread>> threads = new ArrayList<>();
 

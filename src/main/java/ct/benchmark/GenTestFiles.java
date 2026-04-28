@@ -19,10 +19,10 @@ public class GenTestFiles {
 	public static final int SIZE = 1024 * 1024 * 512;
 
 	public static void main(String[] args) throws IOException {
-		App.infona("= = = = Copy Tool Gen Test Files = = = =");
+		App.info("= = = = Copy Tool Gen Test Files = = = =");
 
 		if (args.length == 0) {
-			App.info("Usage: ct-gen-files *path-to-test-dir*");
+			App.infolb("Usage: ct-gen-files *path-to-test-dir*");
 			return;
 		}
 
@@ -37,6 +37,7 @@ public class GenTestFiles {
 			return;
 		}
 
+		App.info();
 		App.highlight("Test Dir", testDir);
 		App.highlight("Filesize", Utils.size(SIZE));
 		App.highlight("Hashfile", hashFile);
@@ -60,7 +61,7 @@ public class GenTestFiles {
 			}
 		}
 
-		App.infonb(timer.elapsedSeconds("Done in"));
+		App.infolb(timer.elapsedSeconds("Done in"));
 	}
 
 	private static String hash(ByteBuffer bb, FileRecord fileRecord) throws IOException {
