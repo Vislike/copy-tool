@@ -58,7 +58,7 @@ public class StdoutPrinter implements IProgressReport {
 
 		// Elapsed seconds
 		long totalElapsedSec = (currentTime - db.startTime()) / 1000;
-		sb.append(Utils.timeElapsed(totalElapsedSec));
+		sb.append(Utils.timeClock(totalElapsedSec));
 
 		// Progress in bytes
 		sb.append("  |  " + Utils.size(bytes) + " / " + Utils.size(db.size()));
@@ -73,7 +73,7 @@ public class StdoutPrinter implements IProgressReport {
 
 			if (bytesPerSec > 0) {
 				long remaningSec = (db.size() - bytes) / bytesPerSec;
-				sb.append(", Rem: " + Utils.timeLeft(remaningSec));
+				sb.append(", Rem: " + Utils.timeDuration(remaningSec));
 			}
 			sb.append("]");
 		}

@@ -12,6 +12,7 @@ import ct.tui.types.DeBounce;
 import ct.tui.types.ProgressUpdate;
 import ct.utils.AnsiEscapeCodes;
 import ct.utils.AnsiEscapeCodes.Color;
+import ct.utils.Utils;
 
 public class TerminalUpdater {
 
@@ -60,11 +61,21 @@ public class TerminalUpdater {
 			}
 		}
 		case CopyEndEvent e -> {
-			log(Color.YELLOW.highlight("Copied", e.ct().sourceFile()));
+			log(Color.YELLOW.highlight("Copied", e.ct().sourceFile() + copyStats(row.db)));
 		}
 		default -> {
 		}
 		}
+	}
+
+	private String copyStats(DeBounce db) {
+		StringBuilder sb = new StringBuilder();
+		long seconds = (db.time() - db.startTime()) / 1000;
+		sb.append(" in ").append(Utils.timeDuration(seconds));
+		if (seconds > 0) {
+			sb.append(" (").append(Utils.size(db.size() / seconds)).append("/s)");
+		}
+		return sb.toString();
 	}
 
 	private void draw() {
@@ -73,11 +84,13 @@ public class TerminalUpdater {
 	}
 
 	private void log(String msg) {
-		clear();
 		if (firstLog) {
+			clear();
 			firstLog = false;
-			sb.append(System.lineSeparator());
+		} else {
+			clearAppendLog();
 		}
+		sb.append(System.lineSeparator());
 		sb.append(msg).append(System.lineSeparator());
 		paint();
 	}
@@ -107,6 +120,12 @@ public class TerminalUpdater {
 	private void clear() {
 		sb.setLength(0);
 		AnsiEscapeCodes.moveUpAndErase(sb, newLines);
+		newLines = 0;
+	}
+
+	private void clearAppendLog() {
+		sb.setLength(0);
+		AnsiEscapeCodes.moveEndOfPrevAndErase(sb, newLines);
 		newLines = 0;
 	}
 }

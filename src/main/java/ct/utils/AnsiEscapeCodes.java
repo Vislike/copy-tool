@@ -49,13 +49,20 @@ public class AnsiEscapeCodes {
 		}
 	}
 
-	private static final String PREV_LINE = "\u001B[%dF";
+	private static final int END_COL = 1000;
+	private static final String CURSOR_UP = "\u001B[%dA";
+	private static final String CURSOR_FORWARD = "\u001B[%dC";
+	private static final String CURSOR_PREV_LINE = "\u001B[%dF";
 	private static final String ERASE_DOWN = "\u001B[J";
 
 	public static StringBuilder moveUpAndErase(StringBuilder sb, int lines) {
 		if (lines > 0) {
-			sb.append(PREV_LINE.formatted(lines)).append(ERASE_DOWN);
+			sb.append(CURSOR_PREV_LINE.formatted(lines)).append(ERASE_DOWN);
 		}
 		return sb;
+	}
+
+	public static StringBuilder moveEndOfPrevAndErase(StringBuilder sb, int lines) {
+		return sb.append(CURSOR_UP.formatted(lines + 1)).append(CURSOR_FORWARD.formatted(END_COL)).append(ERASE_DOWN);
 	}
 }

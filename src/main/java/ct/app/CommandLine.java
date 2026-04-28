@@ -18,14 +18,16 @@ public class CommandLine {
 				    <src> Can be file or directory (filesystem root is not supported).
 				    <dst> Must be directory (since <src> structure is kept).
 
-				Options:
+				Options - Defaults in parentheses, D = Disabled, E = Eanbled:
+				  Functional:
 				    -h    Show this help, and exit.
-				    -d    Dry Run, skips file copy.
-				    -o    Overwrite modified files instead of skipping them.
-
-				    -b    Show all sizes in raw bytes instead of human readable.
-				    -c    Disable colors in text output.
-				    -v    Enable verbose output, for debugging purpose.
+				    -d    Dry Run, analyse only, skips file copy. (D)
+				    -o    Overwrite modified files instead of skipping them. (D)
+				    -v    Verbose output, for debugging purpose. (D)
+				  Visual:
+				    -b    Enable show all sizes in raw bytes instead of human readable. (D)
+				    -c    Disable colors in text output. (E)
+				    -w n  Max width of dynamic content. (120)
 				""");
 	}
 
@@ -34,7 +36,7 @@ public class CommandLine {
 	}
 
 	private static enum OptParams {
-		NONE;
+		TERM_WIDTH, NONE;
 	}
 
 	static void parseOutputArgs(String[] args) {
@@ -60,6 +62,7 @@ public class CommandLine {
 		Path targetDir = null;
 		boolean dryRun = false;
 		boolean overwrite = false;
+		int terminalWidth = App.TERMINAL_WIDTH;
 
 		for (String arg : args) {
 			if (arg.startsWith("-")) {
@@ -73,6 +76,7 @@ public class CommandLine {
 					case 'b', 'c', 'v', 'x' -> {
 						// Handled in parseOutputArgs
 					}
+					case 'w' -> optParams = OptParams.TERM_WIDTH;
 					default -> {
 						App.error("Invalid parameter", arg.charAt(i));
 						return Optional.empty();
@@ -98,6 +102,15 @@ public class CommandLine {
 					}
 				} else {
 					// Parse Optional
+					try {
+						switch (optParams) {
+						case TERM_WIDTH -> terminalWidth = Integer.parseInt(arg);
+						case NONE -> throw new AssertionError();
+						}
+					} catch (NumberFormatException e) {
+						App.error("N must be a number", arg);
+						return Optional.empty();
+					}
 					optParams = OptParams.NONE;
 				}
 			}
@@ -119,7 +132,7 @@ public class CommandLine {
 			return Optional.empty();
 		}
 		Settings s = new Settings(sourceDir, targetDir, dryRun, overwrite, App.BUFF_SIZE, App.WAIT_TIME,
-				App.ROLLBACK_BUFFERS, App.NUM_FILES_SIMULTANEOUSLY, App.TERMINAL_WIDTH);
+				App.ROLLBACK_BUFFERS, App.NUM_FILES_SIMULTANEOUSLY, terminalWidth);
 		return Optional.of(s);
 	}
 }
