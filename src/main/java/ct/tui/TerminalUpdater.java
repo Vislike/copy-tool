@@ -68,16 +68,6 @@ public class TerminalUpdater {
 		}
 	}
 
-	private String copyStats(DeBounce db) {
-		StringBuilder sb = new StringBuilder();
-		long seconds = (db.time() - db.startTime()) / 1000;
-		sb.append(" in ").append(Utils.timeDuration(seconds));
-		if (seconds > 0) {
-			sb.append(" (").append(Utils.size(db.size() / seconds)).append("/s)");
-		}
-		return sb.toString();
-	}
-
 	private void draw() {
 		clear();
 		paint();
@@ -127,5 +117,15 @@ public class TerminalUpdater {
 		sb.setLength(0);
 		AnsiEscapeCodes.moveEndOfPrevAndErase(sb, newLines);
 		newLines = 0;
+	}
+
+	private String copyStats(DeBounce db) {
+		StringBuilder sb = new StringBuilder();
+		long seconds = (db.time() - db.startTime()) / 1000;
+		sb.append(" in ").append(Utils.timeDuration(seconds));
+		if (seconds > 0) {
+			sb.append(" [").append(Utils.size(db.size() / seconds)).append("/s]");
+		}
+		return sb.toString();
 	}
 }
