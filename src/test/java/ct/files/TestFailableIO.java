@@ -7,20 +7,24 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 
+import ct.app.App;
 import ct.files.io.FilesIO;
 import ct.files.io.IOWrapper;
+import ct.utils.Utils;
 
 public class TestFailableIO implements IOWrapper {
 
 	private final IOWrapper io;
 	private final int count[];
 	private final int failAt[];
+	private final int corruptAt[];
 	private int writeOneLessByteAt = 0;
 
 	TestFailableIO() {
 		io = new FilesIO();
 		count = new int[TT.values().length];
 		failAt = new int[TT.values().length];
+		corruptAt = new int[TT.values().length];
 	}
 
 	enum TT {
@@ -33,6 +37,11 @@ public class TestFailableIO implements IOWrapper {
 
 	TestFailableIO failAt(TT t, int n) {
 		failAt[t.ordinal()] = n;
+		return this;
+	}
+
+	TestFailableIO corruptAt(TT t, int n) {
+		corruptAt[t.ordinal()] = n;
 		return this;
 	}
 
@@ -82,12 +91,25 @@ public class TestFailableIO implements IOWrapper {
 	@Override
 	public int read(FileChannel channel, ByteBuffer dst) throws IOException {
 		incCoundAndCheckFail(TT.read);
-		return io.read(channel, dst);
+		int read = io.read(channel, dst);
+		if (corruptAt[TT.read.ordinal()] == count[TT.read.ordinal()]) {
+			dst.put(0, (byte) 0);
+			if (RobustCopyIT.OUTPUT_VISIBLE) {
+				App.verbose("Corrupting read at", Utils.size(channel.position() - read));
+			}
+		}
+		return read;
 	}
 
 	@Override
 	public int write(FileChannel channel, ByteBuffer src) throws IOException {
 		incCoundAndCheckFail(TT.write);
+		if (corruptAt[TT.write.ordinal()] == count[TT.write.ordinal()]) {
+			if (RobustCopyIT.OUTPUT_VISIBLE) {
+				App.verbose("Corrupting write at", Utils.size(channel.position()));
+			}
+			src.put(1, (byte) 0);
+		}
 		int testError = writeOneLessByteAt == count(TT.write) ? 1 : 0;
 		return io.write(channel, src) - testError;
 	}
