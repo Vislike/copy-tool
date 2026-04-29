@@ -9,6 +9,10 @@ import java.nio.file.attribute.FileTime;
 
 public interface IOWrapper {
 
+	enum WT {
+		createDirectories, getLastModifiedTime, setLastModifiedTime, open, position, read, write, size, truncate, close
+	};
+
 	// Files
 
 	Path createDirectories(Path path) throws IOException;

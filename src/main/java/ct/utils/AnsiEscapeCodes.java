@@ -34,18 +34,24 @@ public class AnsiEscapeCodes {
 		public StringBuilder highlight(StringBuilder sb, String msg, Object... args) {
 			append(sb).append(msg);
 			if (args.length > 0) {
-				Color.RESET.append(sb.append(": ")).append(args[0]);
+				RESET.append(sb.append(": ")).append(args[0]);
 				for (int i = 1; i < args.length; i++) {
-					Color.RESET.append(append(sb).append(", ")).append(args[i]);
+					RESET.append(append(sb).append(", ")).append(args[i]);
 				}
 			} else {
-				Color.RESET.append(sb);
+				RESET.append(sb);
 			}
 			return sb;
 		}
 
 		public String highlight(String msg, Object... args) {
 			return highlight(new StringBuilder(Utils.SB_SIZE), msg, args).toString();
+		}
+
+		public String state(String state, String msg) {
+			StringBuilder sb = new StringBuilder(Utils.SB_SIZE);
+			RESET.append(this.append(sb.append("[")).append(state)).append("] ");
+			return sb.append(msg).toString();
 		}
 	}
 

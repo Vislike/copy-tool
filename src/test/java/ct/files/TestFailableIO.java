@@ -22,25 +22,21 @@ public class TestFailableIO implements IOWrapper {
 
 	TestFailableIO() {
 		io = new FilesIO();
-		count = new int[TT.values().length];
-		failAt = new int[TT.values().length];
-		corruptAt = new int[TT.values().length];
+		count = new int[WT.values().length];
+		failAt = new int[WT.values().length];
+		corruptAt = new int[WT.values().length];
 	}
 
-	enum TT {
-		createDirectories, getLastModifiedTime, setLastModifiedTime, open, position, read, write, size, truncate, close
-	};
-
-	int count(TT t) {
+	int count(WT t) {
 		return count[t.ordinal()];
 	}
 
-	TestFailableIO failAt(TT t, int n) {
+	TestFailableIO failAt(WT t, int n) {
 		failAt[t.ordinal()] = n;
 		return this;
 	}
 
-	TestFailableIO corruptAt(TT t, int n) {
+	TestFailableIO corruptAt(WT t, int n) {
 		corruptAt[t.ordinal()] = n;
 		return this;
 	}
@@ -50,7 +46,7 @@ public class TestFailableIO implements IOWrapper {
 		return this;
 	}
 
-	private void incCoundAndCheckFail(TT t) throws IOException {
+	private void incCoundAndCheckFail(WT t) throws IOException {
 		int i = t.ordinal();
 		count[i]++;
 		if (failAt[i] == count[i]) {
@@ -60,39 +56,39 @@ public class TestFailableIO implements IOWrapper {
 
 	@Override
 	public Path createDirectories(Path path) throws IOException {
-		incCoundAndCheckFail(TT.createDirectories);
+		incCoundAndCheckFail(WT.createDirectories);
 		return io.createDirectories(path);
 	}
 
 	@Override
 	public FileTime getLastModifiedTime(Path path) throws IOException {
-		incCoundAndCheckFail(TT.getLastModifiedTime);
+		incCoundAndCheckFail(WT.getLastModifiedTime);
 		return io.getLastModifiedTime(path);
 	}
 
 	@Override
 	public Path setLastModifiedTime(Path path, FileTime time) throws IOException {
-		incCoundAndCheckFail(TT.setLastModifiedTime);
+		incCoundAndCheckFail(WT.setLastModifiedTime);
 		return io.setLastModifiedTime(path, time);
 	}
 
 	@Override
 	public FileChannel open(Path path, OpenOption... options) throws IOException {
-		incCoundAndCheckFail(TT.open);
+		incCoundAndCheckFail(WT.open);
 		return io.open(path, options);
 	}
 
 	@Override
 	public FileChannel position(FileChannel channel, long newPosition) throws IOException {
-		incCoundAndCheckFail(TT.position);
+		incCoundAndCheckFail(WT.position);
 		return io.position(channel, newPosition);
 	}
 
 	@Override
 	public int read(FileChannel channel, ByteBuffer dst) throws IOException {
-		incCoundAndCheckFail(TT.read);
+		incCoundAndCheckFail(WT.read);
 		int read = io.read(channel, dst);
-		if (corruptAt[TT.read.ordinal()] == count[TT.read.ordinal()]) {
+		if (corruptAt[WT.read.ordinal()] == count[WT.read.ordinal()]) {
 			dst.put(0, (byte) 0);
 			if (RobustCopyIT.OUTPUT_VISIBLE) {
 				App.verbose("Corrupting read at", Utils.size(channel.position() - read));
@@ -103,32 +99,32 @@ public class TestFailableIO implements IOWrapper {
 
 	@Override
 	public int write(FileChannel channel, ByteBuffer src) throws IOException {
-		incCoundAndCheckFail(TT.write);
-		if (corruptAt[TT.write.ordinal()] == count[TT.write.ordinal()]) {
+		incCoundAndCheckFail(WT.write);
+		if (corruptAt[WT.write.ordinal()] == count[WT.write.ordinal()]) {
 			if (RobustCopyIT.OUTPUT_VISIBLE) {
 				App.verbose("Corrupting write at", Utils.size(channel.position()));
 			}
 			src.put(1, (byte) 0);
 		}
-		int testError = writeOneLessByteAt == count(TT.write) ? 1 : 0;
+		int testError = writeOneLessByteAt == count(WT.write) ? 1 : 0;
 		return io.write(channel, src) - testError;
 	}
 
 	@Override
 	public long size(FileChannel channel) throws IOException {
-		incCoundAndCheckFail(TT.size);
+		incCoundAndCheckFail(WT.size);
 		return io.size(channel);
 	}
 
 	@Override
 	public FileChannel truncate(FileChannel channel, long size) throws IOException {
-		incCoundAndCheckFail(TT.truncate);
+		incCoundAndCheckFail(WT.truncate);
 		return io.truncate(channel, size);
 	}
 
 	@Override
 	public void close(FileChannel channel) throws IOException {
-		incCoundAndCheckFail(TT.close);
+		incCoundAndCheckFail(WT.close);
 		io.close(channel);
 	}
 }

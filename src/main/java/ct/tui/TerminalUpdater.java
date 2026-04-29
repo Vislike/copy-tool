@@ -1,5 +1,6 @@
 package ct.tui;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,6 +9,9 @@ import ct.app.Settings;
 import ct.files.progress.IProgressEvent.CopyEndEvent;
 import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
+import ct.files.progress.IProgressEvent.ErrorEvent;
+import ct.files.progress.IProgressEvent.WaitEndEvent;
+import ct.files.progress.IProgressEvent.WaitStartEvent;
 import ct.tui.types.DeBounce;
 import ct.tui.types.ProgressUpdate;
 import ct.utils.AnsiEscapeCodes;
@@ -18,11 +22,39 @@ public class TerminalUpdater {
 
 	private static final long DEBOUNCE_TIME = 1000;
 
+	enum State {
+		Copying(Color.GREEN), Waiting(Color.YELLOW);
+
+		final Color c;
+
+		State(Color c) {
+			this.c = c;
+		}
+	}
+
 	private class Row {
-		private DeBounce db;
 		boolean eof = false;
+		DeBounce db;
+		Path path;
 		String heading = "Starting up...";
 		String body = "Grabbing task...";
+
+		public void heading(Path path) {
+			this.path = path;
+		}
+
+		void state(State s) {
+			this.heading = maxWidth(s.c.state(s.toString(), path.toString()));
+		}
+
+		void body(String body) {
+			this.body = maxWidth(body);
+		}
+
+		private String maxWidth(String text) {
+			return text.substring(0, Math.min(text.length(), settings.terminalWidth()));
+		}
+
 	}
 
 	private final Settings settings;
@@ -50,18 +82,26 @@ public class TerminalUpdater {
 		switch (pu.event()) {
 		case CopyStartEvent e -> {
 			row.db = new DeBounce(DEBOUNCE_TIME, e.ct().sourceFile().size());
-			row.heading = e.ct().sourceFile().relativeFromSource().toString();
-			row.body = StdoutPrinter.createProgress(0, row.db);
+			row.heading(e.ct().sourceFile().relativeFromSource());
+			row.state(State.Copying);
+			row.body(StdoutPrinter.createProgress(0, row.db));
 			draw();
 		}
 		case CopyProgressEvent e -> {
 			if (row.db.shouldUpdate(e.size())) {
-				row.body = StdoutPrinter.createProgress(e.size(), row.db);
+				row.body(StdoutPrinter.createProgress(e.size(), row.db));
 				draw();
 			}
 		}
-		case CopyEndEvent e -> {
-			log(Color.YELLOW.highlight("Copied", e.ct().sourceFile() + copyStats(row.db)));
+		case CopyEndEvent e -> log(Color.YELLOW.highlight("Copied", e.ct().sourceFile() + copyStats(row.db)));
+		case ErrorEvent e -> row.body(Color.RED.highlight(e.description(), e.cause()));
+		case WaitStartEvent _ -> {
+			row.state(State.Waiting);
+			draw();
+		}
+		case WaitEndEvent _ -> {
+			row.state(State.Copying);
+			draw();
 		}
 		default -> {
 		}
@@ -89,17 +129,13 @@ public class TerminalUpdater {
 		if (rows.stream().anyMatch(r -> !r.eof)) {
 			Color.WHITE_INTENSE.highlight(sb.append(nl()), "Copy progress:").append(nl());
 		}
-		for (Row threadStatus : rows) {
-			if (!threadStatus.eof) {
-				sb.append(maxWidth(threadStatus.heading)).append(nl());
-				sb.append(maxWidth(threadStatus.body)).append(nl());
+		for (Row row : rows) {
+			if (!row.eof) {
+				sb.append(row.heading).append(nl());
+				sb.append(row.body).append(nl());
 			}
 		}
 		App.infonn(sb.toString());
-	}
-
-	private String maxWidth(String text) {
-		return text.substring(0, Math.min(text.length(), settings.terminalWidth()));
 	}
 
 	private String nl() {

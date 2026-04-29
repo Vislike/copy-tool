@@ -152,6 +152,6 @@ public class CommandLine {
 
 		// Done
 		return Optional.of(new Settings(sourceDir, targetDir, dryRun, overwrite, App.BUFF_SIZE, App.WAIT_TIME,
-				App.ROLLBACK_BUFFERS, filesSimultaneously, terminalWidth));
+				App.ROLLBACK_BUFFERS, filesSimultaneously, terminalWidth, App.CHAOS_CHANCE));
 	}
 }
