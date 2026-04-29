@@ -27,9 +27,19 @@ public class ChaosIO implements IOWrapper {
 	private void chaos(WT t) throws IOException {
 		int roll = rand.nextInt(SCALE);
 		if (roll < chance) {
-			throw new IOException("Chaos rolled: " + (roll + 1) + "/" + SCALE + ", during \"" + t + "\", your odds: "
-					+ df.format((double) chance / (double) (SCALE)));
-
+			if (rand.nextInt(10) < 1) {
+				throw new IOException("""
+						Complete chaos errupted\r\n
+						What should we dooooooo(m)?????\r\n
+						This is many lines, and huge,
+						Maybe a stack trace, formating chaos ensure.
+						Maybe a stack trace, formating chaos ensure.
+						Maybe a stack trace, formating chaos ensure.
+						""");
+			} else {
+				throw new IOException("Chaos rolled: " + (roll + 1) + "/" + SCALE + ", during \"" + t
+						+ "\", your odds: " + df.format((double) chance / (double) (SCALE)));
+			}
 		}
 	}
 

@@ -21,6 +21,8 @@ import ct.utils.Utils;
 public class TerminalUpdater {
 
 	private static final long DEBOUNCE_TIME = 1000;
+	// GREEN = 5, RESET = 3, "[] " = 3, Copying = 7
+	private static final int STATUS_SIZE = 18;
 
 	enum State {
 		Copying(Color.GREEN), Waiting(Color.YELLOW);
@@ -35,24 +37,29 @@ public class TerminalUpdater {
 	private class Row {
 		boolean eof = false;
 		DeBounce db;
-		Path path;
+		String name;
 		String heading = "Starting up...";
 		String body = "Grabbing task...";
 
 		public void heading(Path path) {
-			this.path = path;
+			int len = path.getNameCount();
+			name = path.toString();
+			for (int i = 1; i < len && name.length() > settings.terminalWidth() - STATUS_SIZE; i++) {
+				name = path.subpath(i, len).toString();
+			}
 		}
 
 		void state(State s) {
-			this.heading = maxWidth(s.c.state(s.toString(), path.toString()));
+			this.heading = overflow(s.c.state(s.toString(), name));
 		}
 
 		void body(String body) {
-			this.body = maxWidth(body);
+			this.body = overflow(body);
 		}
 
-		private String maxWidth(String text) {
-			return text.substring(0, Math.min(text.length(), settings.terminalWidth()));
+		private String overflow(String text) {
+			String prot = text.replaceAll("\r?\n", " ");
+			return prot.substring(0, Math.min(prot.length(), settings.terminalWidth()));
 		}
 
 	}

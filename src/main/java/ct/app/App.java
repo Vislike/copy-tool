@@ -16,7 +16,7 @@ public class App {
 	static final int ROLLBACK_BUFFERS = 1;
 	static final int NUM_FILES_SIMULTANEOUSLY = 2;
 	static final int TERMINAL_WIDTH = 120;
-	static final int CHAOS_CHANCE = 2000;
+	static final int CHAOS_CHANCE = 500;
 
 	public static void main(String[] args) throws IOException {
 		info("= = = = Copy Tool v" + version() + " = = = =");
