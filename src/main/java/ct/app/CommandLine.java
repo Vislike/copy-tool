@@ -5,6 +5,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
+import ct.app.Settings.AnalyseSettings;
+import ct.app.Settings.MultiFileSettings;
+import ct.app.Settings.RobustCopySettings;
+
 public class CommandLine {
 
 	private CommandLine() {
@@ -151,7 +155,9 @@ public class CommandLine {
 		}
 
 		// Done
-		return Optional.of(new Settings(sourceDir, targetDir, dryRun, overwrite, App.BUFF_SIZE, App.WAIT_TIME,
-				App.ROLLBACK_BUFFERS, filesSimultaneously, terminalWidth));
+		AnalyseSettings aSettings = new AnalyseSettings(sourceDir, targetDir, dryRun, overwrite);
+		RobustCopySettings rcSettings = new RobustCopySettings(App.BUFF_SIZE, App.WAIT_TIME, App.ROLLBACK_BUFFERS);
+		MultiFileSettings mfSettings = new MultiFileSettings(filesSimultaneously, terminalWidth);
+		return Optional.of(new Settings(aSettings, rcSettings, mfSettings));
 	}
 }

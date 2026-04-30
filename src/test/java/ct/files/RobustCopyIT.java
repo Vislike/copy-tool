@@ -80,7 +80,8 @@ public class RobustCopyIT {
 	}
 
 	private RobustCopy createRobustCopy(IOWrapper wrapper, int rollback) {
-		return new RobustCopy(wrapper, Settings.rollback(TEST_BUFFER_SIZE, rollback), createMessageProducer());
+		return new RobustCopy(wrapper, Settings.rollback(TEST_BUFFER_SIZE, rollback).robustCopy(),
+				createMessageProducer());
 	}
 
 	private void copyAndVerifySmallFile(IOWrapper wrapper) throws IOException {

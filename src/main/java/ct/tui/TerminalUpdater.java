@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ct.app.App;
-import ct.app.Settings;
+import ct.app.Settings.MultiFileSettings;
 import ct.files.progress.IProgressEvent.CopyEndEvent;
 import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
@@ -64,14 +64,14 @@ public class TerminalUpdater {
 
 	}
 
-	private final Settings settings;
+	private final MultiFileSettings settings;
 	private final List<Row> rows = new ArrayList<>();
 
 	private int newLines = 0;
 	private StringBuilder sb = new StringBuilder();
 	private boolean firstLog = true;
 
-	public TerminalUpdater(Settings settings) {
+	public TerminalUpdater(MultiFileSettings settings) {
 		this.settings = settings;
 		for (int tId = 0; tId < settings.filesSimultaneously(); tId++) {
 			rows.add(new Row());

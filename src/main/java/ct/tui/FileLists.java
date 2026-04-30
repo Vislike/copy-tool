@@ -4,6 +4,8 @@ import java.util.List;
 
 import ct.app.App;
 import ct.app.Settings;
+import ct.app.Settings.AnalyseSettings;
+import ct.app.Settings.RobustCopySettings;
 import ct.files.Analyse;
 import ct.files.RobustCopy;
 import ct.files.io.FilesIO;
@@ -15,7 +17,9 @@ import ct.utils.Utils.Timer;
 
 public class FileLists {
 
-	public static void analyseAllFiles(Settings settings) {
+	public static void analyseAllFiles(Settings globalSettings) {
+		AnalyseSettings settings = globalSettings.analyse();
+
 		App.devModeCheck();
 		App.infolb(textFrom(settings));
 		App.info(textTo(settings));
@@ -57,15 +61,15 @@ public class FileLists {
 		} else {
 			Timer timer = Utils.timer();
 			if (Settings.devMode) {
-				new MultiFileCopy(settings, new FilesIO()).copyAll(files.copy());
+				new MultiFileCopy(globalSettings, new FilesIO()).copyAll(files.copy());
 			} else {
-				simpleMode(settings, files.copy());
+				simpleMode(globalSettings.robustCopy(), files.copy());
 			}
 			App.infolb(timer.elapsedSeconds("Copy Complete in"));
 		}
 	}
 
-	private static void simpleMode(Settings settings, List<CopyTask> tasks) {
+	private static void simpleMode(RobustCopySettings settings, List<CopyTask> tasks) {
 		RobustCopy rc = new RobustCopy(new FilesIO(), settings, new StdoutPrinter());
 		tasks.forEach(ct -> {
 			App.info();
@@ -73,10 +77,10 @@ public class FileLists {
 		});
 	}
 
-	private static String textMismatch(Settings settings) {
+	private static String textMismatch(AnalyseSettings s) {
 		StringBuilder sb = new StringBuilder();
 		Color.WHITE_INTENSE.append(sb).append("- - - - Existing mismatching files (");
-		if (settings.overwrite()) {
+		if (s.overwrite()) {
 			Color.RED.append(sb).append("overwriting");
 		} else {
 			Color.YELLOW.append(sb).append("skipping");
@@ -93,12 +97,11 @@ public class FileLists {
 		return Color.WHITE_INTENSE.highlight("* * * * Files to Copy * * * *");
 	}
 
-	private static String textFrom(Settings settings) {
-		return Color.CYAN.highlight("Copy from", settings.sourceDir());
+	private static String textFrom(AnalyseSettings s) {
+		return Color.CYAN.highlight("Copy from", s.sourceDir());
 	}
 
-	private static String textTo(Settings settings) {
-		return Color.CYAN_INTENSE.highlight("Copy to",
-				settings.targetDir().resolve(settings.sourceDir().getFileName()));
+	private static String textTo(AnalyseSettings s) {
+		return Color.CYAN_INTENSE.highlight("Copy to", s.targetDir().resolve(s.sourceDir().getFileName()));
 	}
 }

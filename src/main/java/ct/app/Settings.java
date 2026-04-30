@@ -2,8 +2,16 @@ package ct.app;
 
 import java.nio.file.Path;
 
-public record Settings(Path sourceDir, Path targetDir, boolean dryRun, boolean overwrite, int bufferSize,
-		int waitBeforeRetryTimeSec, int rollbackBuffersNum, int filesSimultaneously, int terminalWidth) {
+public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, MultiFileSettings multiFile) {
+
+	public static record AnalyseSettings(Path sourceDir, Path targetDir, boolean dryRun, boolean overwrite) {
+	}
+
+	public static record RobustCopySettings(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum) {
+	}
+
+	public static record MultiFileSettings(int filesSimultaneously, int terminalWidth) {
+	}
 
 	public static boolean verbose = false;
 	public static boolean rawBytes = false;
@@ -21,7 +29,8 @@ public record Settings(Path sourceDir, Path targetDir, boolean dryRun, boolean o
 
 	public static Settings numFiles(int bufferSize, int rollbackBuffersNum, int waitBeforeRetryTimeSec,
 			int filesSimultaneously) {
-		return new Settings(null, null, false, false, bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum,
-				filesSimultaneously, App.TERMINAL_WIDTH);
+		return new Settings(new AnalyseSettings(null, null, false, false),
+				new RobustCopySettings(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum),
+				new MultiFileSettings(filesSimultaneously, App.TERMINAL_WIDTH));
 	}
 }
