@@ -25,7 +25,7 @@ public class TerminalUpdater {
 	private static final int STATUS_SIZE = 18;
 
 	enum State {
-		Copying(Color.GREEN), Waiting(Color.YELLOW);
+		Copying(Color.GREEN), Waiting(Color.RED), Retryin(Color.YELLOW);
 
 		final Color c;
 
@@ -96,6 +96,7 @@ public class TerminalUpdater {
 		}
 		case CopyProgressEvent e -> {
 			if (row.db.shouldUpdate(e.size())) {
+				row.state(State.Copying);
 				row.body(StdoutPrinter.createProgress(e.size(), row.db));
 				draw();
 			}
@@ -107,7 +108,7 @@ public class TerminalUpdater {
 			draw();
 		}
 		case WaitEndEvent _ -> {
-			row.state(State.Copying);
+			row.state(State.Retryin);
 			draw();
 		}
 		default -> {
