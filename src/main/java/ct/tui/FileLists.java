@@ -57,7 +57,7 @@ public class FileLists {
 		} else {
 			Timer timer = Utils.timer();
 			if (Settings.devMode) {
-				new MultiFileCopy(settings).copyAll(files.copy());
+				new MultiFileCopy(settings, new FilesIO()).copyAll(files.copy());
 			} else {
 				simpleMode(settings, files.copy());
 			}

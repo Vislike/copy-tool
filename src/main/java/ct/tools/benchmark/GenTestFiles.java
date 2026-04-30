@@ -1,4 +1,4 @@
-package ct.benchmark;
+package ct.tools.benchmark;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -10,6 +10,7 @@ import java.util.Random;
 
 import ct.app.App;
 import ct.files.types.FileRecord;
+import ct.tools.Shared;
 import ct.utils.TestUtils;
 import ct.utils.Utils;
 import ct.utils.Utils.Timer;
@@ -45,19 +46,15 @@ public class GenTestFiles {
 
 		Timer timer = Utils.timer();
 		Random random = new Random();
-		int numBytes = 512;
 
 		try (BufferedWriter hashWriter = Files.newBufferedWriter(hashFile)) {
-			// 512 B to 16 MiB
-			for (int i = 0; i < 16; i++) {
+			for (int numBytes : Shared.bytesList()) {
 				Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
 				FileRecord fileRecord = FileRecord.sourceFile(testFile, SIZE, testDir.relativize(testFile));
 				App.highlight("Creating", fileRecord);
 				ByteBuffer bb = randomBb(random, (int) fileRecord.size());
 				Files.write(fileRecord.path(), bb.array());
 				hashWriter.append(hash(bb, fileRecord));
-
-				numBytes *= 2;
 			}
 		}
 

@@ -1,4 +1,4 @@
-package ct.files.io;
+package ct.tools.chaos;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -9,7 +9,8 @@ import java.nio.file.attribute.FileTime;
 import java.text.DecimalFormat;
 import java.util.Random;
 
-import ct.app.Settings;
+import ct.files.io.FilesIO;
+import ct.files.io.IOWrapper;
 
 public class ChaosIO implements IOWrapper {
 
@@ -20,8 +21,8 @@ public class ChaosIO implements IOWrapper {
 	private final IOWrapper io = new FilesIO();
 	private final Random rand = new Random();
 
-	public ChaosIO(Settings settings) {
-		chance = settings.chaosIoChance();
+	public ChaosIO(int chance) {
+		this.chance = chance;
 	}
 
 	private void chaos(WT t) throws IOException {

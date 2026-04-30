@@ -8,7 +8,7 @@ import java.util.concurrent.BlockingQueue;
 
 import ct.app.Settings;
 import ct.files.RobustCopy;
-import ct.files.io.ChaosIO;
+import ct.files.io.IOWrapper;
 import ct.files.progress.IProgressEvent;
 import ct.files.progress.IProgressReport;
 import ct.files.types.CopyTask;
@@ -17,10 +17,12 @@ import ct.tui.types.ProgressUpdate;
 public class MultiFileCopy {
 
 	private final Settings settings;
+	private final IOWrapper io;
 	private final BlockingQueue<ProgressUpdate> progressQueue;
 
-	public MultiFileCopy(Settings settings) {
+	public MultiFileCopy(Settings settings, IOWrapper io) {
 		this.settings = settings;
+		this.io = io;
 		progressQueue = new ArrayBlockingQueue<>(settings.filesSimultaneously() * 4);
 	}
 
@@ -83,7 +85,7 @@ public class MultiFileCopy {
 	private Thread workerThread(int tId, BlockingQueue<CopyTask> copyTaskQueue) {
 		return Thread.ofVirtual().start(() -> {
 			ProgressSender ps = new ProgressSender(tId, progressQueue);
-			RobustCopy rc = new RobustCopy(new ChaosIO(settings), settings, ps);
+			RobustCopy rc = new RobustCopy(io, settings, ps);
 			CopyTask ct;
 			while ((ct = copyTaskQueue.poll()) != null) {
 				rc.copy(ct);

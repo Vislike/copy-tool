@@ -1,11 +1,10 @@
-package ct.benchmark;
+package ct.tools.benchmark;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -16,6 +15,7 @@ import ct.files.RobustCopy;
 import ct.files.io.FilesIO;
 import ct.files.types.CopyTask;
 import ct.files.types.FileRecord;
+import ct.tools.Shared;
 import ct.tui.StdoutPrinter;
 import ct.utils.TestUtils;
 import ct.utils.Utils;
@@ -51,18 +51,14 @@ public class TestBufferSizes {
 
 		Timer timer = Utils.timer();
 		FileRecord targetFile = FileRecord.targetFile(tempFile);
-		Map<String, String> sha256Map = readHashFileToMap(hashFile);
+		Map<String, String> sha256Map = Shared.readHashFileToMap(hashFile);
 		List<String> log = new ArrayList<>();
-		int numBytes = 512;
 
-		// 512 B to 16 MiB
-		for (int i = 0; i < 16; i++) {
+		for (int numBytes : Shared.bytesList()) {
 			Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
 			FileRecord sourceFile = FileRecord.sourceFile(testFile, Files.size(testFile), testDir.relativize(testFile));
 			testCopy(sourceFile, targetFile, numBytes, sha256Map, log);
 			App.info();
-
-			numBytes *= 2;
 		}
 
 		log.forEach(App::info);
@@ -101,20 +97,5 @@ public class TestBufferSizes {
 		} else {
 			sb.append("Warning <Failed> ").append(sha256sum).append(" != ").append(storedHash).append(" </Failed>");
 		}
-	}
-
-	private static Map<String, String> readHashFileToMap(Path hashFile) throws IOException {
-		Map<String, String> sha256 = new HashMap<>();
-		List<String> lines = Files.readAllLines(hashFile);
-		for (String line : lines) {
-			String[] split = line.split(" +");
-			String sha256sum = split[0];
-			String filename = split[1];
-			if (filename.startsWith("*")) {
-				filename = filename.substring(1);
-			}
-			sha256.put(filename, sha256sum);
-		}
-		return sha256;
 	}
 }
