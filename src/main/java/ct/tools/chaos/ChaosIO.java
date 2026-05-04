@@ -18,11 +18,12 @@ public class ChaosIO implements IOWrapper {
 	private static final DecimalFormat df = new DecimalFormat("#.#####%");
 
 	private final int chance;
+	private final Random rand;
 	private final IOWrapper io = new FilesIO();
-	private final Random rand = new Random();
 
-	public ChaosIO(int chance) {
+	public ChaosIO(int chance, long seed) {
 		this.chance = chance;
+		this.rand = new Random(seed);
 	}
 
 	private void chaos(WT t) throws IOException {

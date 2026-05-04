@@ -12,6 +12,7 @@ import ct.files.progress.IProgressEvent.CopyStartEvent;
 import ct.files.progress.IProgressEvent.ErrorEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
+import ct.files.types.FileRecord;
 import ct.tui.types.DeBounce;
 import ct.tui.types.ProgressUpdate;
 import ct.utils.AnsiEscapeCodes;
@@ -66,13 +67,16 @@ public class TerminalUpdater {
 
 	private final MultiFileSettings settings;
 	private final List<Row> rows = new ArrayList<>();
+	private final int totalFiles;
 
+	private int completedFiles = 0;
 	private int newLines = 0;
 	private StringBuilder sb = new StringBuilder();
 	private boolean firstLog = true;
 
-	public TerminalUpdater(MultiFileSettings settings) {
+	public TerminalUpdater(MultiFileSettings settings, int totalFiles) {
 		this.settings = settings;
+		this.totalFiles = totalFiles;
 		for (int tId = 0; tId < settings.filesSimultaneously(); tId++) {
 			rows.add(new Row());
 		}
@@ -101,7 +105,7 @@ public class TerminalUpdater {
 				draw();
 			}
 		}
-		case CopyEndEvent e -> log(Color.YELLOW.highlight("Copied", e.ct().sourceFile() + copyStats(row.db)));
+		case CopyEndEvent e -> log(Color.YELLOW.highlight(copyCount(), copyStats(e.ct().sourceFile(), row.db)));
 		case ErrorEvent e -> row.body(Color.RED.highlight(e.description(), e.cause()));
 		case WaitStartEvent _ -> {
 			row.state(State.Waiting);
@@ -163,10 +167,16 @@ public class TerminalUpdater {
 		newLines = 0;
 	}
 
-	private String copyStats(DeBounce db) {
+	private String copyCount() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Copied ").append(++completedFiles).append("/").append(totalFiles);
+		return sb.toString();
+	}
+
+	private String copyStats(FileRecord file, DeBounce db) {
 		StringBuilder sb = new StringBuilder();
 		long seconds = (db.time() - db.startTime()) / 1000;
-		sb.append(" in ").append(Utils.timeDuration(seconds));
+		sb.append(file).append(" in ").append(Utils.timeDuration(seconds));
 		if (seconds > 0) {
 			sb.append(" [").append(Utils.size(db.size() / seconds)).append("/s]");
 		}

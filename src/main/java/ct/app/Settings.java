@@ -10,7 +10,7 @@ public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, M
 	public static record RobustCopySettings(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum) {
 	}
 
-	public static record MultiFileSettings(int filesSimultaneously, int terminalWidth) {
+	public static record MultiFileSettings(boolean logMode, int filesSimultaneously, int terminalWidth) {
 	}
 
 	public static boolean verbose = false;
@@ -31,6 +31,6 @@ public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, M
 			int filesSimultaneously) {
 		return new Settings(new AnalyseSettings(null, null, false, false),
 				new RobustCopySettings(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum),
-				new MultiFileSettings(filesSimultaneously, App.TERMINAL_WIDTH));
+				new MultiFileSettings(false, filesSimultaneously, App.TERMINAL_WIDTH));
 	}
 }

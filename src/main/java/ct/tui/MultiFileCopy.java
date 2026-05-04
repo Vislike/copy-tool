@@ -37,7 +37,7 @@ public class MultiFileCopy {
 			threads.add(Optional.of(workerThread(tId, copyTaskQueue)));
 		}
 
-		TerminalUpdater terminalUpdater = new TerminalUpdater(settings);
+		TerminalUpdater terminalUpdater = new TerminalUpdater(settings, tasks.size());
 
 		try {
 			while (threads.stream().anyMatch(Optional::isPresent)) {

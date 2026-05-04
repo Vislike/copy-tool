@@ -28,11 +28,13 @@ public class CommandLine {
 				    -d    Dry Run, analyse only, skips file copy. (D)
 				    -n n  Copy multiple files at the same time, 1-8. (%1$d)
 				    -o    Overwrite modified files instead of skipping them. (D)
-				    -v    Verbose output, for debugging purpose. (D)
-				    -x    Dev Mode, enables experimental features. (D)
+				  Modes:
+				    -l    Log mode, disables dynamic progress updates and implies -n 1. (D)
+				    -x    Dev mode, enables experimental features. (D)
 				  Visual:
 				    -b    Enable show all sizes in raw bytes instead of human readable. (D)
 				    -c    Disable colors in text output. (E)
+				    -v    Verbose output, for debugging purpose. (D)
 				    -w n  Max width of dynamic content, 40-500. (%2$d)
 				""".formatted(App.NUM_FILES_SIMULTANEOUSLY, App.TERMINAL_WIDTH));
 	}
@@ -69,6 +71,7 @@ public class CommandLine {
 		Path targetDir = null;
 		boolean dryRun = false;
 		boolean overwrite = false;
+		boolean logMode = false;
 		int filesSimultaneously = App.NUM_FILES_SIMULTANEOUSLY;
 		int terminalWidth = App.TERMINAL_WIDTH;
 
@@ -82,6 +85,7 @@ public class CommandLine {
 					}
 					case 'd' -> dryRun = true;
 					case 'o' -> overwrite = true;
+					case 'l' -> logMode = true;
 					case 'b', 'c', 'v', 'x' -> {
 						// Handled in parseOutputArgs
 					}
@@ -157,7 +161,7 @@ public class CommandLine {
 		// Done
 		AnalyseSettings aSettings = new AnalyseSettings(sourceDir, targetDir, dryRun, overwrite);
 		RobustCopySettings rcSettings = new RobustCopySettings(App.BUFF_SIZE, App.WAIT_TIME, App.ROLLBACK_BUFFERS);
-		MultiFileSettings mfSettings = new MultiFileSettings(filesSimultaneously, terminalWidth);
+		MultiFileSettings mfSettings = new MultiFileSettings(logMode, filesSimultaneously, terminalWidth);
 		return Optional.of(new Settings(aSettings, rcSettings, mfSettings));
 	}
 }

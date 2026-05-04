@@ -3,7 +3,7 @@ The goal of this tool is to copy files over an unstable network connection.
 It will try, try and try again until either you abort it or it has copied all files.
 
 It is inspired by robocopy's restartable mode. But for me, that mode made robocopy very slow and I also got some corrupt files in the end.
-This tool tries to avoid that by immediately closing all file handlers at the first sign of a problem, and then reopening them to try again. I also made it discard the last buffer of copied data, just like the old FTP days, even though I found no case there it actually made any difference in my testing, but still kept it it since it did not hurt either.
+This tool tries to avoid that by immediately closing all file handlers at the first sign of a problem, and then reopening them to try again. I can also optionally discard the last buffer(s) of copied data, just like the old FTP days, even though I found no case where it actually made any difference in my extended testing using the provided wifi-toggle script. In my testing when data was successfully written, as in the write method did not throw IOException, then it never failed checksums verification, both then writing to remote, and writing locally, so i assume integrity is handled by vpn + smb.
 
 The setup this tool was developed for:
 WIFI to 4G modem/router.
@@ -31,8 +31,5 @@ When checking **src** for files **dst** is also analysed and it will use the two
 ## Roadmap
 
 * Multi-threaded read/write, for possible speed gains
-* Support for multiple files at the time
-* Better progress UI
 * Continue an aborted file transfer
 * React to sigterm and gracefully shutdown
-* Chaos inspired tests

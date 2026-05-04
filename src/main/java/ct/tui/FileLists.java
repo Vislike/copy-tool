@@ -32,22 +32,25 @@ public class FileLists {
 		App.info("complete");
 
 		if (!files.match().isEmpty()) {
-			App.infolb(textMatch());
+			App.infolb(textMatch(files.match().size()));
 			Color.GREEN.emit();
 			files.match().forEach(App::info);
 			Color.RESET.emit();
+			App.info(textMatch(files.match().size()));
 		}
 
 		if (!files.mismatch().isEmpty()) {
-			App.infolb(textMismatch(settings));
+			App.infolb(textMismatch(files.mismatch().size(), settings));
 			Color.YELLOW.emit();
 			files.mismatch().forEach(App::info);
 			Color.RESET.emit();
+			App.info(textMismatch(files.mismatch().size(), settings));
 		}
 
 		if (!files.copy().isEmpty()) {
-			App.infolb(textCopy());
+			App.infolb(textCopy(files.copy().size()));
 			files.copy().forEach(App::info);
+			App.info(textCopy(files.copy().size()));
 		}
 
 		App.infolb(textFrom(settings));
@@ -60,16 +63,16 @@ public class FileLists {
 			App.infolb("Up to date");
 		} else {
 			Timer timer = Utils.timer();
-			if (Settings.devMode) {
-				new MultiFileCopy(globalSettings, new FilesIO()).copyAll(files.copy());
+			if (globalSettings.multiFile().logMode()) {
+				logMode(globalSettings.robustCopy(), files.copy());
 			} else {
-				simpleMode(globalSettings.robustCopy(), files.copy());
+				new MultiFileCopy(globalSettings, new FilesIO()).copyAll(files.copy());
 			}
 			App.infolb(timer.elapsedSeconds("Copy Complete in"));
 		}
 	}
 
-	private static void simpleMode(RobustCopySettings settings, List<CopyTask> tasks) {
+	private static void logMode(RobustCopySettings settings, List<CopyTask> tasks) {
 		RobustCopy rc = new RobustCopy(new FilesIO(), settings, new StdoutPrinter());
 		tasks.forEach(ct -> {
 			App.info();
@@ -77,24 +80,24 @@ public class FileLists {
 		});
 	}
 
-	private static String textMismatch(AnalyseSettings s) {
+	private static String textMismatch(int num, AnalyseSettings s) {
 		StringBuilder sb = new StringBuilder();
-		Color.WHITE_INTENSE.append(sb).append("- - - - Existing mismatching files (");
+		Color.WHITE_INTENSE.append(sb).append("- - - Existing mismatching files (");
 		if (s.overwrite()) {
 			Color.RED.append(sb).append("overwriting");
 		} else {
 			Color.YELLOW.append(sb).append("skipping");
 		}
-		Color.WHITE_INTENSE.append(sb).append(") - - - -");
-		return Color.RESET.append(sb).toString();
+		Color.WHITE_INTENSE.append(sb).append("): ");
+		return Color.RESET.append(sb).append(num).toString();
 	}
 
-	private static String textMatch() {
-		return Color.WHITE_INTENSE.highlight("+ + + + Existing matching files (size and modify date) + + + +");
+	private static String textMatch(int num) {
+		return Color.WHITE_INTENSE.highlight("* * * Existing matching files (size and modify date)", num);
 	}
 
-	private static String textCopy() {
-		return Color.WHITE_INTENSE.highlight("* * * * Files to Copy * * * *");
+	private static String textCopy(int num) {
+		return Color.WHITE_INTENSE.highlight("+ + + Files to Copy", num);
 	}
 
 	private static String textFrom(AnalyseSettings s) {
