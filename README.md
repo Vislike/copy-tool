@@ -6,9 +6,9 @@ It is inspired by robocopy's restartable mode. But for me, that mode made roboco
 This tool tries to avoid that by immediately closing all file handlers at the first sign of a problem, and then reopening them to try again. I can also optionally discard the last buffer(s) of copied data, just like the old FTP days, even though I found no case where it actually made any difference in my extended testing using the provided wifi-toggle script. In my testing when data was successfully written, as in the write method did not throw IOException, then it never failed checksums verification, both then writing to remote, and writing locally, so i assume integrity is handled by vpn + smb.
 
 The setup this tool was developed for:
-WIFI to 4G modem/router.
-VPN over 4G connection.
-Windows share (smb) mounted over VPN.
+* WIFI to 4G modem/router.
+* VPN over 4G connection.
+* Windows share (smb) mounted over VPN.
 
 This means that if something goes down, then the files will no longer be visible to your system, and tools like robocopy would simply stop retrying since it can no longer see any files.
 This tool first index all files at the start, so it knows what files it needs to copy and simply retries indefinitely until it either succeeds or you manually abort. So if you loose 4G connection and VPN gets disconnected, so your smb shares are no longer mounted, then it will print errors until 4G connection is restored and VPN reconnected, and then it happily continue from where it left of.
