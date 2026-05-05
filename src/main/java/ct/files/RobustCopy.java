@@ -21,6 +21,7 @@ import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
 import ct.files.progress.IProgressReport;
 import ct.files.types.CopyTask;
+import ct.utils.Utils;
 
 public class RobustCopy {
 
@@ -52,8 +53,17 @@ public class RobustCopy {
 
 		// Resume
 		if (ct.sourceFile().position() > 0) {
-			pr.event(new ResumeEvent(ct.sourceFile().position()));
-			bytesCopied = ct.sourceFile().position();
+			if (ct.sourceFile().position() < ct.sourceFile().size()) {
+				if (ct.sourceFile().position() % settings.bufferSize() != 0) {
+					pr.warning("Warning unaligned resume", ct + " at " + Utils.size(ct.sourceFile().position()));
+				}
+				// Align
+				long skipBuffers = ct.sourceFile().position() / settings.bufferSize();
+				bytesCopied = skipBuffers * settings.bufferSize();
+			} else {
+				bytesCopied = ct.sourceFile().position();
+			}
+			pr.event(new ResumeEvent(bytesCopied));
 		}
 
 		// Copy file
@@ -141,7 +151,7 @@ public class RobustCopy {
 			try {
 				fileTime = io.getLastModifiedTime(path);
 			} catch (IOException e) {
-				pr.error("Error getting last modified time", e.getMessage());
+				pr.error("Error getting modified time", e.getMessage());
 				waitBeforeRetry();
 			}
 		}
@@ -167,7 +177,7 @@ public class RobustCopy {
 					io.close(channel);
 				}
 			} catch (IOException e) {
-				pr.warning("Warning closing channel failed", e.getMessage());
+				pr.error("Error closing channel", e.getMessage());
 			}
 		}
 	}

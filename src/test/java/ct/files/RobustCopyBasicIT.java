@@ -34,10 +34,10 @@ public class RobustCopyBasicIT extends RobustCopyIT {
 		assertEquals(2, io.count(t));
 	}
 
-	private void testResume(IOWrapper wrapper, long pos) throws IOException {
+	private void testResume(IOWrapper wrapper, long pos, int rollback) throws IOException {
 		FileRecord fr = smallFile();
 		FileRecord rr = FileRecord.resumeSource(fr.path(), fr.size(), pos, fr.relativeFromSource());
-		createRobustCopy(wrapper, 0).copy(new CopyTask(rr, tempFile()));
+		createRobustCopy(wrapper, rollback).copy(new CopyTask(rr, tempFile()));
 		verifySha256Temp(SHA_256_SMALL_FILE, true);
 	}
 
@@ -124,7 +124,7 @@ public class RobustCopyBasicIT extends RobustCopyIT {
 		// Copy with resume
 		subTestStart();
 		io = new TestFailableIO();
-		testResume(io, 1024);
+		testResume(io, 1024, 0);
 		assertEquals(2, io.count(WT.read));
 		assertEquals(2, io.count(WT.write));
 		assertEquals(2, io.count(WT.position));
@@ -136,13 +136,53 @@ public class RobustCopyBasicIT extends RobustCopyIT {
 		}
 		verifySha256Temp(SHA_256_SMALL_FILE, false);
 
-		// Copy with resume
+		// File is already complete, make sure it is truncated
 		subTestStart();
 		io = new TestFailableIO();
-		testResume(io, 1999);
+		testResume(io, 1999, 0);
 		assertEquals(0, io.count(WT.read));
 		assertEquals(0, io.count(WT.write));
 		assertEquals(2, io.count(WT.position));
 		assertEquals(1, io.count(WT.truncate));
+	}
+
+	@Test
+	void resumeUnaligned() throws IOException {
+		// Copy base and truncate
+		copyAndVerifySmallFile(new TestFailableIO());
+		int pos = 512 * 3 - 2;
+		FileChannel.open(tempFile().path(), StandardOpenOption.WRITE).truncate(pos).close();
+		assertEquals(pos, Files.size(tempFile().path()));
+
+		// Copy with resume
+		subTestStart();
+		TestFailableIO io = new TestFailableIO();
+		testResume(io, pos, 0);
+		assertEquals(2, io.count(WT.read));
+		assertEquals(2, io.count(WT.write));
+
+		// Copy and corrupt
+		createRobustCopy(new TestFailableIO().corruptAt(WT.write, 3), 0).copy(new CopyTask(smallFile(), tempFile()));
+		verifySha256Temp(SHA_256_SMALL_FILE, false);
+		pos = 512 * 2 + 2;
+		FileChannel.open(tempFile().path(), StandardOpenOption.WRITE).truncate(pos).close();
+		assertEquals(pos, Files.size(tempFile().path()));
+
+		// Copy with resume
+		subTestStart();
+		io = new TestFailableIO();
+		testResume(io, pos, 0);
+		assertEquals(2, io.count(WT.read));
+		assertEquals(2, io.count(WT.write));
+	}
+
+	@Test
+	void resumeWithRollback() throws IOException {
+		createRobustCopy(new TestFailableIO().corruptAt(WT.write, 2), 0).copy(new CopyTask(smallFile(), tempFile()));
+		verifySha256Temp(SHA_256_SMALL_FILE, false);
+		TestFailableIO io = new TestFailableIO();
+		testResume(io, 512 * 2, 1);
+		assertEquals(3, io.count(WT.read));
+		assertEquals(3, io.count(WT.write));
 	}
 }

@@ -13,6 +13,7 @@ import ct.files.progress.IProgressEvent.ErrorEvent;
 import ct.files.progress.IProgressEvent.ResumeEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
+import ct.files.progress.IProgressEvent.WarningEvent;
 import ct.files.types.FileRecord;
 import ct.tui.types.DeBounce;
 import ct.tui.types.ProgressUpdate;
@@ -109,6 +110,7 @@ public class TerminalUpdater {
 		}
 		case CopyEndEvent e -> log(Color.YELLOW.highlight(copyCount(), copyStats(e.ct().sourceFile(), row.db)));
 		case ErrorEvent e -> row.body(Color.RED.highlight(e.description(), e.cause()));
+		case WarningEvent e -> log(Color.MAGENTA.highlight(e.description(), e.cause()));
 		case WaitStartEvent _ -> {
 			row.state(State.Waiting);
 			draw();
