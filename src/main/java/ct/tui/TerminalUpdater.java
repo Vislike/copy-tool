@@ -10,6 +10,7 @@ import ct.files.progress.IProgressEvent.CopyEndEvent;
 import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
 import ct.files.progress.IProgressEvent.ErrorEvent;
+import ct.files.progress.IProgressEvent.ResumeEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
 import ct.files.types.FileRecord;
@@ -98,6 +99,7 @@ public class TerminalUpdater {
 			row.body(StdoutPrinter.createProgress(0, row.db));
 			draw();
 		}
+		case ResumeEvent e -> row.db.setResumePos(e.pos());
 		case CopyProgressEvent e -> {
 			if (row.db.shouldUpdate(e.size())) {
 				row.state(State.Copying);
@@ -178,7 +180,7 @@ public class TerminalUpdater {
 		long seconds = (db.time() - db.startTime()) / 1000;
 		sb.append(file).append(" in ").append(Utils.timeDuration(seconds));
 		if (seconds > 0) {
-			sb.append(" [").append(Utils.size(db.size() / seconds)).append("/s]");
+			sb.append(" [").append(Utils.size(db.copySize() / seconds)).append("/s]");
 		}
 		return sb.toString();
 	}

@@ -15,6 +15,7 @@ import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
 import ct.files.progress.IProgressEvent.ModifiedTimeEvent;
 import ct.files.progress.IProgressEvent.RestartEvent;
+import ct.files.progress.IProgressEvent.ResumeEvent;
 import ct.files.progress.IProgressEvent.TruncateEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
@@ -48,6 +49,12 @@ public class RobustCopy {
 		long bytesCopied = 0;
 		FileChannel inChannel = null;
 		FileChannel outChannel = null;
+
+		// Resume
+		if (ct.sourceFile().position() > 0) {
+			pr.event(new ResumeEvent(ct.sourceFile().position()));
+			bytesCopied = ct.sourceFile().position();
+		}
 
 		// Copy file
 		while (!copyComplete) {

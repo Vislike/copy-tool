@@ -85,6 +85,8 @@ public class FileLists {
 		Color.WHITE_INTENSE.append(sb).append("- - - Existing mismatching files (");
 		if (s.overwrite()) {
 			Color.RED.append(sb).append("overwriting");
+		} else if (s.resume()) {
+			Color.MAGENTA.append(sb).append("resuming");
 		} else {
 			Color.YELLOW.append(sb).append("skipping");
 		}

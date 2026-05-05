@@ -16,6 +16,10 @@ public record FileRecord(Path path, long size, long position, Path relativeFromS
 		return new FileRecord(path, NO_SIZE, 0, null);
 	}
 
+	public static FileRecord resumeSource(Path path, long size, long position, Path relativeFromSource) {
+		return new FileRecord(path, size, position, relativeFromSource);
+	}
+
 	@Override
 	public final String toString() {
 		StringBuilder sb = new StringBuilder();

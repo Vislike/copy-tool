@@ -8,6 +8,7 @@ import ct.files.progress.IProgressEvent.CopyStartEvent;
 import ct.files.progress.IProgressEvent.ErrorEvent;
 import ct.files.progress.IProgressEvent.ModifiedTimeEvent;
 import ct.files.progress.IProgressEvent.RestartEvent;
+import ct.files.progress.IProgressEvent.ResumeEvent;
 import ct.files.progress.IProgressEvent.TruncateEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
@@ -28,6 +29,10 @@ public class StdoutPrinter implements IProgressReport {
 		case CopyStartEvent e -> {
 			db = new DeBounce(DEBOUNCE_TIME, e.ct().sourceFile().size());
 			App.highlight("Copying", e.ct().sourceFile() + " => " + e.ct().targetFile());
+		}
+		case ResumeEvent e -> {
+			db.setResumePos(e.pos());
+			App.highlight("Resuming from", Utils.size(e.pos()));
 		}
 		case CopyProgressEvent e -> {
 			if (db.shouldUpdate(e.size())) {
@@ -68,7 +73,7 @@ public class StdoutPrinter implements IProgressReport {
 
 		// Total speed
 		if (totalElapsedSec > 0) {
-			long bytesPerSec = bytes / totalElapsedSec;
+			long bytesPerSec = (bytes - db.resumePos()) / totalElapsedSec;
 			sb.append("  |  [Avg: " + Utils.size(bytesPerSec) + "/s");
 
 			if (bytesPerSec > 0) {

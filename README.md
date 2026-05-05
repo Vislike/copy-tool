@@ -31,5 +31,4 @@ When checking **src** for files **dst** is also analysed and it will use the two
 ## Roadmap
 
 * Multi-threaded read/write, for possible speed gains
-* Continue an aborted file transfer
 * React to sigterm and gracefully shutdown

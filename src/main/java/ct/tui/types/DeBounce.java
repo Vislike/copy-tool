@@ -7,6 +7,7 @@ public class DeBounce {
 
 	private long time;
 	private long bytes;
+	private long resumePos;
 
 	public DeBounce(long deBounceTime, long size) {
 		this.deBounceTime = deBounceTime;
@@ -23,6 +24,10 @@ public class DeBounce {
 		this.bytes = bytes;
 	}
 
+	public void setResumePos(long resumePos) {
+		this.resumePos = resumePos;
+	}
+
 	public long size() {
 		return size;
 	}
@@ -37,5 +42,13 @@ public class DeBounce {
 
 	public long bytes() {
 		return bytes;
+	}
+
+	public long resumePos() {
+		return resumePos;
+	}
+
+	public long copySize() {
+		return size - resumePos;
 	}
 }

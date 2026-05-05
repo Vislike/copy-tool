@@ -15,6 +15,9 @@ public sealed interface IProgressEvent {
 	record CopyProgressEvent(long size) implements IProgressEvent {
 	}
 
+	record ResumeEvent(long pos) implements IProgressEvent {
+	}
+
 	record RestartEvent(long pos) implements IProgressEvent {
 	}
 

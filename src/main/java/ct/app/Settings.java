@@ -4,7 +4,8 @@ import java.nio.file.Path;
 
 public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, MultiFileSettings multiFile) {
 
-	public static record AnalyseSettings(Path sourceDir, Path targetDir, boolean dryRun, boolean overwrite) {
+	public static record AnalyseSettings(Path sourceDir, Path targetDir, boolean dryRun, boolean overwrite,
+			boolean resume) {
 	}
 
 	public static record RobustCopySettings(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum) {
@@ -29,7 +30,7 @@ public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, M
 
 	public static Settings numFiles(int bufferSize, int rollbackBuffersNum, int waitBeforeRetryTimeSec,
 			int filesSimultaneously) {
-		return new Settings(new AnalyseSettings(null, null, false, false),
+		return new Settings(new AnalyseSettings(null, null, false, false, false),
 				new RobustCopySettings(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum),
 				new MultiFileSettings(false, filesSimultaneously, App.TERMINAL_WIDTH));
 	}
