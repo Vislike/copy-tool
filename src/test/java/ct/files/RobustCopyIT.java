@@ -82,10 +82,8 @@ public abstract class RobustCopyIT {
 
 	protected void subTestStart() {
 		if (OUTPUT_VISIBLE) {
-			if (subTest > 0) {
-				App.info();
-			}
 			subTest++;
+			App.info();
 			App.highlight("Sub Test", subTest);
 		}
 	}

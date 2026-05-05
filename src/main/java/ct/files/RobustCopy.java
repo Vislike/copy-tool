@@ -63,7 +63,7 @@ public class RobustCopy {
 				inChannel = io.open(ct.sourceFile().path(), StandardOpenOption.READ);
 				outChannel = io.open(ct.targetFile().path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 
-				// Rollback last buffer
+				// Restart
 				bytesCopied = Math.max(0, bytesCopied - settings.bufferSize() * settings.rollbackBuffersNum());
 				if (bytesCopied > 0) {
 					pr.event(new RestartEvent(bytesCopied));

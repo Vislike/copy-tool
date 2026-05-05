@@ -3,7 +3,10 @@ package ct.files;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +14,7 @@ import ct.files.io.FilesIO;
 import ct.files.io.IOWrapper;
 import ct.files.io.IOWrapper.WT;
 import ct.files.types.CopyTask;
+import ct.files.types.FileRecord;
 
 public class RobustCopyBasicIT extends RobustCopyIT {
 
@@ -28,6 +32,13 @@ public class RobustCopyBasicIT extends RobustCopyIT {
 		TestFailableIO io = new TestFailableIO();
 		copyAndVerifySmallFile(io.failAt(t, 1));
 		assertEquals(2, io.count(t));
+	}
+
+	private void testResume(IOWrapper wrapper, long pos) throws IOException {
+		FileRecord fr = smallFile();
+		FileRecord rr = FileRecord.resumeSource(fr.path(), fr.size(), pos, fr.relativeFromSource());
+		createRobustCopy(wrapper, 0).copy(new CopyTask(rr, tempFile()));
+		verifySha256Temp(SHA_256_SMALL_FILE, true);
 	}
 
 	@Test
@@ -87,7 +98,7 @@ public class RobustCopyBasicIT extends RobustCopyIT {
 	}
 
 	@Test
-	void sizeTruncateAndResumeFail() throws IOException {
+	void sizeTruncateAndRestartFail() throws IOException {
 		copyAndVerifyLargeFile(new FilesIO());
 		TestFailableIO io = new TestFailableIO();
 		copyAndVerifySmallFile(io.failAt(WT.truncate, 1).failAt(WT.size, 2).failAt(WT.position, 4));
@@ -96,5 +107,42 @@ public class RobustCopyBasicIT extends RobustCopyIT {
 		assertEquals(6, io.count(WT.position));
 		assertEquals(3, io.count(WT.size));
 		assertEquals(2, io.count(WT.truncate));
+	}
+
+	@Test
+	void resume() throws IOException {
+		// Copy base
+		TestFailableIO io = new TestFailableIO();
+		copyAndVerifySmallFile(io);
+		assertEquals(4, io.count(WT.read));
+		assertEquals(4, io.count(WT.write));
+
+		// Truncate it
+		FileChannel.open(tempFile().path(), StandardOpenOption.WRITE).truncate(1024).close();
+		verifySha256Temp(SHA_256_SMALL_FILE, false);
+
+		// Copy with resume
+		subTestStart();
+		io = new TestFailableIO();
+		testResume(io, 1024);
+		assertEquals(2, io.count(WT.read));
+		assertEquals(2, io.count(WT.write));
+		assertEquals(2, io.count(WT.position));
+		assertEquals(0, io.count(WT.truncate));
+
+		// Append bytes
+		try (FileChannel fileChannel = FileChannel.open(tempFile().path(), StandardOpenOption.APPEND)) {
+			fileChannel.write(ByteBuffer.wrap(new byte[] { 1, 2, 3, 4 }));
+		}
+		verifySha256Temp(SHA_256_SMALL_FILE, false);
+
+		// Copy with resume
+		subTestStart();
+		io = new TestFailableIO();
+		testResume(io, 1999);
+		assertEquals(0, io.count(WT.read));
+		assertEquals(0, io.count(WT.write));
+		assertEquals(2, io.count(WT.position));
+		assertEquals(1, io.count(WT.truncate));
 	}
 }
