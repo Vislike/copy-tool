@@ -147,6 +147,9 @@ public class CommandLine {
 		} else if (sourceDir.getFileName() == null) {
 			App.error("Invalid parameter, <src> must be a file or directory", sourceDir);
 			return Optional.empty();
+		} else if (!Files.exists(sourceDir)) {
+			App.error("Invalid parameter, <src> does not exists", sourceDir);
+			return Optional.empty();
 		}
 
 		if (targetDir == null) {
