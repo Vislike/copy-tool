@@ -20,7 +20,7 @@ public class FileLists {
 	public static void analyseAllFiles(Settings globalSettings) {
 		AnalyseSettings settings = globalSettings.analyse();
 
-		App.devModeCheck();
+		App.configCheck(globalSettings);
 		App.infolb(textFrom(settings));
 		App.info(textTo(settings));
 		App.info();
@@ -55,7 +55,7 @@ public class FileLists {
 
 		App.infolb(textFrom(settings));
 		App.info(textTo(settings));
-		App.devModeCheck();
+		App.configCheck(globalSettings);
 
 		if (settings.dryRun()) {
 			App.infolb("Dry Run Complete");

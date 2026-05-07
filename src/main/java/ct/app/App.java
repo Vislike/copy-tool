@@ -100,9 +100,12 @@ public class App {
 		System.out.println(color.highlight(sb, str, args).toString());
 	}
 
-	public static void devModeCheck() {
+	public static void configCheck(Settings settings) {
 		if (Settings.devMode) {
 			warning("Dev Mode", "enabled");
+		}
+		if (settings.multiFile().logMode() && settings.multiFile().filesSimultaneously() > 1) {
+			warning("Log Mode enabled, -n is treated as 1, but set to", settings.multiFile().filesSimultaneously());
 		}
 	}
 }
