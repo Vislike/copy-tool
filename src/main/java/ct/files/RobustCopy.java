@@ -20,6 +20,7 @@ import ct.files.progress.IProgressEvent.TruncateEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
 import ct.files.progress.IProgressReport;
+import ct.files.types.Buffers;
 import ct.files.types.CopyTask;
 import ct.utils.Utils;
 
@@ -28,14 +29,18 @@ public class RobustCopy {
 	private final IOWrapper io;
 	private final RobustCopySettings settings;
 	private final IProgressReport pr;
-	private final ByteBuffer bb;
+	private final Buffers buffers;
 
 	public RobustCopy(IOWrapper io, RobustCopySettings settings, IProgressReport pr) {
 		this.io = io;
 		this.settings = settings;
 		this.pr = pr;
 		// Allocate Buffer
-		this.bb = ByteBuffer.allocateDirect(this.settings.bufferSize());
+		this.buffers = createBuffers();
+	}
+
+	private Buffers createBuffers() {
+		return new Buffers(1, settings.bufferSize());
 	}
 
 	public void copy(CopyTask ct) {
@@ -80,6 +85,7 @@ public class RobustCopy {
 		FileChannel inChannel = null;
 		FileChannel outChannel = null;
 		long bytesCopied = startByte;
+		ByteBuffer bb = buffers.next();
 
 		// Synchronous Copy
 		while (!copyComplete) {
