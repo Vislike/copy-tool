@@ -45,13 +45,9 @@ public class RobustCopy {
 		// Create all parent directories of target
 		createDirectories(ct.targetFile().path().getParent());
 
-		// States
-		boolean copyComplete = false;
-		long bytesCopied = 0;
-		FileChannel inChannel = null;
-		FileChannel outChannel = null;
-
 		// Resume
+		long startByte = 0;
+
 		if (ct.sourceFile().position() > 0) {
 			if (ct.sourceFile().position() < ct.sourceFile().size()) {
 				if (ct.sourceFile().position() % settings.bufferSize() != 0) {
@@ -59,21 +55,40 @@ public class RobustCopy {
 				}
 				// Align
 				long skipBuffers = ct.sourceFile().position() / settings.bufferSize();
-				bytesCopied = skipBuffers * settings.bufferSize();
+				startByte = skipBuffers * settings.bufferSize();
 			} else {
-				bytesCopied = ct.sourceFile().position();
+				startByte = ct.sourceFile().position();
 			}
-			pr.event(new ResumeEvent(bytesCopied));
+			pr.event(new ResumeEvent(startByte));
 		}
 
 		// Copy file
+		singleThreadedSynchronousCopyWithRollbackSupport(ct, startByte);
+
+		// Set last modified time to same as source
+		FileTime lastModifiedTime = getLastModifiedTime(ct.sourceFile().path());
+		pr.event(new ModifiedTimeEvent(lastModifiedTime));
+		setLastModifiedTime(ct.targetFile().path(), lastModifiedTime);
+
+		// End
+		pr.event(new CopyEndEvent(ct));
+	}
+
+	private void singleThreadedSynchronousCopyWithRollbackSupport(final CopyTask ct, final long startByte) {
+		// States
+		boolean copyComplete = false;
+		FileChannel inChannel = null;
+		FileChannel outChannel = null;
+		long bytesCopied = startByte;
+
+		// Synchronous Copy
 		while (!copyComplete) {
 			try {
 				// Open files
 				inChannel = io.open(ct.sourceFile().path(), StandardOpenOption.READ);
 				outChannel = io.open(ct.targetFile().path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
 
-				// Restart
+				// Restart with Rollback
 				bytesCopied = Math.max(0, bytesCopied - settings.bufferSize() * settings.rollbackBuffersNum());
 				if (bytesCopied > 0) {
 					pr.event(new RestartEvent(bytesCopied));
@@ -113,14 +128,6 @@ public class RobustCopy {
 				close(outChannel);
 			}
 		}
-
-		// Set last modified time to same as source
-		FileTime lastModifiedTime = getLastModifiedTime(ct.sourceFile().path());
-		pr.event(new ModifiedTimeEvent(lastModifiedTime));
-		setLastModifiedTime(ct.targetFile().path(), lastModifiedTime);
-
-		// End
-		pr.event(new CopyEndEvent(ct));
 	}
 
 	private void waitBeforeRetry() {
