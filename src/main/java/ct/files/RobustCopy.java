@@ -8,6 +8,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
+import ct.app.Settings;
 import ct.app.Settings.RobustCopySettings;
 import ct.files.io.IOWrapper;
 import ct.files.progress.IProgressEvent.CopyEndEvent;
@@ -26,6 +27,9 @@ import ct.utils.Utils;
 
 public class RobustCopy {
 
+	private static final int MT_BUFFERS_QUEUE = 2;
+	private static final int MT_BUFFERS_IN_FLIGHT = 2;
+
 	private final IOWrapper io;
 	private final RobustCopySettings settings;
 	private final IProgressReport pr;
@@ -40,7 +44,7 @@ public class RobustCopy {
 	}
 
 	private Buffers createBuffers() {
-		return new Buffers(1, settings.bufferSize());
+		return new Buffers(Settings.devMode ? MT_BUFFERS_IN_FLIGHT + MT_BUFFERS_QUEUE : 1, settings.bufferSize());
 	}
 
 	public void copy(CopyTask ct) {
@@ -68,7 +72,11 @@ public class RobustCopy {
 		}
 
 		// Copy file
-		singleThreadedSynchronousCopyWithRollbackSupport(ct, startByte);
+		if (Settings.devMode) {
+			multiThreadedCopy(ct, startByte);
+		} else {
+			singleThreadedSynchronousCopyWithRollbackSupport(ct, startByte);
+		}
 
 		// Set last modified time to same as source
 		FileTime lastModifiedTime = getLastModifiedTime(ct.sourceFile().path());
@@ -77,6 +85,10 @@ public class RobustCopy {
 
 		// End
 		pr.event(new CopyEndEvent(ct));
+	}
+
+	private void multiThreadedCopy(final CopyTask ct, final long startByte) {
+		// TODO Auto-generated method stub
 	}
 
 	private void singleThreadedSynchronousCopyWithRollbackSupport(final CopyTask ct, final long startByte) {
@@ -108,12 +120,24 @@ public class RobustCopy {
 					int bytesRead = io.read(inChannel, bb.clear());
 					int bytesWrite = io.write(outChannel, bb.flip());
 
+					// Error checking
+					if (bytesRead == -1) {
+						throw new IOException("Unexpected EOF at: " + Utils.size(bytesCopied) + ", expected size: "
+								+ Utils.size(ct.sourceFile().size()));
+					}
+					if (bytesRead == 0) {
+						throw new IOException("Unexpected 0 byte read at: " + Utils.size(bytesCopied));
+					}
+					if (bytesWrite == 0) {
+						throw new IOException("Unexpected 0 byte write at: " + Utils.size(bytesCopied));
+					}
 					if (bytesRead != bytesWrite) {
-						throw new IOException("Bytes mismatch, read: " + bytesRead + ", write: " + bytesWrite);
+						throw new IOException("Bytes mismatch, read: " + Utils.size(bytesRead) + ", write: "
+								+ Utils.size(bytesWrite));
 					}
 
+					// Successfully copied bytes
 					bytesCopied += bytesRead;
-
 					pr.event(new CopyProgressEvent(bytesCopied));
 				}
 

@@ -10,7 +10,10 @@ import ct.files.progress.IProgressEvent.CopyEndEvent;
 import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
 import ct.files.progress.IProgressEvent.ErrorEvent;
+import ct.files.progress.IProgressEvent.ModifiedTimeEvent;
+import ct.files.progress.IProgressEvent.RestartEvent;
 import ct.files.progress.IProgressEvent.ResumeEvent;
+import ct.files.progress.IProgressEvent.TruncateEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
 import ct.files.progress.IProgressEvent.WaitStartEvent;
 import ct.files.progress.IProgressEvent.WarningEvent;
@@ -111,6 +114,7 @@ public class TerminalUpdater {
 		case CopyEndEvent e -> log(Color.YELLOW.highlight(copyCount(), copyStats(e.ct().sourceFile(), row.db)));
 		case ErrorEvent e -> row.body(Color.RED.highlight(e.description(), e.cause()));
 		case WarningEvent e -> log(Color.MAGENTA.highlight(e.description(), e.cause()));
+		case TruncateEvent e -> log(Color.MAGENTA.highlight("Truncating " + row.name, Utils.size(e.size())));
 		case WaitStartEvent _ -> {
 			row.state(State.Waiting);
 			draw();
@@ -119,7 +123,7 @@ public class TerminalUpdater {
 			row.state(State.Retryin);
 			draw();
 		}
-		default -> {
+		case ModifiedTimeEvent _,RestartEvent _ -> {
 		}
 		}
 	}

@@ -43,18 +43,11 @@ public class StdoutPrinter implements IProgressReport {
 		case ModifiedTimeEvent e -> App.verbose("Setting Modified Time to", e.time());
 		case WarningEvent e -> App.recoverWarning(e.description(), e.cause());
 		case ErrorEvent e -> App.recoverError(e.description(), e.cause());
-		default -> App.info(message(event));
+		case RestartEvent e -> App.info("Restarting at: " + Utils.size(e.pos()));
+		case TruncateEvent e -> App.info("Truncating to: " + Utils.size(e.size()));
+		case WaitStartEvent e -> App.info("Waiting " + e.seconds() + "s...");
+		case WaitEndEvent _ -> App.info("Retrying...");
 		}
-	}
-
-	private static String message(IProgressEvent event) {
-		return switch (event) {
-		case RestartEvent e -> "Restarting at: " + Utils.size(e.pos());
-		case TruncateEvent e -> "Truncating to: " + Utils.size(e.size());
-		case WaitStartEvent e -> "Waiting " + e.seconds() + "s...";
-		case WaitEndEvent _ -> "Retrying...";
-		default -> null;
-		};
 	}
 
 	static String createProgress(long bytes, DeBounce db) {

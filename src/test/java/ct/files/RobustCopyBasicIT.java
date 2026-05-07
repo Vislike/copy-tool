@@ -85,14 +85,34 @@ public class RobustCopyBasicIT extends RobustCopyIT {
 	}
 
 	@Test
-	void readWriteAndDiffFail() throws IOException {
+	void readWriteFails() throws IOException {
+		subTestStart();
 		TestFailableIO io = new TestFailableIO();
 		copyAndVerifySmallFile(io.failAt(WT.read, 2).failAt(WT.write, 4));
 		assertEquals(6, io.count(WT.read));
 		assertEquals(5, io.count(WT.write));
 
+		subTestStart();
 		io = new TestFailableIO();
 		copyAndVerifySmallFile(io.writeOneLessAt(3));
+		assertEquals(5, io.count(WT.read));
+		assertEquals(5, io.count(WT.write));
+
+		subTestStart();
+		io = new TestFailableIO();
+		copyAndVerifySmallFile(io.writeZeroAt(3));
+		assertEquals(5, io.count(WT.read));
+		assertEquals(5, io.count(WT.write));
+
+		subTestStart();
+		io = new TestFailableIO();
+		copyAndVerifySmallFile(io.readZeroAt(3));
+		assertEquals(5, io.count(WT.read));
+		assertEquals(5, io.count(WT.write));
+
+		subTestStart();
+		io = new TestFailableIO();
+		copyAndVerifySmallFile(io.readEofAt(3));
 		assertEquals(5, io.count(WT.read));
 		assertEquals(5, io.count(WT.write));
 	}

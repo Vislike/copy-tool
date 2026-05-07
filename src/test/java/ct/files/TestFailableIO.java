@@ -19,6 +19,9 @@ public class TestFailableIO implements IOWrapper {
 	private final int failAt[];
 	private final int corruptAt[];
 	private int writeOneLessByteAt = 0;
+	private int writeZeroAt = 0;
+	private int readZeroAt = 0;
+	private int readEofAt = 0;
 
 	TestFailableIO() {
 		io = new FilesIO();
@@ -43,6 +46,21 @@ public class TestFailableIO implements IOWrapper {
 
 	TestFailableIO writeOneLessAt(int n) {
 		writeOneLessByteAt = n;
+		return this;
+	}
+
+	TestFailableIO writeZeroAt(int n) {
+		writeZeroAt = n;
+		return this;
+	}
+
+	TestFailableIO readZeroAt(int n) {
+		readZeroAt = n;
+		return this;
+	}
+
+	TestFailableIO readEofAt(int n) {
+		readEofAt = n;
 		return this;
 	}
 
@@ -94,6 +112,11 @@ public class TestFailableIO implements IOWrapper {
 				App.verbose("Corrupting read at", Utils.size(channel.position() - read));
 			}
 		}
+		if (readZeroAt == count(WT.read)) {
+			return 0;
+		} else if (readEofAt == count(WT.read)) {
+			return -1;
+		}
 		return read;
 	}
 
@@ -106,8 +129,13 @@ public class TestFailableIO implements IOWrapper {
 			}
 			src.put(1, (byte) 0);
 		}
-		int testError = writeOneLessByteAt == count(WT.write) ? 1 : 0;
-		return io.write(channel, src) - testError;
+		int write = io.write(channel, src);
+		if (writeOneLessByteAt == count(WT.write)) {
+			return write - 1;
+		} else if (writeZeroAt == count(WT.write)) {
+			return 0;
+		}
+		return write;
 	}
 
 	@Override
