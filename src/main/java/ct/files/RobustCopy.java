@@ -31,7 +31,6 @@ import ct.utils.Utils;
 
 public class RobustCopy {
 
-	private static final int MT_BUFFERS_QUEUE = 2;
 	private static final int MT_BUFFERS_IN_FLIGHT = 2;
 
 	private final IOWrapper io;
@@ -49,7 +48,7 @@ public class RobustCopy {
 
 	private Buffers createBuffers() {
 		if (Settings.devMode || settings.multiThreaded()) {
-			return new Buffers(MT_BUFFERS_IN_FLIGHT + MT_BUFFERS_QUEUE, settings.bufferSize());
+			return new Buffers(MT_BUFFERS_IN_FLIGHT + App.MT_BUFFERS_QUEUE, settings.bufferSize());
 		} else {
 			return new Buffers(1, settings.bufferSize());
 		}
@@ -98,7 +97,7 @@ public class RobustCopy {
 	private void multiThreadedCopy(final CopyTask ct, final long startByte) {
 
 		// Thread sync
-		final BlockingQueue<ByteBuffer> syncQueue = new ArrayBlockingQueue<>(MT_BUFFERS_QUEUE);
+		final BlockingQueue<ByteBuffer> syncQueue = new ArrayBlockingQueue<>(App.MT_BUFFERS_QUEUE);
 
 		// Read Thread
 		App.thread().name(Thread.currentThread().getName() + "Reader").start(() -> {

@@ -24,8 +24,8 @@ public class Shared {
 	public static List<Integer> bytesList() {
 		List<Integer> result = new ArrayList<>();
 
-		int numBytes = 512;
-		// 512 B to 16 MiB
+		int numBytes = 1024;
+		// 16 files
 		for (int i = 0; i < 16; i++) {
 			result.add(numBytes);
 

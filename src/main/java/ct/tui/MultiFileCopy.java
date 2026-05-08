@@ -19,6 +19,8 @@ import ct.tui.types.ProgressUpdate;
 
 public class MultiFileCopy {
 
+	private static final int QUEUE_SIZE_PER_THREAD = 4;
+
 	private final Settings globalSettings;
 	private final IOWrapper io;
 	private final BlockingQueue<ProgressUpdate> progressQueue;
@@ -26,7 +28,7 @@ public class MultiFileCopy {
 	public MultiFileCopy(Settings settings, IOWrapper io) {
 		this.globalSettings = settings;
 		this.io = io;
-		progressQueue = new ArrayBlockingQueue<>(settings.multiFile().filesSimultaneously() * 4);
+		progressQueue = new ArrayBlockingQueue<>(settings.multiFile().filesSimultaneously() * QUEUE_SIZE_PER_THREAD);
 	}
 
 	public void copyAll(List<CopyTask> tasks) {
