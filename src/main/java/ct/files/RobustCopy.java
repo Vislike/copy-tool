@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import ct.app.Settings;
 import ct.app.Settings.RobustCopySettings;
@@ -16,6 +18,7 @@ import ct.files.progress.IProgressEvent.CopyProgressEvent;
 import ct.files.progress.IProgressEvent.CopyStartEvent;
 import ct.files.progress.IProgressEvent.ModifiedTimeEvent;
 import ct.files.progress.IProgressEvent.RestartEvent;
+import ct.files.progress.IProgressEvent.RestartType;
 import ct.files.progress.IProgressEvent.ResumeEvent;
 import ct.files.progress.IProgressEvent.TruncateEvent;
 import ct.files.progress.IProgressEvent.WaitEndEvent;
@@ -44,7 +47,11 @@ public class RobustCopy {
 	}
 
 	private Buffers createBuffers() {
-		return new Buffers(Settings.devMode ? MT_BUFFERS_IN_FLIGHT + MT_BUFFERS_QUEUE : 1, settings.bufferSize());
+		if (Settings.devMode || settings.multiThreaded()) {
+			return new Buffers(MT_BUFFERS_IN_FLIGHT + MT_BUFFERS_QUEUE, settings.bufferSize());
+		} else {
+			return new Buffers(1, settings.bufferSize());
+		}
 	}
 
 	public void copy(CopyTask ct) {
@@ -72,7 +79,7 @@ public class RobustCopy {
 		}
 
 		// Copy file
-		if (Settings.devMode) {
+		if (Settings.devMode || settings.multiThreaded()) {
 			multiThreadedCopy(ct, startByte);
 		} else {
 			singleThreadedSynchronousCopyWithRollbackSupport(ct, startByte);
@@ -88,7 +95,127 @@ public class RobustCopy {
 	}
 
 	private void multiThreadedCopy(final CopyTask ct, final long startByte) {
-		// TODO Auto-generated method stub
+
+		// Thread sync
+		final BlockingQueue<ByteBuffer> syncQueue = new ArrayBlockingQueue<>(MT_BUFFERS_QUEUE);
+
+		// Read Thread
+		Thread.ofVirtual().start(() -> {
+			// Read States
+			boolean readComplete = false;
+			FileChannel inChannel = null;
+			long bytesRead = startByte;
+
+			// Read error handling loop
+			while (!readComplete) {
+				try {
+					// Open source file
+					inChannel = io.open(ct.sourceFile().path(), StandardOpenOption.READ);
+
+					// Read restart
+					if (bytesRead > 0) {
+						pr.event(new RestartEvent(bytesRead, RestartType.read));
+						io.position(inChannel, bytesRead);
+					}
+
+					// Read all bytes
+					while (bytesRead < ct.sourceFile().size()) {
+						// Read bytes
+						int read = io.read(inChannel, buffers.current().clear());
+
+						// Error checking
+						if (read == -1) {
+							throw new IOException("Unexpected EOF at: " + Utils.size(bytesRead) + ", expected size: "
+									+ Utils.size(ct.sourceFile().size()));
+						}
+						if (read == 0) {
+							throw new IOException("Unexpected 0 byte read at: " + Utils.size(bytesRead));
+						}
+
+						// Successfully read bytes
+						syncQueue.put(buffers.next());
+						bytesRead += read;
+					}
+
+					// Read done
+					readComplete = true;
+				} catch (IOException e) {
+					pr.error("Read problem", e.getMessage());
+					waitBeforeRetry();
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					throw new AssertionError("Interrupt not implemented yet", e);
+				} finally {
+					close(inChannel);
+				}
+			}
+		});
+
+		// Write in current thread
+
+		// Write states
+		boolean writeComplete = false;
+		FileChannel outChannel = null;
+		long bytesWritten = startByte;
+		boolean takeBuffer = true;
+		ByteBuffer bb = null;
+
+		// Write error handling loop
+		while (!writeComplete) {
+			try {
+				// Open target file
+				outChannel = io.open(ct.targetFile().path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+
+				// Write restart
+				if (bytesWritten > 0) {
+					pr.event(new RestartEvent(bytesWritten, RestartType.write));
+					io.position(outChannel, bytesWritten);
+				}
+
+				// Write all bytes
+				while (bytesWritten < ct.sourceFile().size()) {
+					// Take buffer from read thread
+					if (takeBuffer) {
+						bb = syncQueue.take().flip();
+						takeBuffer = false;
+					}
+
+					// Write bytes
+					int write = io.write(outChannel, bb.asReadOnlyBuffer());
+
+					// Error checking
+					if (write == 0) {
+						throw new IOException("Unexpected 0 byte write at: " + Utils.size(bytesWritten));
+					}
+					if (bb.limit() != write) {
+						throw new IOException(
+								"Bytes mismatch, read: " + Utils.size(bb.limit()) + ", write: " + Utils.size(write));
+					}
+
+					// Successfully written bytes
+					pr.event(new CopyProgressEvent(bytesWritten));
+					bytesWritten += write;
+					takeBuffer = true;
+				}
+
+				// Truncate if larger (can be the case during overwrite)
+				if (io.size(outChannel) > ct.sourceFile().size()) {
+					pr.event(new TruncateEvent(ct.sourceFile().size()));
+					io.truncate(outChannel, ct.sourceFile().size());
+				}
+
+				// Write done
+				writeComplete = true;
+			} catch (IOException e) {
+				pr.error("Write problem", e.getMessage());
+				waitBeforeRetry();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new AssertionError("Interrupt not implemented yet", e);
+			} finally {
+				close(outChannel);
+			}
+		}
 	}
 
 	private void singleThreadedSynchronousCopyWithRollbackSupport(final CopyTask ct, final long startByte) {
@@ -99,7 +226,7 @@ public class RobustCopy {
 		long bytesCopied = startByte;
 		ByteBuffer bb = buffers.next();
 
-		// Synchronous Copy
+		// Error handling loop
 		while (!copyComplete) {
 			try {
 				// Open files
@@ -109,7 +236,7 @@ public class RobustCopy {
 				// Restart with Rollback
 				bytesCopied = Math.max(0, bytesCopied - settings.bufferSize() * settings.rollbackBuffersNum());
 				if (bytesCopied > 0) {
-					pr.event(new RestartEvent(bytesCopied));
+					pr.event(new RestartEvent(bytesCopied, RestartType.copy));
 					io.position(inChannel, bytesCopied);
 					io.position(outChannel, bytesCopied);
 				}
@@ -137,8 +264,8 @@ public class RobustCopy {
 					}
 
 					// Successfully copied bytes
-					bytesCopied += bytesRead;
 					pr.event(new CopyProgressEvent(bytesCopied));
+					bytesCopied += bytesRead;
 				}
 
 				// Truncate if larger (can be the case during overwrite)

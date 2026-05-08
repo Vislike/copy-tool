@@ -13,8 +13,8 @@ import ct.files.types.CopyTask;
 public class RobustCopyRollbackIT extends RobustCopyIT {
 
 	private void testRollback(IOWrapper io, int rollback, boolean equals) throws IOException {
-		createRobustCopy(io, rollback).copy(new CopyTask(largeFile(), tempFile()));
-		verifySha256Temp(SHA_256_LARGE_FILE, equals);
+		createRobustCopy(io, rollback).copy(new CopyTask(file2999b(), tempFile()));
+		verifySha256Temp(SHA_256_2999B_FILE, equals);
 	}
 
 	@Test

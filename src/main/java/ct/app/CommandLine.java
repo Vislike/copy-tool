@@ -75,6 +75,7 @@ public class CommandLine {
 		boolean overwrite = false;
 		boolean resume = false;
 		boolean logMode = false;
+		boolean multiThreadedCopy = false;
 		int filesSimultaneously = App.NUM_FILES_SIMULTANEOUSLY;
 		int terminalWidth = App.TERMINAL_WIDTH;
 		int rollbackBuffers = App.ROLLBACK_BUFFERS;
@@ -181,7 +182,8 @@ public class CommandLine {
 
 		// Done
 		AnalyseSettings aSettings = new AnalyseSettings(sourceDir, targetDir, dryRun, overwrite, resume);
-		RobustCopySettings rcSettings = new RobustCopySettings(App.BUFF_SIZE, App.WAIT_TIME, rollbackBuffers);
+		RobustCopySettings rcSettings = new RobustCopySettings(App.BUFF_SIZE, App.WAIT_TIME, rollbackBuffers,
+				multiThreadedCopy);
 		MultiFileSettings mfSettings = new MultiFileSettings(logMode, filesSimultaneously, terminalWidth);
 		return Optional.of(new Settings(aSettings, rcSettings, mfSettings));
 	}

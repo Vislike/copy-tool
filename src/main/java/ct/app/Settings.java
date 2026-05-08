@@ -8,7 +8,8 @@ public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, M
 			boolean resume) {
 	}
 
-	public static record RobustCopySettings(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum) {
+	public static record RobustCopySettings(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum,
+			boolean multiThreaded) {
 	}
 
 	public static record MultiFileSettings(boolean logMode, int filesSimultaneously, int terminalWidth) {
@@ -20,18 +21,24 @@ public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, M
 	public static boolean terminalUserInterface = true;
 	public static boolean devMode = false;
 
-	public static Settings bufferSize(int bufferSize) {
-		return rollback(bufferSize, 0);
+	public static Settings testBufferSizes(int bufferSize) {
+		return testParametersHelper(bufferSize, 0, 0, false, 0);
 	}
 
-	public static Settings rollback(int bufferSize, int rollbackBuffersNum) {
-		return numFiles(bufferSize, rollbackBuffersNum, 0, 0);
+	public static Settings testRobustCopy(int bufferSize, int rollbackBuffersNum, boolean multiThreaded) {
+		return testParametersHelper(bufferSize, 0, rollbackBuffersNum, multiThreaded, 0);
 	}
 
-	public static Settings numFiles(int bufferSize, int rollbackBuffersNum, int waitBeforeRetryTimeSec,
+	public static Settings testChaos(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum,
 			int filesSimultaneously) {
+		return testParametersHelper(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum, false, filesSimultaneously);
+	}
+
+	private static Settings testParametersHelper(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum,
+			boolean multiThreaded, int filesSimultaneously) {
 		return new Settings(new AnalyseSettings(null, null, false, false, false),
-				new RobustCopySettings(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum),
+				new RobustCopySettings(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum, multiThreaded),
 				new MultiFileSettings(false, filesSimultaneously, App.TERMINAL_WIDTH));
 	}
+
 }

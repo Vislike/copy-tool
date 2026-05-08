@@ -25,4 +25,8 @@ public class Buffers {
 		index = (index + 1) % buffers.length;
 		return res;
 	}
+
+	public ByteBuffer current() {
+		return buffers[index];
+	}
 }

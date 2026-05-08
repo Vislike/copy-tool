@@ -6,6 +6,10 @@ import ct.files.types.CopyTask;
 
 public sealed interface IProgressEvent {
 
+	enum RestartType {
+		read, write, copy;
+	}
+
 	record CopyStartEvent(CopyTask ct) implements IProgressEvent {
 	}
 
@@ -18,7 +22,7 @@ public sealed interface IProgressEvent {
 	record ResumeEvent(long pos) implements IProgressEvent {
 	}
 
-	record RestartEvent(long pos) implements IProgressEvent {
+	record RestartEvent(long pos, RestartType type) implements IProgressEvent {
 	}
 
 	record TruncateEvent(long size) implements IProgressEvent {

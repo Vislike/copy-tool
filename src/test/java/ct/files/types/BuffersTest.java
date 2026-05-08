@@ -27,4 +27,19 @@ public class BuffersTest {
 			assertEquals(b3, buffers.next());
 		}
 	}
+
+	@Test
+	void currentTest() {
+		Buffers buffers = new Buffers(3, 1024);
+
+		buffers.current().put((byte) 1).flip();
+		assertEquals(1, buffers.current().limit());
+		assertEquals(1, buffers.next().limit());
+		assertNotEquals(1, buffers.current().limit());
+		assertNotEquals(1, buffers.next().limit());
+		assertNotEquals(1, buffers.current().limit());
+		assertNotEquals(1, buffers.next().limit());
+		assertEquals(1, buffers.current().limit());
+		assertEquals(1, buffers.next().limit());
+	}
 }

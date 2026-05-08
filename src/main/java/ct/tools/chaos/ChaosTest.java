@@ -71,7 +71,7 @@ public class ChaosTest {
 			tasks.add(new CopyTask(sourceFile, targetFile));
 		}
 
-		new MultiFileCopy(Settings.numFiles(BUFF_SIZE, ROLLBACK, WAIT_RETRY, FILES_AT_TIME),
+		new MultiFileCopy(Settings.testChaos(BUFF_SIZE, WAIT_RETRY, ROLLBACK, FILES_AT_TIME),
 				new ChaosIO(CHAOS_CHANCE, System.nanoTime())).copyAll(tasks);
 
 		App.infolb("Verifying files");

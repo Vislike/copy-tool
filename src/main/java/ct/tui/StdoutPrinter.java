@@ -43,7 +43,7 @@ public class StdoutPrinter implements IProgressReport {
 		case ModifiedTimeEvent e -> App.verbose("Setting Modified Time to", e.time());
 		case WarningEvent e -> App.recoverWarning(e.description(), e.cause());
 		case ErrorEvent e -> App.recoverError(e.description(), e.cause());
-		case RestartEvent e -> App.info("Restarting at: " + Utils.size(e.pos()));
+		case RestartEvent e -> App.info("Restarting " + e.type() + " at: " + Utils.size(e.pos()));
 		case TruncateEvent e -> App.info("Truncating to: " + Utils.size(e.size()));
 		case WaitStartEvent e -> App.info("Waiting " + e.seconds() + "s...");
 		case WaitEndEvent _ -> App.info("Retrying...");
