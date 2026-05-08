@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import ct.app.App;
 import ct.app.Settings;
 import ct.app.Settings.RobustCopySettings;
 import ct.files.io.IOWrapper;
@@ -100,7 +101,7 @@ public class RobustCopy {
 		final BlockingQueue<ByteBuffer> syncQueue = new ArrayBlockingQueue<>(MT_BUFFERS_QUEUE);
 
 		// Read Thread
-		Thread.ofVirtual().start(() -> {
+		App.thread().name(Thread.currentThread().getName() + "Reader").start(() -> {
 			// Read States
 			boolean readComplete = false;
 			FileChannel inChannel = null;
@@ -181,21 +182,21 @@ public class RobustCopy {
 					}
 
 					// Write bytes
-					int write = io.write(outChannel, bb.asReadOnlyBuffer());
+					int write = io.write(outChannel, bb.rewind());
 
 					// Error checking
 					if (write == 0) {
 						throw new IOException("Unexpected 0 byte write at: " + Utils.size(bytesWritten));
 					}
 					if (bb.limit() != write) {
-						throw new IOException(
-								"Bytes mismatch, read: " + Utils.size(bb.limit()) + ", write: " + Utils.size(write));
+						throw new IOException("Unexpected mismatch at: " + Utils.size(bytesWritten) + ", read: "
+								+ Utils.size(bb.limit()) + ", write: " + Utils.size(write));
 					}
 
 					// Successfully written bytes
-					pr.event(new CopyProgressEvent(bytesWritten));
 					bytesWritten += write;
 					takeBuffer = true;
+					pr.event(new CopyProgressEvent(bytesWritten));
 				}
 
 				// Truncate if larger (can be the case during overwrite)
@@ -259,13 +260,13 @@ public class RobustCopy {
 						throw new IOException("Unexpected 0 byte write at: " + Utils.size(bytesCopied));
 					}
 					if (bytesRead != bytesWrite) {
-						throw new IOException("Bytes mismatch, read: " + Utils.size(bytesRead) + ", write: "
-								+ Utils.size(bytesWrite));
+						throw new IOException("Unexpected mismatch at: " + Utils.size(bytesCopied) + ", read: "
+								+ Utils.size(bytesRead) + ", write: " + Utils.size(bytesWrite));
 					}
 
 					// Successfully copied bytes
-					pr.event(new CopyProgressEvent(bytesCopied));
 					bytesCopied += bytesRead;
+					pr.event(new CopyProgressEvent(bytesCopied));
 				}
 
 				// Truncate if larger (can be the case during overwrite)

@@ -2,6 +2,7 @@ package ct.app;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.Thread.Builder;
 import java.util.Properties;
 
 import ct.tui.FileLists;
@@ -11,6 +12,7 @@ import ct.utils.Utils;
 
 public class App {
 
+	static final boolean VIRTUAL_THREADS = true;
 	static final int TERMINAL_WIDTH = 120;
 	static final int BUFF_SIZE = 1024 * 1024 * 1;
 	static final int WAIT_TIME = 10;
@@ -98,6 +100,10 @@ public class App {
 			sb.append(System.lineSeparator());
 		}
 		System.out.println(color.highlight(sb, str, args).toString());
+	}
+
+	public static Builder thread() {
+		return VIRTUAL_THREADS ? Thread.ofVirtual() : Thread.ofPlatform();
 	}
 
 	public static void configCheck(Settings settings) {

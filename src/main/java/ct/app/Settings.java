@@ -21,20 +21,15 @@ public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, M
 	public static boolean terminalUserInterface = true;
 	public static boolean devMode = false;
 
-	public static Settings testBufferSizes(int bufferSize) {
-		return testParametersHelper(bufferSize, 0, 0, false, 0);
+	public static Settings testBufferSizes(int bufferSize, boolean multiThreaded) {
+		return testFactory(bufferSize, 0, 0, multiThreaded, 0);
 	}
 
 	public static Settings testRobustCopy(int bufferSize, int rollbackBuffersNum, boolean multiThreaded) {
-		return testParametersHelper(bufferSize, 0, rollbackBuffersNum, multiThreaded, 0);
+		return testFactory(bufferSize, 0, rollbackBuffersNum, multiThreaded, 0);
 	}
 
-	public static Settings testChaos(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum,
-			int filesSimultaneously) {
-		return testParametersHelper(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum, false, filesSimultaneously);
-	}
-
-	private static Settings testParametersHelper(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum,
+	public static Settings testFactory(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum,
 			boolean multiThreaded, int filesSimultaneously) {
 		return new Settings(new AnalyseSettings(null, null, false, false, false),
 				new RobustCopySettings(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum, multiThreaded),

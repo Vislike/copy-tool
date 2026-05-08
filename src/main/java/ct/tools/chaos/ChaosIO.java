@@ -77,14 +77,35 @@ public class ChaosIO implements IOWrapper {
 
 	@Override
 	public int read(FileChannel channel, ByteBuffer dst) throws IOException {
-		chaos(WT.read);
+		try {
+			chaos(WT.read);
+		} catch (IOException e) {
+			int i = rand.nextInt(10);
+			return switch (i) {
+			case 0 -> -1;
+			case 1 -> 0;
+			default -> throw e;
+			};
+		}
 		return io.read(channel, dst);
 	}
 
 	@Override
 	public int write(FileChannel channel, ByteBuffer src) throws IOException {
-		chaos(WT.write);
-		return io.write(channel, src);
+		int writeError = 0;
+		try {
+			chaos(WT.write);
+		} catch (IOException e) {
+			int i = rand.nextInt(10);
+			switch (i) {
+			case 0 -> writeError = rand.nextInt(src.limit() + 1);
+			case 1 -> {
+				return 0;
+			}
+			default -> throw e;
+			}
+		}
+		return io.write(channel, src) - writeError;
 	}
 
 	@Override

@@ -1,11 +1,13 @@
 package ct.tui;
 
+import java.lang.Thread.Builder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import ct.app.App;
 import ct.app.Settings;
 import ct.app.Settings.MultiFileSettings;
 import ct.files.RobustCopy;
@@ -31,10 +33,11 @@ public class MultiFileCopy {
 		MultiFileSettings settings = globalSettings.multiFile();
 		BlockingQueue<CopyTask> copyTaskQueue = new ArrayBlockingQueue<>(tasks.size(), false, tasks);
 
+		Builder threadBuilder = App.thread().name("CopyWorker", 1);
 		List<Optional<Thread>> threads = new ArrayList<>();
 
 		for (int tId = 0; tId < settings.filesSimultaneously(); tId++) {
-			threads.add(Optional.of(workerThread(tId, copyTaskQueue)));
+			threads.add(Optional.of(workerThread(threadBuilder, tId, copyTaskQueue)));
 		}
 
 		TerminalUpdater terminalUpdater = new TerminalUpdater(settings, tasks.size());
@@ -81,11 +84,10 @@ public class MultiFileCopy {
 				throw new AssertionError("Interrupt not implemented yet", e);
 			}
 		}
-
 	}
 
-	private Thread workerThread(int tId, BlockingQueue<CopyTask> copyTaskQueue) {
-		return Thread.ofVirtual().start(() -> {
+	private Thread workerThread(Builder tb, final int tId, BlockingQueue<CopyTask> copyTaskQueue) {
+		return tb.start(() -> {
 			ProgressSender ps = new ProgressSender(tId, progressQueue);
 			RobustCopy rc = new RobustCopy(io, globalSettings.robustCopy(), ps);
 			CopyTask ct;

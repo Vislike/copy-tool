@@ -23,6 +23,8 @@ import ct.utils.Utils.Timer;
 
 public class TestBufferSizes {
 
+	private static final boolean MULTI_THREADED = true;
+
 	public static void main(String[] args) throws IOException {
 		App.info("= = = = Copy Tool Buffer Test = = = =");
 
@@ -47,6 +49,7 @@ public class TestBufferSizes {
 		App.highlight("Test Dir", testDir);
 		App.highlight("Tempfile", tempFile);
 		App.highlight("Hashfile", hashFile);
+		App.highlight("MultiThr", MULTI_THREADED);
 		App.info();
 
 		Timer timer = Utils.timer();
@@ -73,8 +76,8 @@ public class TestBufferSizes {
 		sb.append("Buffer: ").append(Utils.size(numBytes)).append(", Size: ").append(Utils.size(source.size()));
 
 		long startTime = System.nanoTime();
-		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.testBufferSizes(numBytes).robustCopy(),
-				new StdoutPrinter());
+		RobustCopy robustCopy = new RobustCopy(new FilesIO(),
+				Settings.testBufferSizes(numBytes, MULTI_THREADED).robustCopy(), new StdoutPrinter());
 		robustCopy.copy(new CopyTask(source, target));
 		long elapsedNanos = System.nanoTime() - startTime;
 

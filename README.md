@@ -32,3 +32,4 @@ When checking **src** for files **dst** is also analysed and it will use the two
 
 * Multi-threaded read/write, for possible speed gains
 * React to sigterm and gracefully shutdown
+* Error handling for threads (uncaught exception)

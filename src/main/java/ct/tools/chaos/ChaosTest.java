@@ -24,8 +24,9 @@ import ct.utils.Utils.Timer;
 public class ChaosTest {
 
 	private static final int BUFF_SIZE = 512 << 8;
-	private static final int ROLLBACK = 0;
 	private static final int WAIT_RETRY = 1;
+	private static final int ROLLBACK = 0;
+	private static final boolean MULTI_THREADED = true;
 	private static final int FILES_AT_TIME = 4;
 	private static final int CHAOS_CHANCE = 5;
 
@@ -54,8 +55,9 @@ public class ChaosTest {
 		App.highlight("Temp Dir", tempDir);
 		App.highlight("Hashfile", hashFile);
 		App.highlight("Buffsize", BUFF_SIZE);
-		App.highlight("Rollback", ROLLBACK);
 		App.highlight("WaitTime", WAIT_RETRY);
+		App.highlight("Rollback", ROLLBACK);
+		App.highlight("MultiThr", MULTI_THREADED);
 		App.highlight("NumFiles", FILES_AT_TIME);
 		App.highlight("ChaosVal", CHAOS_CHANCE);
 
@@ -71,7 +73,7 @@ public class ChaosTest {
 			tasks.add(new CopyTask(sourceFile, targetFile));
 		}
 
-		new MultiFileCopy(Settings.testChaos(BUFF_SIZE, WAIT_RETRY, ROLLBACK, FILES_AT_TIME),
+		new MultiFileCopy(Settings.testFactory(BUFF_SIZE, WAIT_RETRY, ROLLBACK, MULTI_THREADED, FILES_AT_TIME),
 				new ChaosIO(CHAOS_CHANCE, System.nanoTime())).copyAll(tasks);
 
 		App.infolb("Verifying files");
