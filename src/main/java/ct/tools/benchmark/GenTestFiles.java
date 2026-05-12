@@ -17,7 +17,7 @@ import ct.utils.Utils.Timer;
 
 public class GenTestFiles {
 
-	public static final int SIZE = 1024 * 1024 * 512;
+	public static final int SIZE = 1024 * 1024 * 1024;
 
 	public static void main(String[] args) throws IOException {
 		App.info("= = = = Copy Tool Gen Test Files = = = =");
@@ -39,9 +39,9 @@ public class GenTestFiles {
 		}
 
 		App.info();
-		App.highlight("Test Dir", testDir);
-		App.highlight("Filesize", Utils.size(SIZE));
-		App.highlight("Hashfile", hashFile);
+		App.highlight("Test Dir ", testDir);
+		App.highlight("File Size", Utils.size(SIZE));
+		App.highlight("Hash File", hashFile);
 		App.info();
 
 		Timer timer = Utils.timer();

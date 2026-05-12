@@ -46,6 +46,11 @@ public class FilesIO implements IOWrapper {
 	}
 
 	@Override
+	public long transferTo(FileChannel source, long position, long count, FileChannel target) throws IOException {
+		return source.transferTo(position, count, target);
+	}
+
+	@Override
 	public long size(FileChannel channel) throws IOException {
 		return channel.size();
 	}

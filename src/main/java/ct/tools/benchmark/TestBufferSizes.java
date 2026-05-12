@@ -23,7 +23,7 @@ import ct.utils.Utils.Timer;
 
 public class TestBufferSizes {
 
-	private static final boolean MULTI_THREADED = true;
+	private static final boolean DEV_MODE = true;
 
 	public static void main(String[] args) throws IOException {
 		App.info("= = = = Copy Tool Buffer Test = = = =");
@@ -44,12 +44,13 @@ public class TestBufferSizes {
 			return;
 		}
 
+		Settings.devMode = DEV_MODE;
 		Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "ct-test-buffer-temp-file");
 		App.info();
-		App.highlight("Test Dir", testDir);
-		App.highlight("Tempfile", tempFile);
-		App.highlight("Hashfile", hashFile);
-		App.highlight("MultiThr", MULTI_THREADED);
+		App.highlight("Test Dir ", testDir);
+		App.highlight("Temp File", tempFile);
+		App.highlight("Hash File", hashFile);
+		App.highlight("Dev Mode ", Settings.devMode);
 		App.info();
 
 		Timer timer = Utils.timer();
@@ -58,14 +59,17 @@ public class TestBufferSizes {
 		List<String> log = new ArrayList<>();
 
 		for (int numBytes : Shared.bytesList()) {
+			Shared.waitBetweenTests();
+
 			Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
 			FileRecord sourceFile = FileRecord.sourceFile(testFile, Files.size(testFile), testDir.relativize(testFile));
 			testCopy(sourceFile, targetFile, numBytes, sha256Map, log);
+
 			App.info();
+			Files.delete(targetFile.path());
 		}
 
 		log.forEach(App::info);
-		Files.delete(targetFile.path());
 
 		App.infolb(timer.elapsedSeconds("Done in"));
 	}
@@ -73,11 +77,12 @@ public class TestBufferSizes {
 	private static void testCopy(FileRecord source, FileRecord target, int numBytes, Map<String, String> sha256Map,
 			List<String> log) throws IOException {
 		StringBuilder sb = new StringBuilder();
-		sb.append("Buffer: ").append(Utils.size(numBytes)).append(", Size: ").append(Utils.size(source.size()));
+		sb.append("Buffer: ").append(Utils.size(numBytes)).append(" (").append(Integer.numberOfTrailingZeros(numBytes))
+				.append("), Size: ").append(Utils.size(source.size()));
 
 		long startTime = System.nanoTime();
-		RobustCopy robustCopy = new RobustCopy(new FilesIO(),
-				Settings.testBufferSizes(numBytes, MULTI_THREADED).robustCopy(), new StdoutPrinter());
+		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.testBufferSizes(numBytes).robustCopy(),
+				new StdoutPrinter());
 		robustCopy.copy(new CopyTask(source, target));
 		long elapsedNanos = System.nanoTime() - startTime;
 

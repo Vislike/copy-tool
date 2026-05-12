@@ -3,14 +3,18 @@ package ct.tools;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ct.app.App;
 import ct.utils.Utils;
 
 public class Shared {
+
+	private static final int WAIT_BETWEEN_TEST_TIME = 5000;
 
 	private Shared() {
 	}
@@ -48,5 +52,14 @@ public class Shared {
 			sha256.put(filename, sha256sum);
 		}
 		return sha256;
+	}
+
+	public static void waitBetweenTests() {
+		App.info("Wait between tests " + Duration.ofMillis(WAIT_BETWEEN_TEST_TIME).toSeconds() + "s...");
+		try {
+			Thread.sleep(Duration.ofMillis(WAIT_BETWEEN_TEST_TIME));
+		} catch (InterruptedException e) {
+			// Ignore
+		}
 	}
 }

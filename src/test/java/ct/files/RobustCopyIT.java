@@ -102,19 +102,11 @@ public abstract class RobustCopyIT {
 	}
 
 	protected RobustCopy createRobustCopy(IOWrapper wrapper) {
-		return createRobustCopy(wrapper, 0, false);
-	}
-
-	protected RobustCopy createRobustCopy(IOWrapper wrapper, boolean multiThreaded) {
-		return createRobustCopy(wrapper, 0, multiThreaded);
+		return createRobustCopy(wrapper, 0);
 	}
 
 	protected RobustCopy createRobustCopy(IOWrapper wrapper, int rollback) {
-		return createRobustCopy(wrapper, rollback, false);
-	}
-
-	protected RobustCopy createRobustCopy(IOWrapper wrapper, int rollback, boolean multiThreaded) {
-		return new RobustCopy(wrapper, Settings.testRobustCopy(TEST_BUFFER_SIZE, rollback, multiThreaded).robustCopy(),
+		return new RobustCopy(wrapper, Settings.testRobustCopy(TEST_BUFFER_SIZE, rollback).robustCopy(),
 				createMessageProducer());
 	}
 

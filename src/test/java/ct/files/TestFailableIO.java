@@ -139,6 +139,12 @@ public class TestFailableIO implements IOWrapper {
 	}
 
 	@Override
+	public long transferTo(FileChannel source, long position, long count, FileChannel target) throws IOException {
+		incCoundAndCheckFail(WT.transferTo);
+		return io.transferTo(source, position, count, target);
+	}
+
+	@Override
 	public long size(FileChannel channel) throws IOException {
 		incCoundAndCheckFail(WT.size);
 		return io.size(channel);

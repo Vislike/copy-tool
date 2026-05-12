@@ -10,7 +10,8 @@ import java.nio.file.attribute.FileTime;
 public interface IOWrapper {
 
 	enum WT {
-		createDirectories, getLastModifiedTime, setLastModifiedTime, open, position, read, write, size, truncate, close
+		createDirectories, getLastModifiedTime, setLastModifiedTime, open, position, read, write, transferTo, size,
+		truncate, close
 	};
 
 	// Files
@@ -30,6 +31,8 @@ public interface IOWrapper {
 	int read(FileChannel channel, ByteBuffer dst) throws IOException;
 
 	int write(FileChannel channel, ByteBuffer src) throws IOException;
+
+	long transferTo(FileChannel source, long position, long count, FileChannel target) throws IOException;
 
 	long size(FileChannel channel) throws IOException;
 

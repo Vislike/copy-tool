@@ -31,7 +31,9 @@ import ct.utils.Utils;
 
 public class RobustCopy {
 
+	private static final boolean DEV_TRANSFER = false;
 	private static final int MT_BUFFERS_IN_FLIGHT = 2;
+	private static final int MT_BUFFERS_QUEUE = 2;
 
 	private final IOWrapper io;
 	private final RobustCopySettings settings;
@@ -47,8 +49,12 @@ public class RobustCopy {
 	}
 
 	private Buffers createBuffers() {
-		if (Settings.devMode || settings.multiThreaded()) {
-			return new Buffers(MT_BUFFERS_IN_FLIGHT + App.MT_BUFFERS_QUEUE, settings.bufferSize());
+		if (Settings.devMode) {
+			if (DEV_TRANSFER) {
+				return null;
+			} else {
+				return new Buffers(MT_BUFFERS_IN_FLIGHT + MT_BUFFERS_QUEUE, settings.bufferSize());
+			}
 		} else {
 			return new Buffers(1, settings.bufferSize());
 		}
@@ -79,8 +85,12 @@ public class RobustCopy {
 		}
 
 		// Copy file
-		if (Settings.devMode || settings.multiThreaded()) {
-			multiThreadedCopy(ct, startByte);
+		if (Settings.devMode) {
+			if (DEV_TRANSFER) {
+				devTestTransferTo(ct, startByte);
+			} else {
+				devTestmultiThreaded(ct, startByte);
+			}
 		} else {
 			singleThreadedSynchronousCopyWithRollbackSupport(ct, startByte);
 		}
@@ -88,16 +98,77 @@ public class RobustCopy {
 		// Set last modified time to same as source
 		FileTime lastModifiedTime = getLastModifiedTime(ct.sourceFile().path());
 		pr.event(new ModifiedTimeEvent(lastModifiedTime));
+
 		setLastModifiedTime(ct.targetFile().path(), lastModifiedTime);
 
 		// End
 		pr.event(new CopyEndEvent(ct));
 	}
 
-	private void multiThreadedCopy(final CopyTask ct, final long startByte) {
+	private void devTestTransferTo(final CopyTask ct, final long startByte) {
+		// States
+		boolean copyComplete = false;
+		FileChannel inChannel = null;
+		FileChannel outChannel = null;
+		long bytesCopied = startByte;
+
+		// Error handling loop
+		while (!copyComplete) {
+			try {
+				// Open files
+				inChannel = io.open(ct.sourceFile().path(), StandardOpenOption.READ);
+				outChannel = io.open(ct.targetFile().path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+
+				// Restart with Rollback
+				bytesCopied = Math.max(0, bytesCopied - settings.bufferSize() * settings.rollbackBuffersNum());
+				if (bytesCopied > 0) {
+					pr.event(new RestartEvent(bytesCopied, RestartType.copy));
+					io.position(outChannel, bytesCopied);
+				}
+
+				// Copy all bytes
+				while (bytesCopied < ct.sourceFile().size()) {
+					// Copy chunk
+					long toTransfer = Math.min(ct.sourceFile().size() - bytesCopied, settings.bufferSize());
+					long bytesTransfered = io.transferTo(inChannel, bytesCopied, toTransfer, outChannel);
+
+					// Error checking
+					if (bytesTransfered == 0) {
+						throw new IOException("Unexpected 0 byte transfer at: " + Utils.size(bytesCopied));
+					}
+					if (toTransfer != bytesTransfered) {
+						throw new IOException("Unexpected mismatch at: " + Utils.size(bytesCopied) + ", expected: "
+								+ Utils.size(toTransfer) + ", actual: " + Utils.size(bytesTransfered));
+					}
+
+					// Successfully copied bytes
+					bytesCopied += bytesTransfered;
+					pr.event(new CopyProgressEvent(bytesCopied));
+				}
+
+				// Truncate if larger (can be the case during overwrite)
+				if (io.size(outChannel) > ct.sourceFile().size()) {
+					pr.event(new TruncateEvent(ct.sourceFile().size()));
+					io.truncate(outChannel, ct.sourceFile().size());
+				}
+
+				// Done
+				copyComplete = true;
+			} catch (IOException e) {
+				pr.error("Copy problem", e.getMessage());
+				waitBeforeRetry();
+			} finally {
+				// Close channels, ignore problems
+				close(inChannel);
+				close(outChannel);
+			}
+		}
+	}
+
+	private void devTestmultiThreaded(final CopyTask ct, final long startByte) {
 
 		// Thread sync
-		final BlockingQueue<ByteBuffer> syncQueue = new ArrayBlockingQueue<>(App.MT_BUFFERS_QUEUE);
+		final BlockingQueue<ByteBuffer> syncQueue = new ArrayBlockingQueue<>(MT_BUFFERS_QUEUE);
 
 		// Read Thread
 		App.thread().name(Thread.currentThread().getName() + "Reader").start(() -> {

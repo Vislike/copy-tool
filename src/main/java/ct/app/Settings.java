@@ -8,8 +8,7 @@ public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, M
 			boolean resume) {
 	}
 
-	public static record RobustCopySettings(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum,
-			boolean multiThreaded) {
+	public static record RobustCopySettings(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum) {
 	}
 
 	public static record MultiFileSettings(boolean logMode, int filesSimultaneously, int terminalWidth) {
@@ -21,18 +20,18 @@ public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, M
 	public static boolean terminalUserInterface = true;
 	public static boolean devMode = false;
 
-	public static Settings testBufferSizes(int bufferSize, boolean multiThreaded) {
-		return testFactory(bufferSize, 0, 0, multiThreaded, 0);
+	public static Settings testBufferSizes(int bufferSize) {
+		return testFactory(bufferSize, 0, 0, 0);
 	}
 
-	public static Settings testRobustCopy(int bufferSize, int rollbackBuffersNum, boolean multiThreaded) {
-		return testFactory(bufferSize, 0, rollbackBuffersNum, multiThreaded, 0);
+	public static Settings testRobustCopy(int bufferSize, int rollbackBuffersNum) {
+		return testFactory(bufferSize, 0, rollbackBuffersNum, 0);
 	}
 
 	public static Settings testFactory(int bufferSize, int waitBeforeRetryTimeSec, int rollbackBuffersNum,
-			boolean multiThreaded, int filesSimultaneously) {
+			int filesSimultaneously) {
 		return new Settings(new AnalyseSettings(null, null, false, false, false),
-				new RobustCopySettings(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum, multiThreaded),
+				new RobustCopySettings(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum),
 				new MultiFileSettings(false, filesSimultaneously, App.TERMINAL_WIDTH));
 	}
 

@@ -13,12 +13,11 @@ import ct.utils.Utils;
 public class App {
 
 	static final int TERMINAL_WIDTH = 120;
-	static final int BUFF_SIZE = 1024 * 1024 * 1;
+	static final int BUFF_SIZE = 20;
 	static final int WAIT_TIME = 10;
 	static final int ROLLBACK_BUFFERS = 0;
 	static final int NUM_FILES_SIMULTANEOUSLY = 2;
 	static final boolean VIRTUAL_THREADS = true;
-	public static final int MT_BUFFERS_QUEUE = 2;
 
 	public static void main(String[] args) throws IOException {
 		info("= = = = Copy Tool v" + version() + " = = = =");
@@ -108,6 +107,7 @@ public class App {
 	}
 
 	public static void configCheck(Settings settings) {
+		verbose("Copy buffer size", Utils.size(settings.robustCopy().bufferSize()));
 		if (Settings.devMode) {
 			warning("Dev Mode", "enabled");
 		}

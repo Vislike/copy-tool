@@ -29,7 +29,8 @@ public class CommandLine {
 				    -n n  Copy multiple files at the same time, 1-8. (%1$d)
 				    -o    Overwrite mismatching files instead of skipping them. (D)
 				    -r    Resume mismatching files instead of skipping them. (D)
-				    -u n  Rollback n buffers on copy problem (require single threaded), 0-10. (%3$d)
+				    -s n  Copy buffer size, in format 2^n bytes, 9-30. (%4$d)
+				    -u n  Rollback n buffers on copy problem, 0-10. (%3$d)
 				  Modes:
 				    -l    Log mode, disables dynamic progress updates and implies -n 1. (D)
 				    -x    Dev mode, enables experimental features. (D)
@@ -38,7 +39,7 @@ public class CommandLine {
 				    -c    Disable colors in text output. (E)
 				    -v    Verbose output, for debugging purpose. (D)
 				    -w n  Max width of dynamic content, 40-500. (%2$d)
-				""".formatted(App.NUM_FILES_SIMULTANEOUSLY, App.TERMINAL_WIDTH, App.ROLLBACK_BUFFERS));
+				""".formatted(App.NUM_FILES_SIMULTANEOUSLY, App.TERMINAL_WIDTH, App.ROLLBACK_BUFFERS, App.BUFF_SIZE));
 	}
 
 	private static enum ReqParams {
@@ -46,7 +47,7 @@ public class CommandLine {
 	}
 
 	private static enum OptParams {
-		NONE, TERM_WIDTH, MULTIPLE_FILES, ROLLBACK_BUFFERS;
+		NONE, TERM_WIDTH, MULTIPLE_FILES, ROLLBACK_BUFFERS, BUFFER_SIZE;
 	}
 
 	static void parseOutputArgs(String[] args) {
@@ -75,10 +76,10 @@ public class CommandLine {
 		boolean overwrite = false;
 		boolean resume = false;
 		boolean logMode = false;
-		boolean multiThreadedCopy = false;
 		int filesSimultaneously = App.NUM_FILES_SIMULTANEOUSLY;
 		int terminalWidth = App.TERMINAL_WIDTH;
 		int rollbackBuffers = App.ROLLBACK_BUFFERS;
+		int bufferExponent = App.BUFF_SIZE;
 
 		// Parse
 		for (String arg : args) {
@@ -104,6 +105,7 @@ public class CommandLine {
 					case 'w' -> optParams = OptParams.TERM_WIDTH;
 					case 'n' -> optParams = OptParams.MULTIPLE_FILES;
 					case 'u' -> optParams = OptParams.ROLLBACK_BUFFERS;
+					case 's' -> optParams = OptParams.BUFFER_SIZE;
 					default -> {
 						App.error("Invalid parameter", arg.charAt(i));
 						return Optional.empty();
@@ -135,6 +137,7 @@ public class CommandLine {
 						case TERM_WIDTH -> terminalWidth = Integer.parseInt(arg);
 						case MULTIPLE_FILES -> filesSimultaneously = Integer.parseInt(arg);
 						case ROLLBACK_BUFFERS -> rollbackBuffers = Integer.parseInt(arg);
+						case BUFFER_SIZE -> bufferExponent = Integer.parseInt(arg);
 						}
 					} catch (NumberFormatException e) {
 						App.error("N must be a number", arg);
@@ -180,10 +183,14 @@ public class CommandLine {
 			return Optional.empty();
 		}
 
+		if (bufferExponent < 9 || bufferExponent > 30) {
+			App.error("Invlaid value for -s", bufferExponent);
+			return Optional.empty();
+		}
+
 		// Done
 		AnalyseSettings aSettings = new AnalyseSettings(sourceDir, targetDir, dryRun, overwrite, resume);
-		RobustCopySettings rcSettings = new RobustCopySettings(App.BUFF_SIZE, App.WAIT_TIME, rollbackBuffers,
-				multiThreadedCopy);
+		RobustCopySettings rcSettings = new RobustCopySettings(1 << bufferExponent, App.WAIT_TIME, rollbackBuffers);
 		MultiFileSettings mfSettings = new MultiFileSettings(logMode, filesSimultaneously, terminalWidth);
 		return Optional.of(new Settings(aSettings, rcSettings, mfSettings));
 	}

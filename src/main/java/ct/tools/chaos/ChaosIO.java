@@ -109,6 +109,24 @@ public class ChaosIO implements IOWrapper {
 	}
 
 	@Override
+	public long transferTo(FileChannel source, long position, long count, FileChannel target) throws IOException {
+		long transferError = 0;
+		try {
+			chaos(WT.transferTo);
+		} catch (IOException e) {
+			int i = rand.nextInt(10);
+			switch (i) {
+			case 0 -> transferError = rand.nextLong(count + 1);
+			case 1 -> {
+				return 0;
+			}
+			default -> throw e;
+			}
+		}
+		return io.transferTo(source, position, count, target) - transferError;
+	}
+
+	@Override
 	public long size(FileChannel channel) throws IOException {
 		chaos(WT.size);
 		return io.size(channel);
@@ -125,5 +143,4 @@ public class ChaosIO implements IOWrapper {
 		chaos(WT.close);
 		io.close(channel);
 	}
-
 }
