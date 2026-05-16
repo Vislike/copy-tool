@@ -13,7 +13,7 @@ $WifiOnMinWait = 5
 $WifiOnMaxWait = 60*2
 
 $WifiOffMinWait = 10
-$WifiOffMaxWait = 60*6
+$WifiOffMaxWait = 60*8
 
 
 # --- Run ---

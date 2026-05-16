@@ -31,7 +31,7 @@ import ct.utils.Utils;
 
 public class RobustCopy {
 
-	private static final boolean DEV_TRANSFER = false;
+	private static final boolean DEV_TRANSFER = true;
 	private static final int MT_BUFFERS_IN_FLIGHT = 2;
 	private static final int MT_BUFFERS_QUEUE = 2;
 
