@@ -71,17 +71,11 @@ public class RobustCopy {
 		long startByte = 0;
 
 		if (ct.sourceFile().position() > 0) {
-			if (ct.sourceFile().position() < ct.sourceFile().size()) {
-				if (ct.sourceFile().position() % settings.bufferSize() != 0) {
-					pr.warning("Warning unaligned resume", ct + " at " + Utils.size(ct.sourceFile().position()));
-				}
-				// Align
-				long skipBuffers = ct.sourceFile().position() / settings.bufferSize();
-				startByte = skipBuffers * settings.bufferSize();
-			} else {
-				startByte = ct.sourceFile().position();
-			}
+			startByte = ct.sourceFile().position();
 			pr.event(new ResumeEvent(startByte));
+			if (startByte < ct.sourceFile().size() && startByte % settings.bufferSize() != 0) {
+				pr.warning("Warning unaligned resume", ct + " at " + Utils.size(startByte));
+			}
 		}
 
 		// Copy file
