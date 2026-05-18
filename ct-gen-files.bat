@@ -1,3 +1,3 @@
 @echo off
 rem Develop/Debug launch helper
-java -p target/classes -m copy.tool/ct.tools.benchmark.GenTestFiles %*
+java -p target/classes -m copy.tool/ct.support.GenTestFiles %*

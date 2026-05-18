@@ -7,15 +7,15 @@ import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import ct.action.RobustCopy;
+import ct.action.io.IOWrapper;
+import ct.action.progress.IProgressEvent;
+import ct.action.progress.IProgressReport;
+import ct.action.type.CopyTask;
 import ct.app.App;
 import ct.app.Settings;
 import ct.app.Settings.MultiFileSettings;
-import ct.files.RobustCopy;
-import ct.files.io.IOWrapper;
-import ct.files.progress.IProgressEvent;
-import ct.files.progress.IProgressReport;
-import ct.files.types.CopyTask;
-import ct.tui.types.ProgressUpdate;
+import ct.tui.type.ProgressUpdate;
 
 public class MultiFileCopy {
 

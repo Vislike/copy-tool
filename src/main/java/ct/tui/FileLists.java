@@ -2,18 +2,18 @@ package ct.tui;
 
 import java.util.List;
 
+import ct.action.Analyse;
+import ct.action.RobustCopy;
+import ct.action.io.FilesIO;
+import ct.action.type.AnalyseResult;
+import ct.action.type.CopyTask;
 import ct.app.App;
 import ct.app.Settings;
 import ct.app.Settings.AnalyseSettings;
 import ct.app.Settings.RobustCopySettings;
-import ct.files.Analyse;
-import ct.files.RobustCopy;
-import ct.files.io.FilesIO;
-import ct.files.types.AnalyseResult;
-import ct.files.types.CopyTask;
-import ct.utils.AnsiEscapeCodes.Color;
-import ct.utils.Utils;
-import ct.utils.Utils.Timer;
+import ct.util.Utils;
+import ct.util.AnsiEscapeCodes.Color;
+import ct.util.Utils.Timer;
 
 public class FileLists {
 

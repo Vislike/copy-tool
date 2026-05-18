@@ -6,9 +6,9 @@ import java.lang.Thread.Builder;
 import java.util.Properties;
 
 import ct.tui.FileLists;
-import ct.utils.AnsiEscapeCodes.Color;
-import ct.utils.Native;
-import ct.utils.Utils;
+import ct.util.Native;
+import ct.util.Utils;
+import ct.util.AnsiEscapeCodes.Color;
 
 public class App {
 

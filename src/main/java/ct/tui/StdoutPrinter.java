@@ -1,21 +1,21 @@
 package ct.tui;
 
+import ct.action.progress.IProgressEvent;
+import ct.action.progress.IProgressReport;
+import ct.action.progress.IProgressEvent.CopyEndEvent;
+import ct.action.progress.IProgressEvent.CopyProgressEvent;
+import ct.action.progress.IProgressEvent.CopyStartEvent;
+import ct.action.progress.IProgressEvent.ErrorEvent;
+import ct.action.progress.IProgressEvent.ModifiedTimeEvent;
+import ct.action.progress.IProgressEvent.RestartEvent;
+import ct.action.progress.IProgressEvent.ResumeEvent;
+import ct.action.progress.IProgressEvent.TruncateEvent;
+import ct.action.progress.IProgressEvent.WaitEndEvent;
+import ct.action.progress.IProgressEvent.WaitStartEvent;
+import ct.action.progress.IProgressEvent.WarningEvent;
 import ct.app.App;
-import ct.files.progress.IProgressEvent;
-import ct.files.progress.IProgressEvent.CopyEndEvent;
-import ct.files.progress.IProgressEvent.CopyProgressEvent;
-import ct.files.progress.IProgressEvent.CopyStartEvent;
-import ct.files.progress.IProgressEvent.ErrorEvent;
-import ct.files.progress.IProgressEvent.ModifiedTimeEvent;
-import ct.files.progress.IProgressEvent.RestartEvent;
-import ct.files.progress.IProgressEvent.ResumeEvent;
-import ct.files.progress.IProgressEvent.TruncateEvent;
-import ct.files.progress.IProgressEvent.WaitEndEvent;
-import ct.files.progress.IProgressEvent.WaitStartEvent;
-import ct.files.progress.IProgressEvent.WarningEvent;
-import ct.files.progress.IProgressReport;
-import ct.tui.types.DeBounce;
-import ct.utils.Utils;
+import ct.tui.type.DeBounce;
+import ct.util.Utils;
 
 public class StdoutPrinter implements IProgressReport {
 

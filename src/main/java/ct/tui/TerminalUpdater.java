@@ -4,25 +4,25 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import ct.action.progress.IProgressEvent.CopyEndEvent;
+import ct.action.progress.IProgressEvent.CopyProgressEvent;
+import ct.action.progress.IProgressEvent.CopyStartEvent;
+import ct.action.progress.IProgressEvent.ErrorEvent;
+import ct.action.progress.IProgressEvent.ModifiedTimeEvent;
+import ct.action.progress.IProgressEvent.RestartEvent;
+import ct.action.progress.IProgressEvent.ResumeEvent;
+import ct.action.progress.IProgressEvent.TruncateEvent;
+import ct.action.progress.IProgressEvent.WaitEndEvent;
+import ct.action.progress.IProgressEvent.WaitStartEvent;
+import ct.action.progress.IProgressEvent.WarningEvent;
+import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings.MultiFileSettings;
-import ct.files.progress.IProgressEvent.CopyEndEvent;
-import ct.files.progress.IProgressEvent.CopyProgressEvent;
-import ct.files.progress.IProgressEvent.CopyStartEvent;
-import ct.files.progress.IProgressEvent.ErrorEvent;
-import ct.files.progress.IProgressEvent.ModifiedTimeEvent;
-import ct.files.progress.IProgressEvent.RestartEvent;
-import ct.files.progress.IProgressEvent.ResumeEvent;
-import ct.files.progress.IProgressEvent.TruncateEvent;
-import ct.files.progress.IProgressEvent.WaitEndEvent;
-import ct.files.progress.IProgressEvent.WaitStartEvent;
-import ct.files.progress.IProgressEvent.WarningEvent;
-import ct.files.types.FileRecord;
-import ct.tui.types.DeBounce;
-import ct.tui.types.ProgressUpdate;
-import ct.utils.AnsiEscapeCodes;
-import ct.utils.AnsiEscapeCodes.Color;
-import ct.utils.Utils;
+import ct.tui.type.DeBounce;
+import ct.tui.type.ProgressUpdate;
+import ct.util.AnsiEscapeCodes;
+import ct.util.Utils;
+import ct.util.AnsiEscapeCodes.Color;
 
 public class TerminalUpdater {
 
