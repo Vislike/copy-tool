@@ -12,11 +12,11 @@ import java.util.Map;
 import ct.app.App;
 import ct.util.Utils;
 
-public class Shared {
+public class SupportUtils {
 
 	private static final int WAIT_BETWEEN_TEST_TIME = 1000;
 
-	private Shared() {
+	private SupportUtils() {
 	}
 
 	public static final String HASHES_FILE = "sha256sums.txt";

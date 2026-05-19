@@ -14,7 +14,7 @@ import ct.action.type.CopyTask;
 import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
-import ct.support.Shared;
+import ct.support.SupportUtils;
 import ct.tui.StdoutPrinter;
 import ct.util.Utils;
 import ct.util.Utils.Timer;
@@ -62,7 +62,7 @@ public class TestLargeFile {
 		List<String> log = new ArrayList<>();
 
 		for (int i = BUFF_FROM; i <= BUFF_TO; i++) {
-			Shared.waitBetweenTests();
+			SupportUtils.waitBetweenTests();
 
 			testCopy(sourceFile, targetFile, 1 << i, log);
 

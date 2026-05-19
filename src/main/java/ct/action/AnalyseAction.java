@@ -13,9 +13,9 @@ import ct.action.type.CopyTask;
 import ct.action.type.FileRecord;
 import ct.app.Settings.AnalyseSettings;
 
-public class Analyse {
+public class AnalyseAction {
 
-	private Analyse() {
+	private AnalyseAction() {
 	}
 
 	private static enum Status {

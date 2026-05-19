@@ -1,4 +1,4 @@
-package ct.action.types;
+package ct.action.type;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -6,8 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import java.nio.ByteBuffer;
 
 import org.junit.jupiter.api.Test;
-
-import ct.action.type.Buffers;
 
 public class BuffersTest {
 

@@ -15,7 +15,7 @@ import ct.action.type.CopyTask;
 import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
-import ct.support.Shared;
+import ct.support.SupportUtils;
 import ct.tui.MultiFileCopy;
 import ct.util.TestUtils;
 import ct.util.Utils;
@@ -43,7 +43,7 @@ public class ChaosTest {
 			App.error("Not a directory", args[0]);
 			return;
 		}
-		Path hashFile = testDir.resolve(Shared.HASHES_FILE);
+		Path hashFile = testDir.resolve(SupportUtils.HASHES_FILE);
 		if (Files.notExists(hashFile)) {
 			App.error("No hashfile found, generate files first", hashFile);
 			return;
@@ -63,11 +63,11 @@ public class ChaosTest {
 		App.highlight("Dev Mode ", Settings.devMode);
 
 		Timer timer = Utils.timer();
-		Map<String, String> sha256Map = Shared.readHashFileToMap(hashFile);
+		Map<String, String> sha256Map = SupportUtils.readHashFileToMap(hashFile);
 		List<CopyTask> tasks = new ArrayList<>();
 
-		for (int numBytes : Shared.bytesList()) {
-			String fileName = Shared.nameOfGenFile(numBytes);
+		for (int numBytes : SupportUtils.bytesList()) {
+			String fileName = SupportUtils.nameOfGenFile(numBytes);
 			Path testFile = testDir.resolve(fileName);
 			FileRecord sourceFile = FileRecord.sourceFile(testFile, Files.size(testFile), testDir.relativize(testFile));
 			FileRecord targetFile = FileRecord.targetFile(tempDir.resolve(fileName));

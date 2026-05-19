@@ -5,10 +5,10 @@ import java.io.InputStream;
 import java.lang.Thread.Builder;
 import java.util.Properties;
 
-import ct.tui.FileLists;
+import ct.runner.AnalyseRunner;
+import ct.util.AnsiEscapeCodes.Color;
 import ct.util.Native;
 import ct.util.Utils;
-import ct.util.AnsiEscapeCodes.Color;
 
 public class App {
 
@@ -30,7 +30,7 @@ public class App {
 			verbose("EnableVirtualTerminalProcessing", vtp);
 		}
 
-		CommandLine.parseArgs(args).ifPresentOrElse(FileLists::analyseAllFiles, CommandLine::help);
+		CommandLine.parseArgs(args).ifPresentOrElse(AnalyseRunner::execute, CommandLine::help);
 	}
 
 	private static String version() throws IOException {

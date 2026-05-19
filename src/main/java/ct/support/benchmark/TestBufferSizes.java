@@ -15,7 +15,7 @@ import ct.action.type.CopyTask;
 import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
-import ct.support.Shared;
+import ct.support.SupportUtils;
 import ct.tui.StdoutPrinter;
 import ct.util.TestUtils;
 import ct.util.Utils;
@@ -38,7 +38,7 @@ public class TestBufferSizes {
 			App.error("Not a directory", args[0]);
 			return;
 		}
-		Path hashFile = testDir.resolve(Shared.HASHES_FILE);
+		Path hashFile = testDir.resolve(SupportUtils.HASHES_FILE);
 		if (Files.notExists(hashFile)) {
 			App.error("No hashfile found, generate files first", hashFile);
 			return;
@@ -55,13 +55,13 @@ public class TestBufferSizes {
 
 		Timer timer = Utils.timer();
 		FileRecord targetFile = FileRecord.targetFile(tempFile);
-		Map<String, String> sha256Map = Shared.readHashFileToMap(hashFile);
+		Map<String, String> sha256Map = SupportUtils.readHashFileToMap(hashFile);
 		List<String> log = new ArrayList<>();
 
-		for (int numBytes : Shared.bytesList()) {
-			Shared.waitBetweenTests();
+		for (int numBytes : SupportUtils.bytesList()) {
+			SupportUtils.waitBetweenTests();
 
-			Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
+			Path testFile = testDir.resolve(SupportUtils.nameOfGenFile(numBytes));
 			FileRecord sourceFile = FileRecord.sourceFile(testFile, Files.size(testFile), testDir.relativize(testFile));
 			testCopy(sourceFile, targetFile, numBytes, sha256Map, log);
 

@@ -34,5 +34,4 @@ public record Settings(AnalyseSettings analyse, RobustCopySettings robustCopy, M
 				new RobustCopySettings(bufferSize, waitBeforeRetryTimeSec, rollbackBuffersNum),
 				new MultiFileSettings(false, filesSimultaneously, App.TERMINAL_WIDTH));
 	}
-
 }

@@ -31,7 +31,7 @@ public class GenTestFiles {
 			App.error("Not a directory", args[0]);
 			return;
 		}
-		Path hashFile = testDir.resolve(Shared.HASHES_FILE);
+		Path hashFile = testDir.resolve(SupportUtils.HASHES_FILE);
 		if (Files.exists(hashFile)) {
 			App.error("Hashfile exists, remove it to create new files", hashFile);
 			return;
@@ -47,8 +47,8 @@ public class GenTestFiles {
 		Random random = new Random();
 
 		try (BufferedWriter hashWriter = Files.newBufferedWriter(hashFile)) {
-			for (int numBytes : Shared.bytesList()) {
-				Path testFile = testDir.resolve(Shared.nameOfGenFile(numBytes));
+			for (int numBytes : SupportUtils.bytesList()) {
+				Path testFile = testDir.resolve(SupportUtils.nameOfGenFile(numBytes));
 				FileRecord fileRecord = FileRecord.sourceFile(testFile, SIZE, testDir.relativize(testFile));
 				App.highlight("Creating", fileRecord);
 				ByteBuffer bb = randomBb(random, (int) fileRecord.size());
