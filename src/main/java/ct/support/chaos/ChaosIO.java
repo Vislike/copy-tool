@@ -3,6 +3,7 @@ package ct.support.chaos;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -29,19 +30,23 @@ public class ChaosIO implements IOWrapper {
 	private void chaos(WT t) throws IOException {
 		int roll = rand.nextInt(SCALE);
 		if (roll < chance) {
-			if (rand.nextInt(10) < 1) {
-				throw new IOException("""
-						Complete chaos errupted\r\n
+			String msg = "Chaos rolled: " + (roll + 1) + "/" + SCALE + ", during \"" + t + "\", your odds: "
+					+ df.format((double) chance / (double) (SCALE));
+
+			int randNum = rand.nextInt(10);
+			if (randNum < 1) {
+				msg += """
+						... Complete chaos errupted\r\n
 						What should we dooooooo(m)?????\r\n
 						This is many lines, and huge,
 						Maybe a stack trace, formating chaos ensure.
 						Maybe a stack trace, formating chaos ensure.
 						Maybe a stack trace, formating chaos ensure.
-						""");
-			} else {
-				throw new IOException("Chaos rolled: " + (roll + 1) + "/" + SCALE + ", during \"" + t
-						+ "\", your odds: " + df.format((double) chance / (double) (SCALE)));
+						""";
+			} else if (randNum < 2) {
+				throw new NoSuchFileException(msg);
 			}
+			throw new IOException(msg);
 		}
 	}
 

@@ -25,7 +25,7 @@ public class RobustCopyChaosIT extends RobustCopyIT {
 		assertEquals(sha256, TestUtils.sha256(tempFile().path()), "Seed to reproduce: " + seed);
 	}
 
-	private void testChaos(int chance, int rollback) throws IOException {
+	private void testChaos(int chance, int rollback) throws Exception {
 		RobustCopy rc = createRobustCopy(new ChaosIO(chance, seed), rollback);
 		rc.copy(new CopyTask(file2999b(), tempFile()));
 		chaosAssert(SHA_256_2999B_FILE);
@@ -35,17 +35,17 @@ public class RobustCopyChaosIT extends RobustCopyIT {
 	}
 
 	@Test
-	void highFailChanceST() throws IOException {
+	void highFailChanceST() throws Exception {
 		testChaos(5000, 0);
 	}
 
 	@Test
-	void midFailChanceSTWithRollback() throws IOException {
+	void midFailChanceSTWithRollback() throws Exception {
 		testChaos(3300, 2);
 	}
 
 	@RepeatedTest(value = 20, name = RepeatedTest.LONG_DISPLAY_NAME)
-	void lowFailChanceST() throws IOException {
+	void lowFailChanceST() throws Exception {
 		testChaos(500, 0);
 	}
 }

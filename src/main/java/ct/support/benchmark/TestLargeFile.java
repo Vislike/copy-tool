@@ -1,6 +1,5 @@
 package ct.support.benchmark;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,7 +14,7 @@ import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
 import ct.support.SupportUtils;
-import ct.tui.StdoutPrinter;
+import ct.tui.StdoutProgress;
 import ct.util.Utils;
 import ct.util.Utils.Timer;
 
@@ -25,7 +24,7 @@ public class TestLargeFile {
 	private static final int BUFF_FROM = 19;
 	private static final int BUFF_TO = 25;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		App.info("= = = = Copy Tool Large File Test = = = =");
 
 		if (args.length == 0) {
@@ -75,14 +74,14 @@ public class TestLargeFile {
 		App.infolb(timer.elapsedSeconds("Done in"));
 	}
 
-	private static void testCopy(FileRecord source, FileRecord target, int buff, List<String> log) throws IOException {
+	private static void testCopy(FileRecord source, FileRecord target, int buff, List<String> log) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Buffer: ").append(Utils.size(buff)).append(" (").append(Integer.numberOfTrailingZeros(buff))
 				.append("), Size: ").append(Utils.size(source.size()));
 
 		long startTime = System.nanoTime();
 		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.testBufferSizes(buff).robustCopy(),
-				new StdoutPrinter());
+				new StdoutProgress());
 		robustCopy.copy(new CopyTask(source, target));
 		long elapsedNanos = System.nanoTime() - startTime;
 

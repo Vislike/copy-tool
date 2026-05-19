@@ -42,4 +42,7 @@ public sealed interface IProgressEvent {
 
 	record ErrorEvent(String description, String cause) implements IProgressEvent {
 	}
+
+	record AbortEvent(CopyTask ct) implements IProgressEvent {
+	}
 }

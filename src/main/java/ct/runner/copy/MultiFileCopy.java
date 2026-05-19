@@ -1,4 +1,4 @@
-package ct.runner;
+package ct.runner.copy;
 
 import java.lang.Thread.Builder;
 import java.util.ArrayList;
@@ -95,7 +95,12 @@ public class MultiFileCopy {
 			RobustCopy rc = new RobustCopy(io, globalSettings.robustCopy(), ps);
 			CopyTask ct;
 			while ((ct = copyTaskQueue.poll()) != null) {
-				rc.copy(ct);
+				try {
+					rc.copy(ct);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					throw new AssertionError("Interrupt not implemented yet", e);
+				}
 			}
 			ps.done();
 		});

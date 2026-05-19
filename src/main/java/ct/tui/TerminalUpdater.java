@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import ct.action.progress.IProgressEvent.AbortEvent;
 import ct.action.progress.IProgressEvent.CopyEndEvent;
 import ct.action.progress.IProgressEvent.CopyProgressEvent;
 import ct.action.progress.IProgressEvent.CopyStartEvent;
@@ -21,8 +22,8 @@ import ct.app.Settings.MultiFileSettings;
 import ct.tui.type.DeBounce;
 import ct.tui.type.ProgressUpdate;
 import ct.util.AnsiEscapeCodes;
-import ct.util.Utils;
 import ct.util.AnsiEscapeCodes.Color;
+import ct.util.Utils;
 
 public class TerminalUpdater {
 
@@ -100,14 +101,14 @@ public class TerminalUpdater {
 			row.db = new DeBounce(DEBOUNCE_TIME, e.ct().sourceFile().size());
 			row.heading(e.ct().sourceFile().relativeFromSource());
 			row.state(State.Copying);
-			row.body(StdoutPrinter.createProgress(0, row.db));
+			row.body(StdoutProgress.createProgress(0, row.db));
 			draw();
 		}
 		case ResumeEvent e -> row.db.setResumePos(e.pos());
 		case CopyProgressEvent e -> {
 			if (row.db.shouldUpdate(e.size())) {
 				row.state(State.Copying);
-				row.body(StdoutPrinter.createProgress(e.size(), row.db));
+				row.body(StdoutProgress.createProgress(e.size(), row.db));
 				draw();
 			}
 		}
@@ -123,7 +124,7 @@ public class TerminalUpdater {
 			row.state(State.Retryin);
 			draw();
 		}
-		case ModifiedTimeEvent _,RestartEvent _ -> {
+		case ModifiedTimeEvent _,RestartEvent _,AbortEvent _ -> {
 		}
 		}
 	}

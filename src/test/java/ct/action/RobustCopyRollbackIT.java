@@ -2,8 +2,6 @@ package ct.action;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.IOException;
-
 import org.junit.jupiter.api.Test;
 
 import ct.action.io.IOWrapper;
@@ -12,13 +10,13 @@ import ct.action.type.CopyTask;
 
 public class RobustCopyRollbackIT extends RobustCopyIT {
 
-	private void testRollback(IOWrapper io, int rollback, boolean equals) throws IOException {
+	private void testRollback(IOWrapper io, int rollback, boolean equals) throws Exception {
 		createRobustCopy(io, rollback).copy(new CopyTask(file2999b(), tempFile()));
 		verifySha256Temp(SHA_256_2999B_FILE, equals);
 	}
 
 	@Test
-	void rollback() throws IOException {
+	void rollback() throws Exception {
 		TestFailableIO io = new TestFailableIO();
 		// 2999 bytes completes in 6 cycles, fail at write 6 throws away two buffers
 		// 5+4, restart at 3 completed, fail at read 8 throws away buffers 4+3, restart
@@ -30,7 +28,7 @@ public class RobustCopyRollbackIT extends RobustCopyIT {
 	}
 
 	@Test
-	void corruptedRead() throws IOException {
+	void corruptedRead() throws Exception {
 		subTestStart();
 		testRollback(new TestFailableIO().corruptAt(WT.read, 3).failAt(WT.read, 5), 0, false);
 
@@ -42,7 +40,7 @@ public class RobustCopyRollbackIT extends RobustCopyIT {
 	}
 
 	@Test
-	void corruptedWrite() throws IOException {
+	void corruptedWrite() throws Exception {
 		subTestStart();
 		testRollback(new TestFailableIO().corruptAt(WT.write, 1).failAt(WT.write, 3), 0, false);
 
@@ -54,7 +52,7 @@ public class RobustCopyRollbackIT extends RobustCopyIT {
 	}
 
 	@Test
-	void corruptedReadAndWrite() throws IOException {
+	void corruptedReadAndWrite() throws Exception {
 		TestFailableIO io;
 
 		// Write fail rolls back to read corruption, lucky
@@ -84,7 +82,7 @@ public class RobustCopyRollbackIT extends RobustCopyIT {
 	}
 
 	@Test
-	void corruptedWriteAndRead() throws IOException {
+	void corruptedWriteAndRead() throws Exception {
 		TestFailableIO io;
 
 		// Read fail rolls back to write corruption, lucky

@@ -17,7 +17,7 @@ import ct.action.progress.IProgressReport;
 import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
-import ct.tui.StdoutPrinter;
+import ct.tui.StdoutProgress;
 import ct.util.TestUtils;
 
 public abstract class RobustCopyIT {
@@ -98,7 +98,7 @@ public abstract class RobustCopyIT {
 	}
 
 	private IProgressReport createMessageProducer() {
-		return OUTPUT_VISIBLE ? new StdoutPrinter() : new TestVoidProgress();
+		return OUTPUT_VISIBLE ? new StdoutProgress() : new TestVoidProgress();
 	}
 
 	protected RobustCopy createRobustCopy(IOWrapper wrapper) {

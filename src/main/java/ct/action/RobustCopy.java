@@ -2,6 +2,7 @@ package ct.action;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -45,7 +46,7 @@ public class RobustCopy {
 		return new Buffers(1, settings.bufferSize());
 	}
 
-	public void copy(CopyTask ct) {
+	public void copy(CopyTask ct) throws InterruptedException {
 		// Start
 		pr.event(new CopyStartEvent(ct));
 
@@ -76,7 +77,7 @@ public class RobustCopy {
 		pr.event(new CopyEndEvent(ct));
 	}
 
-	private void singleThreadedBufferCopy(final CopyTask ct, final long startByte) {
+	private void singleThreadedBufferCopy(final CopyTask ct, final long startByte) throws InterruptedException {
 		// States
 		boolean copyComplete = false;
 		FileChannel inChannel = null;
@@ -134,11 +135,13 @@ public class RobustCopy {
 
 				// Done
 				copyComplete = true;
-			} catch (NoSuchFileException e) {
-				pr.error("Error, file not found", e.getMessage());
-				waitBeforeRetry();
+			} catch (ClosedByInterruptException e) {
+				throw new InterruptedException();
 			} catch (IOException e) {
-				pr.error("Copy problem", e.getMessage());
+				pr.error(switch (e) {
+				case NoSuchFileException _ -> "Error no such file";
+				default -> "Copy problem";
+				}, e.getMessage());
 				waitBeforeRetry();
 			} finally {
 				// Close channels, ignore problems
@@ -148,17 +151,13 @@ public class RobustCopy {
 		}
 	}
 
-	private void waitBeforeRetry() {
+	private void waitBeforeRetry() throws InterruptedException {
 		pr.event(new WaitStartEvent(settings.waitBeforeRetryTimeSec()));
-		try {
-			Thread.sleep(Duration.ofSeconds(settings.waitBeforeRetryTimeSec()));
-		} catch (InterruptedException e) {
-			pr.warning("Warning wait interrupted", e.getMessage());
-		}
+		Thread.sleep(Duration.ofSeconds(settings.waitBeforeRetryTimeSec()));
 		pr.event(new WaitEndEvent());
 	}
 
-	private void createDirectories(Path path) {
+	private void createDirectories(Path path) throws InterruptedException {
 		Path success = null;
 		while (success == null) {
 			try {
@@ -170,7 +169,7 @@ public class RobustCopy {
 		}
 	}
 
-	private FileTime getLastModifiedTime(Path path) {
+	private FileTime getLastModifiedTime(Path path) throws InterruptedException {
 		FileTime fileTime = null;
 		while (fileTime == null) {
 			try {
@@ -183,7 +182,7 @@ public class RobustCopy {
 		return fileTime;
 	}
 
-	private void setLastModifiedTime(Path path, FileTime fileTime) {
+	private void setLastModifiedTime(Path path, FileTime fileTime) throws InterruptedException {
 		Path success = null;
 		while (success == null) {
 			try {

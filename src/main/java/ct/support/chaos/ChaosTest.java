@@ -15,7 +15,7 @@ import ct.action.type.CopyTask;
 import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
-import ct.runner.MultiFileCopy;
+import ct.runner.copy.MultiFileCopy;
 import ct.support.SupportUtils;
 import ct.util.TestUtils;
 import ct.util.Utils;

@@ -16,7 +16,7 @@ import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
 import ct.support.SupportUtils;
-import ct.tui.StdoutPrinter;
+import ct.tui.StdoutProgress;
 import ct.util.TestUtils;
 import ct.util.Utils;
 import ct.util.Utils.Timer;
@@ -25,7 +25,7 @@ public class TestBufferSizes {
 
 	private static final boolean DEV_MODE = true;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		App.info("= = = = Copy Tool Buffer Test = = = =");
 
 		if (args.length == 0) {
@@ -75,14 +75,14 @@ public class TestBufferSizes {
 	}
 
 	private static void testCopy(FileRecord source, FileRecord target, int numBytes, Map<String, String> sha256Map,
-			List<String> log) throws IOException {
+			List<String> log) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Buffer: ").append(Utils.size(numBytes)).append(" (").append(Integer.numberOfTrailingZeros(numBytes))
 				.append("), Size: ").append(Utils.size(source.size()));
 
 		long startTime = System.nanoTime();
 		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.testBufferSizes(numBytes).robustCopy(),
-				new StdoutPrinter());
+				new StdoutProgress());
 		robustCopy.copy(new CopyTask(source, target));
 		long elapsedNanos = System.nanoTime() - startTime;
 

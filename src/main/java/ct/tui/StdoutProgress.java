@@ -1,7 +1,7 @@
 package ct.tui;
 
 import ct.action.progress.IProgressEvent;
-import ct.action.progress.IProgressReport;
+import ct.action.progress.IProgressEvent.AbortEvent;
 import ct.action.progress.IProgressEvent.CopyEndEvent;
 import ct.action.progress.IProgressEvent.CopyProgressEvent;
 import ct.action.progress.IProgressEvent.CopyStartEvent;
@@ -13,11 +13,12 @@ import ct.action.progress.IProgressEvent.TruncateEvent;
 import ct.action.progress.IProgressEvent.WaitEndEvent;
 import ct.action.progress.IProgressEvent.WaitStartEvent;
 import ct.action.progress.IProgressEvent.WarningEvent;
+import ct.action.progress.IProgressReport;
 import ct.app.App;
 import ct.tui.type.DeBounce;
 import ct.util.Utils;
 
-public class StdoutPrinter implements IProgressReport {
+public class StdoutProgress implements IProgressReport {
 
 	private static final long DEBOUNCE_TIME = 10000;
 
@@ -47,6 +48,7 @@ public class StdoutPrinter implements IProgressReport {
 		case TruncateEvent e -> App.info("Truncating to: " + Utils.size(e.size()));
 		case WaitStartEvent e -> App.info("Waiting " + e.seconds() + "s...");
 		case WaitEndEvent _ -> App.info("Retrying...");
+		case AbortEvent e -> App.highlight("Aborted", e.ct().sourceFile());
 		}
 	}
 
