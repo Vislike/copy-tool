@@ -1,4 +1,4 @@
-package ct.tui;
+package ct.runner;
 
 import java.lang.Thread.Builder;
 import java.util.ArrayList;
@@ -15,6 +15,7 @@ import ct.action.type.CopyTask;
 import ct.app.App;
 import ct.app.Settings;
 import ct.app.Settings.MultiFileSettings;
+import ct.tui.TerminalUpdater;
 import ct.tui.type.ProgressUpdate;
 
 public class MultiFileCopy {

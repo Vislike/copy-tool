@@ -1,5 +1,6 @@
 package ct.runner;
 
+import java.time.Duration;
 import java.util.List;
 
 import ct.action.RobustCopy;
@@ -9,14 +10,34 @@ import ct.action.type.CopyTask;
 import ct.app.App;
 import ct.app.Settings;
 import ct.app.Settings.RobustCopySettings;
-import ct.tui.MultiFileCopy;
 import ct.tui.StdoutPrinter;
 import ct.util.Utils;
 import ct.util.Utils.Timer;
 
 public class CopyRunner {
 
+	private static final int SHUTDOWN_WAIT = 2;
+
 	public static void execute(AnalyseResult files, Settings settings) {
+
+		Thread mainThread = Thread.currentThread();
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				try {
+					App.warning("Shutdown requested, waiting max", SHUTDOWN_WAIT);
+					mainThread.interrupt();
+					boolean terminated = mainThread.join(Duration.ofSeconds(SHUTDOWN_WAIT));
+					if (!terminated) {
+						App.error("All threads not stopped, hard exit...");
+					}
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					throw new AssertionError("Interrupt not implemented yet", e);
+				}
+			}
+		});
+
 		Timer timer = Utils.timer();
 		if (settings.multiFile().logMode()) {
 			logMode(settings.robustCopy(), files.copy());
