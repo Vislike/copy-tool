@@ -10,8 +10,6 @@ import ct.app.Settings;
 
 public class Utils {
 
-	public static final int SB_SIZE = 128;
-
 	private Utils() {
 	}
 

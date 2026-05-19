@@ -17,7 +17,11 @@ public class App {
 	static final int WAIT_TIME = 10;
 	static final int ROLLBACK_BUFFERS = 0;
 	static final int NUM_FILES_SIMULTANEOUSLY = 2;
-	static final boolean VIRTUAL_THREADS = true;
+
+	private static final boolean VIRTUAL_THREADS = true;
+
+	public static final int SHUTDOWN_MAX_WAIT = 10;
+	public static final int SB_SIZE = 128;
 
 	public static void main(String[] args) throws IOException {
 		info("= = = = Copy Tool v" + version() + " = = = =");
@@ -95,7 +99,7 @@ public class App {
 	}
 
 	private static void printCommon(Color color, boolean extraNl, String str, Object... args) {
-		StringBuilder sb = new StringBuilder(Utils.SB_SIZE);
+		StringBuilder sb = new StringBuilder(SB_SIZE);
 		if (extraNl) {
 			sb.append(System.lineSeparator());
 		}

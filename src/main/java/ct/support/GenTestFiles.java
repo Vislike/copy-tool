@@ -16,7 +16,7 @@ import ct.util.Utils.Timer;
 
 public class GenTestFiles {
 
-	public static final int SIZE = 1024 * 1024 * 1024;
+	private static final int SIZE = 1024 * 1024 * 1024;
 
 	public static void main(String[] args) throws IOException {
 		App.info("= = = = Copy Tool Gen Test Files = = = =");

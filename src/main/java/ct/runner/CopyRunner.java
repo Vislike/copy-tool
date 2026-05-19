@@ -13,7 +13,6 @@ import ct.util.Utils.Timer;
 
 public class CopyRunner {
 
-	private static final int SHUTDOWN_WAIT = 10;
 	private static Thread shutdownHookThread;
 
 	public static void execute(AnalyseResult files, Settings settings) {
@@ -34,11 +33,11 @@ public class CopyRunner {
 		final Thread mainThread = Thread.currentThread();
 		shutdownHookThread = new Thread(() -> {
 			try {
-				App.warning("Shutdown requested, aborting...");
+				App.warning("Shutdown requested, gracefully aborting...");
 				mainThread.interrupt();
-				boolean terminated = mainThread.join(Duration.ofSeconds(SHUTDOWN_WAIT));
+				boolean terminated = mainThread.join(Duration.ofSeconds(App.SHUTDOWN_MAX_WAIT));
 				if (!terminated) {
-					App.error("Graceful shutdown failed, hard exiting, timeout seconds", SHUTDOWN_WAIT);
+					App.error("Graceful shutdown failed, hard exiting, timeout seconds", App.SHUTDOWN_MAX_WAIT);
 				}
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();

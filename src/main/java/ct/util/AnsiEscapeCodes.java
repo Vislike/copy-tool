@@ -45,11 +45,11 @@ public class AnsiEscapeCodes {
 		}
 
 		public String highlight(String msg, Object... args) {
-			return highlight(new StringBuilder(Utils.SB_SIZE), msg, args).toString();
+			return highlight(new StringBuilder(App.SB_SIZE), msg, args).toString();
 		}
 
 		public String state(String state, String msg) {
-			StringBuilder sb = new StringBuilder(Utils.SB_SIZE);
+			StringBuilder sb = new StringBuilder(App.SB_SIZE);
 			RESET.append(this.append(sb.append("[")).append(state)).append("] ");
 			return sb.append(msg).toString();
 		}
