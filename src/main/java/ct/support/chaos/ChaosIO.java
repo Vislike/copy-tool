@@ -103,7 +103,7 @@ public class ChaosIO implements IOWrapper {
 		} catch (IOException e) {
 			int i = rand.nextInt(10);
 			switch (i) {
-			case 0 -> writeError = rand.nextInt(src.limit() + 1);
+			case 0 -> writeError = rand.nextInt(Math.max(src.limit(), 1));
 			case 1 -> {
 				return 0;
 			}
@@ -121,7 +121,7 @@ public class ChaosIO implements IOWrapper {
 		} catch (IOException e) {
 			int i = rand.nextInt(10);
 			switch (i) {
-			case 0 -> transferError = rand.nextLong(count + 1);
+			case 0 -> transferError = rand.nextLong(Math.max(count, 1));
 			case 1 -> {
 				return 0;
 			}

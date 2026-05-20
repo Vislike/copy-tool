@@ -6,8 +6,7 @@ import ct.action.io.FilesIO;
 import ct.action.type.AnalyseResult;
 import ct.app.App;
 import ct.app.Settings;
-import ct.runner.copy.LogModeCopy;
-import ct.runner.copy.MultiFileCopy;
+import ct.runner.copy.ICopyRunnerModule;
 import ct.util.Utils;
 import ct.util.Utils.Timer;
 
@@ -16,24 +15,22 @@ public class CopyRunner {
 	private static Thread shutdownHookThread;
 
 	public static void execute(AnalyseResult files, Settings settings) {
-		createAndAddShutdownHook();
-
 		Timer timer = Utils.timer();
-		if (settings.multiFile().logMode()) {
-			new LogModeCopy(settings, new FilesIO()).copyall(files.copy());
-		} else {
-			new MultiFileCopy(settings, new FilesIO()).copyAll(files.copy());
+		createAndAddShutdownHook();
+		try {
+			ICopyRunnerModule cm = ICopyRunnerModule.create(settings, new FilesIO());
+			cm.copyAll(files.copy());
+		} finally {
+			removeShutdownHook();
+			App.infolb(timer.elapsedSeconds("Copy Finished in"));
 		}
-		App.infolb(timer.elapsedSeconds("Copy Complete in"));
-
-		removeShutdownHook();
 	}
 
 	private static void createAndAddShutdownHook() {
 		final Thread mainThread = Thread.currentThread();
 		shutdownHookThread = new Thread(() -> {
 			try {
-				App.warning("Shutdown requested, gracefully aborting...");
+				App.warning("Shutdown requested, aborting...");
 				mainThread.interrupt();
 				boolean terminated = mainThread.join(Duration.ofSeconds(App.SHUTDOWN_HARD_WAIT));
 				if (!terminated) {

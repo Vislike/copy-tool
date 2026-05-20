@@ -12,7 +12,7 @@ import ct.app.Settings;
 import ct.app.Settings.RobustCopySettings;
 import ct.tui.copy.StdoutProgress;
 
-public class LogModeCopy {
+public class LogModeCopy implements ICopyRunnerModule {
 
 	private final RobustCopySettings settings;
 	private final IOWrapper io;
@@ -22,7 +22,8 @@ public class LogModeCopy {
 		this.io = io;
 	}
 
-	public void copyall(List<CopyTask> tasks) {
+	@Override
+	public void copyAll(List<CopyTask> tasks) {
 		IProgressReport pr = new StdoutProgress();
 		RobustCopy rc = new RobustCopy(io, settings, pr);
 		for (CopyTask task : tasks) {

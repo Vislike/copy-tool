@@ -194,14 +194,14 @@ public class RobustCopy {
 		}
 	}
 
-	private void close(FileChannel channel) throws InterruptedException {
+	private void close(FileChannel channel) {
 		if (channel != null) {
 			try {
 				if (channel.isOpen()) {
 					io.close(channel);
 				}
 			} catch (IOException e) {
-				pr.error("Error closing channel", e.getMessage());
+				// Ignore
 			}
 		}
 	}

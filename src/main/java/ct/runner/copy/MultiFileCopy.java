@@ -1,6 +1,5 @@
 package ct.runner.copy;
 
-import java.lang.Thread.Builder;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +16,10 @@ import ct.app.App;
 import ct.app.Settings;
 import ct.tui.copy.AnsiTerminalProgress;
 
-public class MultiFileCopy {
+public class MultiFileCopy implements ICopyRunnerModule {
 
 	private static final int QUEUE_SIZE_PER_THREAD = 4;
+	private static final String NAME_PREFIX = "CopyWorker";
 
 	private final Settings settings;
 	private final IOWrapper io;
@@ -48,15 +48,15 @@ public class MultiFileCopy {
 		progressQueue = new ArrayBlockingQueue<>(settings.multiFile().filesSimultaneously() * QUEUE_SIZE_PER_THREAD);
 	}
 
+	@Override
 	public void copyAll(List<CopyTask> tasks) {
 		AnsiTerminalProgress progress = new AnsiTerminalProgress(settings.multiFile(), tasks.size());
 		List<WorkerThread> threads = new ArrayList<>();
 
-		Builder threadBuilder = App.thread().name("CopyWorker", 1);
 		BlockingQueue<CopyTask> copyTaskQueue = new ArrayBlockingQueue<>(tasks.size(), false, tasks);
 
 		for (int tId = 0; tId < settings.multiFile().filesSimultaneously(); tId++) {
-			threads.add(new WorkerThread(workerThread(threadBuilder, tId, copyTaskQueue)));
+			threads.add(new WorkerThread(workerThread(tId, copyTaskQueue)));
 		}
 
 		eventLoop(threads, progress);
@@ -67,20 +67,25 @@ public class MultiFileCopy {
 			// Run until done
 			while (threads.stream().anyMatch(WorkerThread::isActive)) {
 				ProgressUpdate pu = progressQueue.take();
-				if (pu.eof()) {
+				if (pu.exception() != null) {
+					App.error("Exception thrown by", threadName(pu.threadId()));
+					throw pu.exception();
+				} else if (pu.event() != null) {
+					progress.update(pu.event(), pu.threadId());
+				} else {
 					threads.get(pu.threadId()).eof();
 					progress.eof(pu.threadId());
-				} else {
-					progress.update(pu.event(), pu.threadId());
 				}
 			}
-		} catch (InterruptedException _) {
+		} catch (Throwable t) {
 			final long maxTime = Duration.ofSeconds(App.SHUTDOWN_SOFT_WAIT).toMillis() + System.currentTimeMillis();
 
 			// Abort all workers
 			threads.forEach(w -> {
-				App.verbose("Stopping thread", w.thread.getName());
-				w.thread.interrupt();
+				if (w.thread.isAlive()) {
+					App.verbose("Stopping thread", w.thread.getName());
+					w.thread.interrupt();
+				}
 			});
 
 			// Wait for all workers
@@ -100,12 +105,21 @@ public class MultiFileCopy {
 					App.error("Timeout stopping", w.thread.getName());
 				}
 			}
+			if (!(t instanceof InterruptedException)) {
+				throw new RuntimeException(t);
+			}
 		}
 	}
 
-	private Thread workerThread(Builder tb, final int tId, BlockingQueue<CopyTask> copyTaskQueue) {
-		return tb.start(() -> {
-			ProgressSender ps = new ProgressSender(tId, progressQueue);
+	private Thread workerThread(final int tId, BlockingQueue<CopyTask> copyTaskQueue) {
+		ProgressSender ps = new ProgressSender(tId, progressQueue);
+		return App.thread().name(threadName(tId)).uncaughtExceptionHandler((_, e) -> {
+			try {
+				ps.exception(e);
+			} catch (InterruptedException _) {
+				// Just let thread die
+			}
+		}).start(() -> {
 			RobustCopy rc = new RobustCopy(io, settings.robustCopy(), ps);
 			CopyTask ct = null;
 			try {
@@ -119,7 +133,11 @@ public class MultiFileCopy {
 		});
 	}
 
-	public record ProgressUpdate(int threadId, IProgressEvent event, boolean eof) {
+	private String threadName(int tId) {
+		return NAME_PREFIX + (tId + 1);
+	}
+
+	public record ProgressUpdate(int threadId, IProgressEvent event, Throwable exception) {
 	}
 
 	private static class ProgressSender implements IProgressReport {
@@ -134,7 +152,7 @@ public class MultiFileCopy {
 
 		@Override
 		public void event(IProgressEvent event) throws InterruptedException {
-			mq.put(new ProgressUpdate(threadId, event, false));
+			mq.put(new ProgressUpdate(threadId, event, null));
 		}
 
 		@Override
@@ -142,8 +160,12 @@ public class MultiFileCopy {
 			App.highlight("Aborted", event.ct().sourceFile());
 		}
 
-		public void done() throws InterruptedException {
-			mq.put(new ProgressUpdate(threadId, null, true));
+		void done() throws InterruptedException {
+			mq.put(new ProgressUpdate(threadId, null, null));
+		}
+
+		void exception(Throwable e) throws InterruptedException {
+			mq.put(new ProgressUpdate(threadId, null, e));
 		}
 	}
 }
