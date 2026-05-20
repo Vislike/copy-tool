@@ -1,4 +1,4 @@
-package ct.tui.type;
+package ct.tui.copy;
 
 public class DeBounce {
 	private final long deBounceTime;

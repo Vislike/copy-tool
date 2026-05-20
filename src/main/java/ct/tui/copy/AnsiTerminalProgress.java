@@ -1,9 +1,10 @@
-package ct.tui;
+package ct.tui.copy;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import ct.action.progress.IProgressEvent;
 import ct.action.progress.IProgressEvent.AbortEvent;
 import ct.action.progress.IProgressEvent.CopyEndEvent;
 import ct.action.progress.IProgressEvent.CopyProgressEvent;
@@ -19,13 +20,11 @@ import ct.action.progress.IProgressEvent.WarningEvent;
 import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings.MultiFileSettings;
-import ct.tui.type.DeBounce;
-import ct.tui.type.ProgressUpdate;
 import ct.util.AnsiEscapeCodes;
 import ct.util.AnsiEscapeCodes.Color;
 import ct.util.Utils;
 
-public class TerminalUpdater {
+public class AnsiTerminalProgress {
 
 	private static final long DEBOUNCE_TIME = 1000;
 	// GREEN = 5, RESET = 3, "[] " = 3, Copying = 7
@@ -80,7 +79,7 @@ public class TerminalUpdater {
 	private StringBuilder sb = new StringBuilder();
 	private boolean firstLog = true;
 
-	public TerminalUpdater(MultiFileSettings settings, int totalFiles) {
+	public AnsiTerminalProgress(MultiFileSettings settings, int totalFiles) {
 		this.settings = settings;
 		this.totalFiles = totalFiles;
 		for (int tId = 0; tId < settings.filesSimultaneously(); tId++) {
@@ -88,15 +87,10 @@ public class TerminalUpdater {
 		}
 	}
 
-	public void update(ProgressUpdate pu) {
-		Row row = rows.get(pu.threadId());
-		if (pu.eof()) {
-			row.eof = true;
-			draw();
-			return;
-		}
+	public void update(IProgressEvent event, int rowId) {
+		Row row = rows.get(rowId);
 
-		switch (pu.event()) {
+		switch (event) {
 		case CopyStartEvent e -> {
 			row.db = new DeBounce(DEBOUNCE_TIME, e.ct().sourceFile().size());
 			row.heading(e.ct().sourceFile().relativeFromSource());
@@ -116,6 +110,7 @@ public class TerminalUpdater {
 		case ErrorEvent e -> row.body(Color.RED.highlight(e.description(), e.cause()));
 		case WarningEvent e -> log(Color.MAGENTA.highlight(e.description(), e.cause()));
 		case TruncateEvent e -> log(Color.MAGENTA.highlight("Truncating " + row.name, Utils.size(e.size())));
+		case AbortEvent e -> log(Color.YELLOW.highlight("Aborted", e.ct().sourceFile()));
 		case WaitStartEvent _ -> {
 			row.state(State.Waiting);
 			draw();
@@ -124,9 +119,15 @@ public class TerminalUpdater {
 			row.state(State.Retryin);
 			draw();
 		}
-		case ModifiedTimeEvent _,RestartEvent _,AbortEvent _ -> {
+		case ModifiedTimeEvent _,RestartEvent _ -> {
 		}
 		}
+	}
+
+	public void eof(int rowId) {
+		Row row = rows.get(rowId);
+		row.eof = true;
+		draw();
 	}
 
 	private void draw() {

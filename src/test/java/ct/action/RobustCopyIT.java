@@ -17,7 +17,7 @@ import ct.action.progress.IProgressReport;
 import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
-import ct.tui.StdoutProgress;
+import ct.tui.copy.StdoutProgress;
 import ct.util.TestUtils;
 
 public abstract class RobustCopyIT {

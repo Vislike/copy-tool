@@ -1,4 +1,4 @@
-package ct.tui.type;
+package ct.tui.copy;
 
 import ct.action.progress.IProgressEvent;
 

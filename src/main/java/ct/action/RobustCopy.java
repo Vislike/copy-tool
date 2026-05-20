@@ -194,7 +194,7 @@ public class RobustCopy {
 		}
 	}
 
-	private void close(FileChannel channel) {
+	private void close(FileChannel channel) throws InterruptedException {
 		if (channel != null) {
 			try {
 				if (channel.isOpen()) {

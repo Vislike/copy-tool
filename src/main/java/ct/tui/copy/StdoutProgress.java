@@ -1,4 +1,4 @@
-package ct.tui;
+package ct.tui.copy;
 
 import ct.action.progress.IProgressEvent;
 import ct.action.progress.IProgressEvent.AbortEvent;
@@ -15,7 +15,6 @@ import ct.action.progress.IProgressEvent.WaitStartEvent;
 import ct.action.progress.IProgressEvent.WarningEvent;
 import ct.action.progress.IProgressReport;
 import ct.app.App;
-import ct.tui.type.DeBounce;
 import ct.util.Utils;
 
 public class StdoutProgress implements IProgressReport {
@@ -50,6 +49,11 @@ public class StdoutProgress implements IProgressReport {
 		case WaitEndEvent _ -> App.info("Retrying...");
 		case AbortEvent e -> App.highlight("Aborted", e.ct().sourceFile());
 		}
+	}
+
+	@Override
+	public void abort(AbortEvent event) {
+		event(event);
 	}
 
 	static String createProgress(long bytes, DeBounce db) {

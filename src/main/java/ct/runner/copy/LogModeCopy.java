@@ -10,7 +10,7 @@ import ct.action.type.CopyTask;
 import ct.app.App;
 import ct.app.Settings;
 import ct.app.Settings.RobustCopySettings;
-import ct.tui.StdoutProgress;
+import ct.tui.copy.StdoutProgress;
 
 public class LogModeCopy {
 
@@ -30,7 +30,7 @@ public class LogModeCopy {
 				App.info();
 				rc.copy(task);
 			} catch (InterruptedException e) {
-				pr.event(new AbortEvent(task));
+				pr.abort(new AbortEvent(task));
 				return;
 			}
 		}

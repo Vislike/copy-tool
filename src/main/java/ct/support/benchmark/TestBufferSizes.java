@@ -16,7 +16,7 @@ import ct.action.type.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
 import ct.support.SupportUtils;
-import ct.tui.StdoutProgress;
+import ct.tui.copy.StdoutProgress;
 import ct.util.TestUtils;
 import ct.util.Utils;
 import ct.util.Utils.Timer;
