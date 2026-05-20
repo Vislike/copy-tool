@@ -110,7 +110,6 @@ public class AnsiTerminalProgress {
 		case ErrorEvent e -> row.body(Color.RED.highlight(e.description(), e.cause()));
 		case WarningEvent e -> log(Color.MAGENTA.highlight(e.description(), e.cause()));
 		case TruncateEvent e -> log(Color.MAGENTA.highlight("Truncating " + row.name, Utils.size(e.size())));
-		case AbortEvent e -> log(Color.YELLOW.highlight("Aborted", e.ct().sourceFile()));
 		case WaitStartEvent _ -> {
 			row.state(State.Waiting);
 			draw();
@@ -119,7 +118,7 @@ public class AnsiTerminalProgress {
 			row.state(State.Retryin);
 			draw();
 		}
-		case ModifiedTimeEvent _,RestartEvent _ -> {
+		case ModifiedTimeEvent _,RestartEvent _,AbortEvent _ -> {
 		}
 		}
 	}

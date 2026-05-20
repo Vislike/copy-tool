@@ -1,6 +1,7 @@
 package ct.runner.copy;
 
 import java.lang.Thread.Builder;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -15,7 +16,6 @@ import ct.action.type.CopyTask;
 import ct.app.App;
 import ct.app.Settings;
 import ct.tui.copy.AnsiTerminalProgress;
-import ct.tui.copy.ProgressUpdate;
 
 public class MultiFileCopy {
 
@@ -64,18 +64,42 @@ public class MultiFileCopy {
 
 	private void eventLoop(List<WorkerThread> threads, AnsiTerminalProgress progress) {
 		try {
+			// Run until done
 			while (threads.stream().anyMatch(WorkerThread::isActive)) {
-				ProgressUpdate progressUpdate = progressQueue.take();
-				if (progressUpdate.eof()) {
-					threads.get(progressUpdate.threadId()).eof();
-					progress.eof(progressUpdate.threadId());
+				ProgressUpdate pu = progressQueue.take();
+				if (pu.eof()) {
+					threads.get(pu.threadId()).eof();
+					progress.eof(pu.threadId());
 				} else {
-					progress.update(progressUpdate.event(), progressUpdate.threadId());
+					progress.update(pu.event(), pu.threadId());
 				}
 			}
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new AssertionError("Interrupt not implemented yet", e);
+		} catch (InterruptedException _) {
+			final long maxTime = Duration.ofSeconds(App.SHUTDOWN_SOFT_WAIT).toMillis() + System.currentTimeMillis();
+
+			// Abort all workers
+			threads.forEach(w -> {
+				App.verbose("Stopping thread", w.thread.getName());
+				w.thread.interrupt();
+			});
+
+			// Wait for all workers
+			for (WorkerThread w : threads) {
+				boolean alive = w.thread.isAlive();
+				long waitTime = maxTime - System.currentTimeMillis();
+				if (waitTime > 0) {
+					try {
+						alive = !w.thread.join(Duration.ofMillis(waitTime));
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+						throw new AssertionError("Unexpected interrupt during worker abort", e);
+					}
+				}
+
+				if (alive) {
+					App.error("Timeout stopping", w.thread.getName());
+				}
+			}
 		}
 	}
 
@@ -95,6 +119,9 @@ public class MultiFileCopy {
 		});
 	}
 
+	public record ProgressUpdate(int threadId, IProgressEvent event, boolean eof) {
+	}
+
 	private static class ProgressSender implements IProgressReport {
 
 		private final int threadId;
@@ -112,7 +139,7 @@ public class MultiFileCopy {
 
 		@Override
 		public void abort(AbortEvent event) {
-			mq.offer(new ProgressUpdate(threadId, event, true));
+			App.highlight("Aborted", event.ct().sourceFile());
 		}
 
 		public void done() throws InterruptedException {

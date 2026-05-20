@@ -35,9 +35,9 @@ public class CopyRunner {
 			try {
 				App.warning("Shutdown requested, gracefully aborting...");
 				mainThread.interrupt();
-				boolean terminated = mainThread.join(Duration.ofSeconds(App.SHUTDOWN_MAX_WAIT));
+				boolean terminated = mainThread.join(Duration.ofSeconds(App.SHUTDOWN_HARD_WAIT));
 				if (!terminated) {
-					App.error("Graceful shutdown failed, hard exiting, timeout seconds", App.SHUTDOWN_MAX_WAIT);
+					App.error("Graceful shutdown failed, hard exiting, timeout reached", App.SHUTDOWN_HARD_WAIT);
 				}
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();

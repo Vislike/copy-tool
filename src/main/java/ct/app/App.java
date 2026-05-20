@@ -20,7 +20,8 @@ public class App {
 
 	private static final boolean VIRTUAL_THREADS = true;
 
-	public static final int SHUTDOWN_MAX_WAIT = 10;
+	public static final int SHUTDOWN_HARD_WAIT = 10;
+	public static final int SHUTDOWN_SOFT_WAIT = 5;
 	public static final int SB_SIZE = 128;
 
 	public static void main(String[] args) throws IOException {
