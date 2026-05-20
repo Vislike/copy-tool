@@ -1,7 +1,7 @@
 package ct.runner;
 
 import ct.action.AnalyseAction;
-import ct.action.type.AnalyseResult;
+import ct.action.AnalyseResult;
 import ct.app.App;
 import ct.app.Settings;
 import ct.tui.FileList;

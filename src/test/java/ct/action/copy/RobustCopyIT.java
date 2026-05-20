@@ -1,4 +1,4 @@
-package ct.action;
+package ct.action.copy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -12,9 +12,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 
-import ct.action.io.IOWrapper;
-import ct.action.progress.IProgressReport;
-import ct.action.type.FileRecord;
+import ct.action.copy.io.IOWrapper;
+import ct.action.copy.model.FileRecord;
+import ct.action.copy.progress.IProgressEvent;
+import ct.action.copy.progress.IProgressEvent.AbortEvent;
+import ct.action.copy.progress.IProgressReport;
 import ct.app.App;
 import ct.app.Settings;
 import ct.tui.copy.StdoutProgress;
@@ -115,6 +117,16 @@ public abstract class RobustCopyIT {
 			subTest++;
 			App.info();
 			App.highlight("Sub Test", subTest);
+		}
+	}
+
+	public class TestVoidProgress implements IProgressReport {
+		@Override
+		public void event(IProgressEvent event) throws InterruptedException {
+		}
+
+		@Override
+		public void abort(AbortEvent event) {
 		}
 	}
 }

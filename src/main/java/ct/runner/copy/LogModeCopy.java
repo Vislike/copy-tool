@@ -2,11 +2,11 @@ package ct.runner.copy;
 
 import java.util.List;
 
-import ct.action.RobustCopy;
-import ct.action.io.IOWrapper;
-import ct.action.progress.IProgressEvent.AbortEvent;
-import ct.action.progress.IProgressReport;
-import ct.action.type.CopyTask;
+import ct.action.copy.RobustCopy;
+import ct.action.copy.io.IOWrapper;
+import ct.action.copy.model.CopyTask;
+import ct.action.copy.progress.IProgressReport;
+import ct.action.copy.progress.IProgressEvent.AbortEvent;
 import ct.app.App;
 import ct.app.Settings;
 import ct.app.Settings.RobustCopySettings;

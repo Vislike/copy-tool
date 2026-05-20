@@ -1,4 +1,4 @@
-package ct.action.type;
+package ct.action.copy.model;
 
 import java.nio.file.Path;
 

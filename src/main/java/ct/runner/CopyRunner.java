@@ -2,8 +2,8 @@ package ct.runner;
 
 import java.time.Duration;
 
-import ct.action.io.FilesIO;
-import ct.action.type.AnalyseResult;
+import ct.action.AnalyseResult;
+import ct.action.copy.io.FilesIO;
 import ct.app.App;
 import ct.app.Settings;
 import ct.runner.copy.ICopyRunnerModule;

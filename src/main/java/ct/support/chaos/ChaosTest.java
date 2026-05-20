@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import ct.action.type.CopyTask;
-import ct.action.type.FileRecord;
+import ct.action.copy.model.CopyTask;
+import ct.action.copy.model.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
 import ct.runner.copy.MultiFileCopy;

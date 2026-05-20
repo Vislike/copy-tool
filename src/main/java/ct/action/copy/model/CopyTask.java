@@ -1,4 +1,4 @@
-package ct.action.type;
+package ct.action.copy.model;
 
 public record CopyTask(FileRecord sourceFile, FileRecord targetFile) {
 

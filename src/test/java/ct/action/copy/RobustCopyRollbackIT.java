@@ -1,12 +1,12 @@
-package ct.action;
+package ct.action.copy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import ct.action.io.IOWrapper;
-import ct.action.io.IOWrapper.WT;
-import ct.action.type.CopyTask;
+import ct.action.copy.io.IOWrapper;
+import ct.action.copy.io.IOWrapper.WT;
+import ct.action.copy.model.CopyTask;
 
 public class RobustCopyRollbackIT extends RobustCopyIT {
 

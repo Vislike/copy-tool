@@ -1,8 +1,8 @@
-package ct.action.progress;
+package ct.action.copy.progress;
 
 import java.nio.file.attribute.FileTime;
 
-import ct.action.type.CopyTask;
+import ct.action.copy.model.CopyTask;
 
 public sealed interface IProgressEvent {
 

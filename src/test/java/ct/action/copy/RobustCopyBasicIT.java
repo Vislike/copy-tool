@@ -1,4 +1,4 @@
-package ct.action;
+package ct.action.copy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,11 +10,11 @@ import java.nio.file.StandardOpenOption;
 
 import org.junit.jupiter.api.Test;
 
-import ct.action.io.FilesIO;
-import ct.action.io.IOWrapper;
-import ct.action.io.IOWrapper.WT;
-import ct.action.type.CopyTask;
-import ct.action.type.FileRecord;
+import ct.action.copy.io.FilesIO;
+import ct.action.copy.io.IOWrapper;
+import ct.action.copy.io.IOWrapper.WT;
+import ct.action.copy.model.CopyTask;
+import ct.action.copy.model.FileRecord;
 
 public class RobustCopyBasicIT extends RobustCopyIT {
 

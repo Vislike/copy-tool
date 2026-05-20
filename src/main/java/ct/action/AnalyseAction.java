@@ -8,9 +8,8 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
-import ct.action.type.AnalyseResult;
-import ct.action.type.CopyTask;
-import ct.action.type.FileRecord;
+import ct.action.copy.model.CopyTask;
+import ct.action.copy.model.FileRecord;
 import ct.app.Settings.AnalyseSettings;
 
 public class AnalyseAction {
@@ -59,7 +58,7 @@ public class AnalyseAction {
 	}
 
 	public static AnalyseResult findAllFiles(AnalyseSettings settings) {
-		AnalyseResult files = new AnalyseResult();
+		AnalyseResult result = new AnalyseResult();
 
 		try {
 			Files.walkFileTree(settings.sourceDir(), new SimpleFileVisitor<Path>() {
@@ -71,14 +70,14 @@ public class AnalyseAction {
 					FilesResult res = filesStatus(sourceFile, targetFile, relativeFromSource);
 
 					switch (res.status()) {
-					case COPY -> files.copy().add(new CopyTask(res.sourceFile(), res.targetFile()));
-					case MATCH -> files.match().add(res.sourceFile());
+					case COPY -> result.copy().add(new CopyTask(res.sourceFile(), res.targetFile()));
+					case MATCH -> result.match().add(res.sourceFile());
 					case MISMATCH -> {
-						files.mismatch().add(res.sourceFile());
+						result.mismatch().add(res.sourceFile());
 						if (settings.overwrite()) {
-							files.copy().add(new CopyTask(res.sourceFile(), res.targetFile()));
+							result.copy().add(new CopyTask(res.sourceFile(), res.targetFile()));
 						} else if (settings.resume()) {
-							files.copy().add(new CopyTask(res.resumeSource(), res.targetFile()));
+							result.copy().add(new CopyTask(res.resumeSource(), res.targetFile()));
 						}
 					}
 					}
@@ -89,6 +88,6 @@ public class AnalyseAction {
 			throw new UncheckedIOException(e);
 		}
 
-		return files;
+		return result;
 	}
 }

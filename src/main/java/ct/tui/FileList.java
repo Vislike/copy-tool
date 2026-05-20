@@ -1,6 +1,6 @@
 package ct.tui;
 
-import ct.action.type.AnalyseResult;
+import ct.action.AnalyseResult;
 import ct.app.App;
 import ct.app.Settings.AnalyseSettings;
 import ct.util.AnsiEscapeCodes.Color;

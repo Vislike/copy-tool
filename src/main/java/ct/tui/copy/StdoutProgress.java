@@ -1,19 +1,19 @@
 package ct.tui.copy;
 
-import ct.action.progress.IProgressEvent;
-import ct.action.progress.IProgressEvent.AbortEvent;
-import ct.action.progress.IProgressEvent.CopyEndEvent;
-import ct.action.progress.IProgressEvent.CopyProgressEvent;
-import ct.action.progress.IProgressEvent.CopyStartEvent;
-import ct.action.progress.IProgressEvent.ErrorEvent;
-import ct.action.progress.IProgressEvent.ModifiedTimeEvent;
-import ct.action.progress.IProgressEvent.RestartEvent;
-import ct.action.progress.IProgressEvent.ResumeEvent;
-import ct.action.progress.IProgressEvent.TruncateEvent;
-import ct.action.progress.IProgressEvent.WaitEndEvent;
-import ct.action.progress.IProgressEvent.WaitStartEvent;
-import ct.action.progress.IProgressEvent.WarningEvent;
-import ct.action.progress.IProgressReport;
+import ct.action.copy.progress.IProgressEvent;
+import ct.action.copy.progress.IProgressReport;
+import ct.action.copy.progress.IProgressEvent.AbortEvent;
+import ct.action.copy.progress.IProgressEvent.CopyEndEvent;
+import ct.action.copy.progress.IProgressEvent.CopyProgressEvent;
+import ct.action.copy.progress.IProgressEvent.CopyStartEvent;
+import ct.action.copy.progress.IProgressEvent.ErrorEvent;
+import ct.action.copy.progress.IProgressEvent.ModifiedTimeEvent;
+import ct.action.copy.progress.IProgressEvent.RestartEvent;
+import ct.action.copy.progress.IProgressEvent.ResumeEvent;
+import ct.action.copy.progress.IProgressEvent.TruncateEvent;
+import ct.action.copy.progress.IProgressEvent.WaitEndEvent;
+import ct.action.copy.progress.IProgressEvent.WaitStartEvent;
+import ct.action.copy.progress.IProgressEvent.WarningEvent;
 import ct.app.App;
 import ct.util.Utils;
 

@@ -1,4 +1,4 @@
-package ct.action;
+package ct.action.copy;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -10,20 +10,20 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
-import ct.action.io.IOWrapper;
-import ct.action.progress.IProgressEvent.CopyEndEvent;
-import ct.action.progress.IProgressEvent.CopyProgressEvent;
-import ct.action.progress.IProgressEvent.CopyStartEvent;
-import ct.action.progress.IProgressEvent.ModifiedTimeEvent;
-import ct.action.progress.IProgressEvent.RestartEvent;
-import ct.action.progress.IProgressEvent.RestartType;
-import ct.action.progress.IProgressEvent.ResumeEvent;
-import ct.action.progress.IProgressEvent.TruncateEvent;
-import ct.action.progress.IProgressEvent.WaitEndEvent;
-import ct.action.progress.IProgressEvent.WaitStartEvent;
-import ct.action.progress.IProgressReport;
-import ct.action.type.Buffers;
-import ct.action.type.CopyTask;
+import ct.action.copy.io.Buffers;
+import ct.action.copy.io.IOWrapper;
+import ct.action.copy.model.CopyTask;
+import ct.action.copy.progress.IProgressReport;
+import ct.action.copy.progress.IProgressEvent.CopyEndEvent;
+import ct.action.copy.progress.IProgressEvent.CopyProgressEvent;
+import ct.action.copy.progress.IProgressEvent.CopyStartEvent;
+import ct.action.copy.progress.IProgressEvent.ModifiedTimeEvent;
+import ct.action.copy.progress.IProgressEvent.RestartEvent;
+import ct.action.copy.progress.IProgressEvent.RestartType;
+import ct.action.copy.progress.IProgressEvent.ResumeEvent;
+import ct.action.copy.progress.IProgressEvent.TruncateEvent;
+import ct.action.copy.progress.IProgressEvent.WaitEndEvent;
+import ct.action.copy.progress.IProgressEvent.WaitStartEvent;
 import ct.app.Settings.RobustCopySettings;
 import ct.util.Utils;
 

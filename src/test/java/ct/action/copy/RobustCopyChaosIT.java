@@ -1,4 +1,4 @@
-package ct.action;
+package ct.action.copy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -8,7 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
-import ct.action.type.CopyTask;
+import ct.action.copy.model.CopyTask;
 import ct.support.chaos.ChaosIO;
 import ct.util.TestUtils;
 

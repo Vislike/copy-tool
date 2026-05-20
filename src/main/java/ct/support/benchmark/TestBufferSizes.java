@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import ct.action.RobustCopy;
-import ct.action.io.FilesIO;
-import ct.action.type.CopyTask;
-import ct.action.type.FileRecord;
+import ct.action.copy.RobustCopy;
+import ct.action.copy.io.FilesIO;
+import ct.action.copy.model.CopyTask;
+import ct.action.copy.model.FileRecord;
 import ct.app.App;
 import ct.app.Settings;
 import ct.support.SupportUtils;

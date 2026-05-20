@@ -10,8 +10,8 @@ import java.nio.file.attribute.FileTime;
 import java.text.DecimalFormat;
 import java.util.Random;
 
-import ct.action.io.FilesIO;
-import ct.action.io.IOWrapper;
+import ct.action.copy.io.FilesIO;
+import ct.action.copy.io.IOWrapper;
 
 public class ChaosIO implements IOWrapper {
 

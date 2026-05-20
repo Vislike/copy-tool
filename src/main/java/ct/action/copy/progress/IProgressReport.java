@@ -1,8 +1,8 @@
-package ct.action.progress;
+package ct.action.copy.progress;
 
-import ct.action.progress.IProgressEvent.AbortEvent;
-import ct.action.progress.IProgressEvent.ErrorEvent;
-import ct.action.progress.IProgressEvent.WarningEvent;
+import ct.action.copy.progress.IProgressEvent.AbortEvent;
+import ct.action.copy.progress.IProgressEvent.ErrorEvent;
+import ct.action.copy.progress.IProgressEvent.WarningEvent;
 
 public interface IProgressReport {
 

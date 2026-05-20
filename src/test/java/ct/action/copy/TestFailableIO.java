@@ -1,4 +1,4 @@
-package ct.action;
+package ct.action.copy;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -7,8 +7,8 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 
-import ct.action.io.FilesIO;
-import ct.action.io.IOWrapper;
+import ct.action.copy.io.FilesIO;
+import ct.action.copy.io.IOWrapper;
 import ct.app.App;
 import ct.util.Utils;
 

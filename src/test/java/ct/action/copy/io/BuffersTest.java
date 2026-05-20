@@ -1,4 +1,4 @@
-package ct.action.type;
+package ct.action.copy.io;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
