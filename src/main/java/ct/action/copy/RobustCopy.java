@@ -1,49 +1,44 @@
 package ct.action.copy;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 
-import ct.action.copy.io.Buffers;
 import ct.action.copy.io.IOWrapper;
 import ct.action.copy.model.CopyTask;
-import ct.action.copy.progress.IProgressReport;
 import ct.action.copy.progress.IProgressEvent.CopyEndEvent;
-import ct.action.copy.progress.IProgressEvent.CopyProgressEvent;
 import ct.action.copy.progress.IProgressEvent.CopyStartEvent;
 import ct.action.copy.progress.IProgressEvent.ModifiedTimeEvent;
-import ct.action.copy.progress.IProgressEvent.RestartEvent;
-import ct.action.copy.progress.IProgressEvent.RestartType;
 import ct.action.copy.progress.IProgressEvent.ResumeEvent;
-import ct.action.copy.progress.IProgressEvent.TruncateEvent;
 import ct.action.copy.progress.IProgressEvent.WaitEndEvent;
 import ct.action.copy.progress.IProgressEvent.WaitStartEvent;
+import ct.action.copy.progress.IProgressReport;
+import ct.app.Settings;
 import ct.app.Settings.RobustCopySettings;
 import ct.util.Utils;
 
-public class RobustCopy {
+public abstract class RobustCopy {
 
-	private final IOWrapper io;
-	private final RobustCopySettings settings;
-	private final IProgressReport pr;
-	private final Buffers buffers;
-
-	public RobustCopy(IOWrapper io, RobustCopySettings settings, IProgressReport pr) {
-		this.io = io;
-		this.settings = settings;
-		this.pr = pr;
-		// Allocate Buffer
-		this.buffers = createBuffers();
+	public static RobustCopy create(RobustCopySettings settings, IOWrapper io, IProgressReport pr) {
+		if (Settings.devMode) {
+			return new MultiThreadedCopy(settings, io, pr);
+		}
+		if (settings.zeroCopy()) {
+			return new ZeroCopy(settings, io, pr);
+		}
+		return new DirectBufferCopy(settings, io, pr);
 	}
 
-	private Buffers createBuffers() {
-		return new Buffers(1, settings.bufferSize());
+	protected final RobustCopySettings settings;
+	protected final IOWrapper io;
+	protected final IProgressReport pr;
+
+	RobustCopy(RobustCopySettings settings, IOWrapper io, IProgressReport pr) {
+		this.settings = settings;
+		this.io = io;
+		this.pr = pr;
 	}
 
 	public void copy(CopyTask ct) throws InterruptedException {
@@ -65,7 +60,7 @@ public class RobustCopy {
 		}
 
 		// Copy file
-		singleThreadedBufferCopy(ct, startByte);
+		copyFile(ct, startByte);
 
 		// Set last modified time to same as source
 		FileTime lastModifiedTime = getLastModifiedTime(ct.sourceFile().path());
@@ -77,84 +72,24 @@ public class RobustCopy {
 		pr.event(new CopyEndEvent(ct));
 	}
 
-	private void singleThreadedBufferCopy(final CopyTask ct, final long startByte) throws InterruptedException {
-		// States
-		boolean copyComplete = false;
-		FileChannel inChannel = null;
-		FileChannel outChannel = null;
-		long bytesCopied = startByte;
-		ByteBuffer bb = buffers.next();
+	abstract void copyFile(CopyTask ct, long startByte) throws InterruptedException;
 
-		// Error handling loop
-		while (!copyComplete) {
-			try {
-				// Open files
-				inChannel = io.open(ct.sourceFile().path(), StandardOpenOption.READ);
-				outChannel = io.open(ct.targetFile().path(), StandardOpenOption.WRITE, StandardOpenOption.CREATE);
-
-				// Restart with Rollback
-				bytesCopied = Math.max(0, bytesCopied - settings.bufferSize() * settings.rollbackBuffersNum());
-				if (bytesCopied > 0) {
-					pr.event(new RestartEvent(bytesCopied, RestartType.copy));
-					io.position(inChannel, bytesCopied);
-					io.position(outChannel, bytesCopied);
-				}
-
-				// Copy all bytes
-				while (bytesCopied < ct.sourceFile().size()) {
-					// Copy chunk
-					int bytesRead = io.read(inChannel, bb.clear());
-					int bytesWrite = io.write(outChannel, bb.flip());
-
-					// Error checking
-					if (bytesRead == -1) {
-						throw new IOException("Unexpected EOF at: " + Utils.size(bytesCopied) + ", expected size: "
-								+ Utils.size(ct.sourceFile().size()));
-					}
-					if (bytesRead == 0) {
-						throw new IOException("Unexpected 0 byte read at: " + Utils.size(bytesCopied));
-					}
-					if (bytesWrite == 0) {
-						throw new IOException("Unexpected 0 byte write at: " + Utils.size(bytesCopied));
-					}
-					if (bytesRead != bytesWrite) {
-						throw new IOException("Unexpected mismatch at: " + Utils.size(bytesCopied) + ", read: "
-								+ Utils.size(bytesRead) + ", write: " + Utils.size(bytesWrite));
-					}
-
-					// Successfully copied bytes
-					bytesCopied += bytesRead;
-					pr.event(new CopyProgressEvent(bytesCopied));
-				}
-
-				// Truncate if larger (can be the case during overwrite)
-				if (io.size(outChannel) > ct.sourceFile().size()) {
-					pr.event(new TruncateEvent(ct.sourceFile().size()));
-					io.truncate(outChannel, ct.sourceFile().size());
-				}
-
-				// Done
-				copyComplete = true;
-			} catch (ClosedByInterruptException e) {
-				throw new InterruptedException();
-			} catch (IOException e) {
-				pr.error(switch (e) {
-				case NoSuchFileException _ -> "Error no such file";
-				default -> "Copy problem";
-				}, e.getMessage());
-				waitBeforeRetry();
-			} finally {
-				// Close channels, ignore problems
-				close(inChannel);
-				close(outChannel);
-			}
-		}
-	}
-
-	private void waitBeforeRetry() throws InterruptedException {
+	protected void waitBeforeRetry() throws InterruptedException {
 		pr.event(new WaitStartEvent(settings.waitBeforeRetryTimeSec()));
 		Thread.sleep(Duration.ofSeconds(settings.waitBeforeRetryTimeSec()));
 		pr.event(new WaitEndEvent());
+	}
+
+	protected void close(FileChannel channel) {
+		if (channel != null) {
+			try {
+				if (channel.isOpen()) {
+					io.close(channel);
+				}
+			} catch (IOException e) {
+				// Ignore
+			}
+		}
 	}
 
 	private void createDirectories(Path path) throws InterruptedException {
@@ -190,18 +125,6 @@ public class RobustCopy {
 			} catch (IOException e) {
 				pr.error("Error setting modified time", e.getMessage());
 				waitBeforeRetry();
-			}
-		}
-	}
-
-	private void close(FileChannel channel) {
-		if (channel != null) {
-			try {
-				if (channel.isOpen()) {
-					io.close(channel);
-				}
-			} catch (IOException e) {
-				// Ignore
 			}
 		}
 	}

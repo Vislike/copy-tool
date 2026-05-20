@@ -21,6 +21,7 @@ import ct.util.Utils.Timer;
 public class TestLargeFile {
 
 	private static final boolean DEV_MODE = true;
+	private static final boolean ZERO_COPY = true;
 	private static final int BUFF_FROM = 19;
 	private static final int BUFF_TO = 25;
 
@@ -53,6 +54,7 @@ public class TestLargeFile {
 		App.highlight("Buff From", Utils.size(1 << BUFF_FROM));
 		App.highlight("Buff To  ", Utils.size(1 << BUFF_TO));
 		App.highlight("Num Tests", BUFF_TO - BUFF_FROM + 1);
+		App.highlight("Zero Copy", ZERO_COPY);
 		App.highlight("Dev Mode ", Settings.devMode);
 		App.info();
 
@@ -80,7 +82,7 @@ public class TestLargeFile {
 				.append("), Size: ").append(Utils.size(source.size()));
 
 		long startTime = System.nanoTime();
-		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.testBufferSizes(buff).robustCopy(),
+		RobustCopy robustCopy = RobustCopy.create(Settings.testBufferSizes(buff, ZERO_COPY).robustCopy(), new FilesIO(),
 				new StdoutProgress());
 		robustCopy.copy(new CopyTask(source, target));
 		long elapsedNanos = System.nanoTime() - startTime;

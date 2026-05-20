@@ -24,6 +24,7 @@ import ct.util.Utils.Timer;
 public class ChaosTest {
 
 	private static final boolean DEV_MODE = true;
+	private static final boolean ZERO_COPY = true;
 	private static final int BUFF_SIZE = 17;
 	private static final int WAIT_RETRY = 1;
 	private static final int ROLLBACK = 0;
@@ -60,6 +61,7 @@ public class ChaosTest {
 		App.highlight("Rollback ", ROLLBACK);
 		App.highlight("NumFiles ", FILES_AT_TIME);
 		App.highlight("ChaosVal ", CHAOS_CHANCE);
+		App.highlight("Zero Copy", ZERO_COPY);
 		App.highlight("Dev Mode ", Settings.devMode);
 
 		Timer timer = Utils.timer();
@@ -74,7 +76,7 @@ public class ChaosTest {
 			tasks.add(new CopyTask(sourceFile, targetFile));
 		}
 
-		new MultiFileCopy(Settings.testFactory(1 << BUFF_SIZE, WAIT_RETRY, ROLLBACK, FILES_AT_TIME),
+		new MultiFileCopy(Settings.testFactory(1 << BUFF_SIZE, WAIT_RETRY, ROLLBACK, FILES_AT_TIME, ZERO_COPY),
 				new ChaosIO(CHAOS_CHANCE, System.nanoTime())).copyAll(tasks);
 
 		App.infolb("Verifying files");

@@ -8,7 +8,6 @@ import java.util.Properties;
 import ct.runner.AnalyseRunner;
 import ct.util.AnsiEscapeCodes.Color;
 import ct.util.Native;
-import ct.util.Utils;
 
 public class App {
 
@@ -112,7 +111,6 @@ public class App {
 	}
 
 	public static void configCheck(Settings settings) {
-		verbose("Copy buffer size", Utils.size(settings.robustCopy().bufferSize()));
 		if (Settings.devMode) {
 			warning("Dev Mode", "enabled");
 		}

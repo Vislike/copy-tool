@@ -33,6 +33,7 @@ public class CommandLine {
 				    -u n  Rollback n buffers on copy problem, 0-10. (%3$d)
 				  Modes:
 				    -l    Log mode, disables dynamic progress updates and implies -n 1. (D)
+				    -z    Zero-Copy Mode, uses transferTo instead of directByteBuffer. (D)
 				    -x    Dev mode, enables experimental features. (D)
 				  Visual:
 				    -b    Enable show all sizes in raw bytes instead of human readable. (D)
@@ -76,6 +77,7 @@ public class CommandLine {
 		boolean overwrite = false;
 		boolean resume = false;
 		boolean logMode = false;
+		boolean zeroMode = false;
 		int filesSimultaneously = App.NUM_FILES_SIMULTANEOUSLY;
 		int terminalWidth = App.TERMINAL_WIDTH;
 		int rollbackBuffers = App.ROLLBACK_BUFFERS;
@@ -99,6 +101,7 @@ public class CommandLine {
 						overwrite = false;
 					}
 					case 'l' -> logMode = true;
+					case 'z' -> zeroMode = true;
 					case 'b', 'c', 'v', 'x' -> {
 						// Handled in parseOutputArgs
 					}
@@ -190,7 +193,8 @@ public class CommandLine {
 
 		// Done
 		AnalyseSettings aSettings = new AnalyseSettings(sourceDir, targetDir, dryRun, overwrite, resume);
-		RobustCopySettings rcSettings = new RobustCopySettings(1 << bufferExponent, App.WAIT_TIME, rollbackBuffers);
+		RobustCopySettings rcSettings = new RobustCopySettings(1 << bufferExponent, App.WAIT_TIME, rollbackBuffers,
+				zeroMode);
 		MultiFileSettings mfSettings = new MultiFileSettings(logMode, filesSimultaneously, terminalWidth);
 		return Optional.of(new Settings(aSettings, rcSettings, mfSettings));
 	}

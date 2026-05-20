@@ -5,8 +5,8 @@ import java.util.List;
 import ct.action.copy.RobustCopy;
 import ct.action.copy.io.IOWrapper;
 import ct.action.copy.model.CopyTask;
-import ct.action.copy.progress.IProgressReport;
 import ct.action.copy.progress.IProgressEvent.AbortEvent;
+import ct.action.copy.progress.IProgressReport;
 import ct.app.App;
 import ct.app.Settings;
 import ct.app.Settings.RobustCopySettings;
@@ -25,7 +25,7 @@ public class LogModeCopy implements ICopyRunnerModule {
 	@Override
 	public void copyAll(List<CopyTask> tasks) {
 		IProgressReport pr = new StdoutProgress();
-		RobustCopy rc = new RobustCopy(io, settings, pr);
+		RobustCopy rc = RobustCopy.create(settings, io, pr);
 		for (CopyTask task : tasks) {
 			try {
 				App.info();

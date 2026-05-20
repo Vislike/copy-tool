@@ -104,11 +104,15 @@ public abstract class RobustCopyIT {
 	}
 
 	protected RobustCopy createRobustCopy(IOWrapper wrapper) {
-		return createRobustCopy(wrapper, 0);
+		return createRobustCopy(wrapper, 0, false);
 	}
 
 	protected RobustCopy createRobustCopy(IOWrapper wrapper, int rollback) {
-		return new RobustCopy(wrapper, Settings.testRobustCopy(TEST_BUFFER_SIZE, rollback).robustCopy(),
+		return createRobustCopy(wrapper, rollback, false);
+	}
+
+	protected RobustCopy createRobustCopy(IOWrapper wrapper, int rollback, boolean zeroCopy) {
+		return RobustCopy.create(Settings.testRobustCopy(TEST_BUFFER_SIZE, rollback, zeroCopy).robustCopy(), wrapper,
 				createMessageProducer());
 	}
 

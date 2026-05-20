@@ -10,8 +10,8 @@ import ct.action.copy.RobustCopy;
 import ct.action.copy.io.IOWrapper;
 import ct.action.copy.model.CopyTask;
 import ct.action.copy.progress.IProgressEvent;
-import ct.action.copy.progress.IProgressReport;
 import ct.action.copy.progress.IProgressEvent.AbortEvent;
+import ct.action.copy.progress.IProgressReport;
 import ct.app.App;
 import ct.app.Settings;
 import ct.tui.copy.AnsiTerminalProgress;
@@ -120,7 +120,7 @@ public class MultiFileCopy implements ICopyRunnerModule {
 				// Just let thread die
 			}
 		}).start(() -> {
-			RobustCopy rc = new RobustCopy(io, settings.robustCopy(), ps);
+			RobustCopy rc = RobustCopy.create(settings.robustCopy(), io, ps);
 			CopyTask ct = null;
 			try {
 				while ((ct = copyTaskQueue.poll()) != null) {

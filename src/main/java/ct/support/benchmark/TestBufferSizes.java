@@ -24,6 +24,7 @@ import ct.util.Utils.Timer;
 public class TestBufferSizes {
 
 	private static final boolean DEV_MODE = true;
+	private static final boolean ZERO_COPY = true;
 
 	public static void main(String[] args) throws Exception {
 		App.info("= = = = Copy Tool Buffer Test = = = =");
@@ -50,6 +51,7 @@ public class TestBufferSizes {
 		App.highlight("Test Dir ", testDir);
 		App.highlight("Temp File", tempFile);
 		App.highlight("Hash File", hashFile);
+		App.highlight("Zero Copy", ZERO_COPY);
 		App.highlight("Dev Mode ", Settings.devMode);
 		App.info();
 
@@ -81,8 +83,8 @@ public class TestBufferSizes {
 				.append("), Size: ").append(Utils.size(source.size()));
 
 		long startTime = System.nanoTime();
-		RobustCopy robustCopy = new RobustCopy(new FilesIO(), Settings.testBufferSizes(numBytes).robustCopy(),
-				new StdoutProgress());
+		RobustCopy robustCopy = RobustCopy.create(Settings.testBufferSizes(numBytes, ZERO_COPY).robustCopy(),
+				new FilesIO(), new StdoutProgress());
 		robustCopy.copy(new CopyTask(source, target));
 		long elapsedNanos = System.nanoTime() - startTime;
 

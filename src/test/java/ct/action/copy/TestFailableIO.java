@@ -18,10 +18,12 @@ public class TestFailableIO implements IOWrapper {
 	private final int count[];
 	private final int failAt[];
 	private final int corruptAt[];
-	private int writeOneLessByteAt = 0;
+	private int writeOneLessAt = 0;
 	private int writeZeroAt = 0;
 	private int readZeroAt = 0;
 	private int readEofAt = 0;
+	private int transferOneLessAt = 0;
+	private int transferZeroAt = 0;
 
 	TestFailableIO() {
 		io = new FilesIO();
@@ -45,7 +47,7 @@ public class TestFailableIO implements IOWrapper {
 	}
 
 	TestFailableIO writeOneLessAt(int n) {
-		writeOneLessByteAt = n;
+		writeOneLessAt = n;
 		return this;
 	}
 
@@ -61,6 +63,16 @@ public class TestFailableIO implements IOWrapper {
 
 	TestFailableIO readEofAt(int n) {
 		readEofAt = n;
+		return this;
+	}
+
+	TestFailableIO transferOneLessAt(int n) {
+		transferOneLessAt = n;
+		return this;
+	}
+
+	TestFailableIO transferZeroAt(int n) {
+		transferZeroAt = n;
 		return this;
 	}
 
@@ -130,7 +142,7 @@ public class TestFailableIO implements IOWrapper {
 			src.put(1, (byte) 0);
 		}
 		int write = io.write(channel, src);
-		if (writeOneLessByteAt == count(WT.write)) {
+		if (writeOneLessAt == count(WT.write)) {
 			return write - 1;
 		} else if (writeZeroAt == count(WT.write)) {
 			return 0;
@@ -141,7 +153,13 @@ public class TestFailableIO implements IOWrapper {
 	@Override
 	public long transferTo(FileChannel source, long position, long count, FileChannel target) throws IOException {
 		incCoundAndCheckFail(WT.transferTo);
-		return io.transferTo(source, position, count, target);
+		long transferTo = io.transferTo(source, position, count, target);
+		if (transferOneLessAt == count(WT.transferTo)) {
+			return transferTo - 1;
+		} else if (transferZeroAt == count(WT.transferTo)) {
+			return 0;
+		}
+		return transferTo;
 	}
 
 	@Override
