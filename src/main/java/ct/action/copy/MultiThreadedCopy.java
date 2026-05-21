@@ -148,8 +148,9 @@ public class MultiThreadedCopy extends RobustCopy {
 
 				// Write done
 				writeComplete = true;
-			} catch (ClosedByInterruptException e) {
-				throw new InterruptedException();
+			} catch (ClosedByInterruptException | InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new AssertionError("Interrupt not implemented yet", e);
 			} catch (IOException e) {
 				pr.error("Write problem", e.getMessage());
 				waitBeforeRetry();

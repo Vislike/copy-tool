@@ -65,7 +65,6 @@ public abstract class RobustCopy {
 		// Set last modified time to same as source
 		FileTime lastModifiedTime = getLastModifiedTime(ct.sourceFile().path());
 		pr.event(new ModifiedTimeEvent(lastModifiedTime));
-
 		setLastModifiedTime(ct.targetFile().path(), lastModifiedTime);
 
 		// End
