@@ -30,11 +30,11 @@ public class CopyRunner {
 		final Thread mainThread = Thread.currentThread();
 		shutdownHookThread = new Thread(() -> {
 			try {
-				App.warning("Shutdown requested, aborting...");
+				App.warning("Shutdown requested, aborting, max wait time in seconds", App.SHUTDOWN_HOOK_WAIT);
 				mainThread.interrupt();
-				boolean terminated = mainThread.join(Duration.ofSeconds(App.SHUTDOWN_HARD_WAIT));
+				boolean terminated = mainThread.join(Duration.ofSeconds(App.SHUTDOWN_HOOK_WAIT));
 				if (!terminated) {
-					App.error("Graceful shutdown failed, hard exiting, timeout reached", App.SHUTDOWN_HARD_WAIT);
+					App.error("Graceful shutdown failed, hard exiting, timeout reached", App.SHUTDOWN_HOOK_WAIT);
 				}
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();

@@ -84,7 +84,7 @@ public class MultiFileCopy implements ICopyRunnerModule {
 			threads.forEach(w -> {
 				if (w.thread.isAlive()) {
 					App.verbose("Stopping thread", w.thread.getName());
-					w.thread.interrupt();
+					Thread.startVirtualThread(w.thread::interrupt);
 				}
 			});
 

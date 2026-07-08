@@ -57,7 +57,7 @@ public class StdoutProgress implements IProgressReport {
 	}
 
 	static String createProgress(long bytes, DeBounce db) {
-		StringBuilder sb = new StringBuilder(App.SB_SIZE);
+		StringBuilder sb = new StringBuilder(App.STRING_BUILDER_SIZE);
 		long currentTime = System.currentTimeMillis();
 
 		// Elapsed seconds

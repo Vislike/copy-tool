@@ -19,9 +19,9 @@ public class App {
 
 	private static final boolean VIRTUAL_THREADS = true;
 
-	public static final int SHUTDOWN_HARD_WAIT = 10;
-	public static final int SHUTDOWN_SOFT_WAIT = 5;
-	public static final int SB_SIZE = 128;
+	public static final int SHUTDOWN_HOOK_WAIT = 30;
+	public static final int SHUTDOWN_SOFT_WAIT = SHUTDOWN_HOOK_WAIT - 5;
+	public static final int STRING_BUILDER_SIZE = 128;
 
 	public static void main(String[] args) throws IOException {
 		info("= = = = Copy Tool v" + version() + " = = = =");
@@ -99,7 +99,7 @@ public class App {
 	}
 
 	private static void printCommon(Color color, boolean extraNl, String str, Object... args) {
-		StringBuilder sb = new StringBuilder(SB_SIZE);
+		StringBuilder sb = new StringBuilder(STRING_BUILDER_SIZE);
 		if (extraNl) {
 			sb.append(System.lineSeparator());
 		}
