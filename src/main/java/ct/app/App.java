@@ -12,7 +12,7 @@ import ct.util.Native;
 public class App {
 
 	static final int TERMINAL_WIDTH = 120;
-	static final int BUFF_SIZE = 22;
+	static final int BUFF_SIZE = 18;
 	static final int WAIT_TIME = 10;
 	static final int ROLLBACK_BUFFERS = 0;
 	static final int NUM_FILES_SIMULTANEOUSLY = 2;
